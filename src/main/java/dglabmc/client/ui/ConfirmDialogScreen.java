@@ -1,8 +1,8 @@
 package dglabmc.client.ui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 
 public class ConfirmDialogScreen extends Screen {
     private final Screen parent;
@@ -13,7 +13,7 @@ public class ConfirmDialogScreen extends Screen {
     private String status = "";
 
     public ConfirmDialogScreen(Screen parent, String heading, String description, String confirmLabel, Runnable confirmAction) {
-        super(new StringTextComponent(heading));
+        super(new TextComponent(heading));
         this.parent = parent;
         this.heading = heading;
         this.description = description;
@@ -29,11 +29,11 @@ public class ConfirmDialogScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
         if (compact) {
-            this.addButton(new StyledButton(left + 18, top + 102, panelWidth - 36, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
-            this.addButton(new StyledButton(left + 18, top + 126, panelWidth - 36, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 102, panelWidth - 36, 20, new TextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 126, panelWidth - 36, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         } else {
-            this.addButton(new StyledButton(left + 18, top + 102, 110, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
-            this.addButton(new StyledButton(left + 136, top + 102, 110, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 102, 110, 20, new TextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
+            this.addRenderableWidget(new StyledButton(left + 136, top + 102, 110, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         }
     }
 
@@ -46,7 +46,7 @@ public class ConfirmDialogScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(420, this.width - 24);

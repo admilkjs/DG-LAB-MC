@@ -1,10 +1,10 @@
 package dglabmc.client.ui;
 
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.TextComponent;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -19,7 +19,7 @@ public class TextPromptScreen extends Screen {
     private final String initialValue;
     private final Consumer<String> submitHandler;
 
-    private TextFieldWidget inputField;
+    private EditBox inputField;
     private String status = "";
 
     public TextPromptScreen(Screen parent, String heading, String description, String confirmLabel, String initialValue, Consumer<String> submitHandler) {
@@ -27,7 +27,7 @@ public class TextPromptScreen extends Screen {
     }
 
     public TextPromptScreen(Screen parent, String heading, String description, String inputLabel, String confirmLabel, String initialValue, Consumer<String> submitHandler) {
-        super(new StringTextComponent(heading));
+        super(new TextComponent(heading));
         this.parent = parent;
         this.heading = heading;
         this.description = description;
@@ -45,20 +45,20 @@ public class TextPromptScreen extends Screen {
         panelHeight = Math.min(panelHeight, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        this.inputField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, new StringTextComponent(this.inputLabel));
+        this.inputField = new EditBox(this.font, left + 18, top + 54, panelWidth - 36, 20, new TextComponent(this.inputLabel));
         this.inputField.setMaxLength(512);
         this.inputField.setValue(this.initialValue);
-        this.children.add(this.inputField);
+        this.addRenderableWidget(this.inputField);
         this.setInitialFocus(this.inputField);
 
         if (compact) {
-            this.addButton(new StyledButton(left + 18, top + 90, panelWidth - 36, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onSubmit()));
-            this.addButton(new StyledButton(left + 18, top + 114, panelWidth - 36, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setValue(PlatformServices.client().readClipboard())));
-            this.addButton(new StyledButton(left + 18, top + 138, panelWidth - 36, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 90, panelWidth - 36, 20, new TextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onSubmit()));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 114, panelWidth - 36, 20, new TextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setValue(PlatformServices.client().readClipboard())));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 138, panelWidth - 36, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         } else {
-            this.addButton(new StyledButton(left + 18, top + 90, 100, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onSubmit()));
-            this.addButton(new StyledButton(left + 126, top + 90, 100, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setValue(PlatformServices.client().readClipboard())));
-            this.addButton(new StyledButton(left + 234, top + 90, 128, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 90, 100, 20, new TextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onSubmit()));
+            this.addRenderableWidget(new StyledButton(left + 126, top + 90, 100, 20, new TextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setValue(PlatformServices.client().readClipboard())));
+            this.addRenderableWidget(new StyledButton(left + 234, top + 90, 128, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         }
     }
 
@@ -98,7 +98,7 @@ public class TextPromptScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(380, this.width - 24);

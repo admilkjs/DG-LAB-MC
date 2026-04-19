@@ -8,15 +8,15 @@ import dglabmc.rule.RuleEventContext;
 import dglabmc.rule.TriggerRegistry;
 import dglabmc.security.EncryptedChatSignal;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -29,7 +29,7 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.ArrowLooseEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Mod.EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, value = Dist.CLIENT)
 public final class ClientHooks {
     private static final Minecraft MINECRAFT = Minecraft.getInstance();
-    private static KeyBinding openMenuKey;
+    private static KeyMapping openMenuKey;
     private static boolean menuKeyLatch;
     private static boolean sprinting;
     private static boolean crouching;
@@ -62,10 +62,10 @@ public final class ClientHooks {
     }
 
     public static void registerKeyBinding() {
-        openMenuKey = new KeyBinding(
+        openMenuKey = new KeyMapping(
             "key.dglabmc.open",
             KeyConflictContext.IN_GAME,
-            InputMappings.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_O),
+            InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_O),
             "key.categories.dglabmc"
         );
         ClientRegistry.registerKeyBinding(openMenuKey);
@@ -96,7 +96,7 @@ public final class ClientHooks {
 
     @SubscribeEvent
     public static void onClientChatReceived(ClientChatReceivedEvent event) {
-        ClientPlayerEntity player = MINECRAFT.player;
+        LocalPlayer player = MINECRAFT.player;
         if (player == null || event.getMessage() == null) {
             return;
         }
@@ -126,7 +126,7 @@ public final class ClientHooks {
         if (ClientCommandRouter.consumePendingControlCenterOpen()) {
             PlatformServices.client().openControlCenter();
         }
-        ClientPlayerEntity player = MINECRAFT.player;
+        LocalPlayer player = MINECRAFT.player;
         if (player == null) {
             sprinting = false;
             crouching = false;
@@ -204,13 +204,13 @@ public final class ClientHooks {
     @SubscribeEvent
     public static void onJump(LivingEvent.LivingJumpEvent event) {
         if (event.getEntityLiving().level.isClientSide && ForgeRuleEventBridge.isLocalPlayer(event.getEntityLiving())) {
-            fireTrigger(ForgeRuleEventBridge.createContext((PlayerEntity) event.getEntityLiving(), TriggerRegistry.JUMP));
+            fireTrigger(ForgeRuleEventBridge.createContext((Player) event.getEntityLiving(), TriggerRegistry.JUMP));
         }
     }
 
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
-        ClientPlayerEntity player = MINECRAFT.player;
+        LocalPlayer player = MINECRAFT.player;
         if (player == null || event.getPlayer() == null || !player.getUUID().equals(event.getPlayer().getUUID())) {
             return;
         }
@@ -221,7 +221,7 @@ public final class ClientHooks {
 
     @SubscribeEvent
     public static void onCriticalHit(CriticalHitEvent event) {
-        ClientPlayerEntity player = MINECRAFT.player;
+        LocalPlayer player = MINECRAFT.player;
         if (player != null
             && event.getPlayer() != null
             && event.getPlayer().level.isClientSide
@@ -234,7 +234,7 @@ public final class ClientHooks {
 
     @SubscribeEvent
     public static void onArrowLoose(ArrowLooseEvent event) {
-        ClientPlayerEntity player = MINECRAFT.player;
+        LocalPlayer player = MINECRAFT.player;
         if (player != null
             && event.getPlayer() != null
             && event.getPlayer().level.isClientSide
@@ -251,14 +251,14 @@ public final class ClientHooks {
         AppServices.get().getRuleEngine().fire(context);
     }
 
-    private static void drainPendingSignals(ClientPlayerEntity player) {
+    private static void drainPendingSignals(LocalPlayer player) {
         String triggerId;
         while ((triggerId = PENDING_SIGNAL_TRIGGERS.poll()) != null) {
             dispatchSyntheticSignal(player, triggerId);
         }
     }
 
-    private static void dispatchSyntheticSignal(ClientPlayerEntity player, String triggerId) {
+    private static void dispatchSyntheticSignal(LocalPlayer player, String triggerId) {
         RuleEventContext context = ForgeRuleEventBridge.createSignalContext(player, triggerId);
         if (context == null) {
             return;
@@ -267,7 +267,7 @@ public final class ClientHooks {
         AppServices.get().getRuleEngine().fireSynthetic(context);
     }
 
-    private static void pollLocalPlayerEvents(ClientPlayerEntity player) {
+    private static void pollLocalPlayerEvents(LocalPlayer player) {
         float currentHealth = Math.max(0.0F, player.getHealth());
         int currentHurtTime = player.hurtTime;
         int currentDeathTime = player.deathTime;
@@ -322,23 +322,23 @@ public final class ClientHooks {
         return source != null && (source == DamageSource.FALL || "fall".equals(source.msgId));
     }
 
-    private static void fireAttackDamageTriggers(PlayerEntity player, LivingEntity target, float damage) {
-        fireAttackCategory(player, target instanceof PlayerEntity, TriggerRegistry.ATTACK_DAMAGE_ALL, TriggerRegistry.ATTACK_DAMAGE_PLAYER, TriggerRegistry.ATTACK_DAMAGE_NON_PLAYER, damage);
+    private static void fireAttackDamageTriggers(Player player, LivingEntity target, float damage) {
+        fireAttackCategory(player, target instanceof Player, TriggerRegistry.ATTACK_DAMAGE_ALL, TriggerRegistry.ATTACK_DAMAGE_PLAYER, TriggerRegistry.ATTACK_DAMAGE_NON_PLAYER, damage);
     }
 
-    private static void fireAttackCriticalTriggers(PlayerEntity player, LivingEntity target) {
-        fireAttackCategory(player, target instanceof PlayerEntity, TriggerRegistry.ATTACK_CRITICAL_ALL, TriggerRegistry.ATTACK_CRITICAL_PLAYER, TriggerRegistry.ATTACK_CRITICAL_NON_PLAYER, 0.0F);
+    private static void fireAttackCriticalTriggers(Player player, LivingEntity target) {
+        fireAttackCategory(player, target instanceof Player, TriggerRegistry.ATTACK_CRITICAL_ALL, TriggerRegistry.ATTACK_CRITICAL_PLAYER, TriggerRegistry.ATTACK_CRITICAL_NON_PLAYER, 0.0F);
     }
 
-    private static void fireAttackKillTriggers(PlayerEntity player, LivingEntity target) {
-        fireAttackCategory(player, target instanceof PlayerEntity, TriggerRegistry.ATTACK_KILL_ALL, TriggerRegistry.ATTACK_KILL_PLAYER, TriggerRegistry.ATTACK_KILL_NON_PLAYER, 0.0F);
+    private static void fireAttackKillTriggers(Player player, LivingEntity target) {
+        fireAttackCategory(player, target instanceof Player, TriggerRegistry.ATTACK_KILL_ALL, TriggerRegistry.ATTACK_KILL_PLAYER, TriggerRegistry.ATTACK_KILL_NON_PLAYER, 0.0F);
     }
 
-    private static void fireAttackKillTriggers(PlayerEntity player, boolean playerTarget) {
+    private static void fireAttackKillTriggers(Player player, boolean playerTarget) {
         fireAttackCategory(player, playerTarget, TriggerRegistry.ATTACK_KILL_ALL, TriggerRegistry.ATTACK_KILL_PLAYER, TriggerRegistry.ATTACK_KILL_NON_PLAYER, 0.0F);
     }
 
-    private static void fireAttackCategory(PlayerEntity player, boolean playerTarget, String allTrigger, String playerTrigger, String nonPlayerTrigger, float damage) {
+    private static void fireAttackCategory(Player player, boolean playerTarget, String allTrigger, String playerTrigger, String nonPlayerTrigger, float damage) {
         RuleEventContext allContext = ForgeRuleEventBridge.createContext(player, allTrigger);
         allContext.damage = damage;
         fireTrigger(allContext);
@@ -358,7 +358,7 @@ public final class ClientHooks {
             pending = new PendingAttack(target.getId());
             PENDING_ATTACKS.put(Integer.valueOf(target.getId()), pending);
         }
-        pending.playerTarget = target instanceof PlayerEntity;
+        pending.playerTarget = target instanceof Player;
         pending.lastObservedHealth = Math.max(0.0F, target.getHealth());
         pending.critical = pending.critical || critical;
         pending.damageTriggered = false;
@@ -367,7 +367,7 @@ public final class ClientHooks {
         pending.lastDamageTick = -1L;
     }
 
-    private static void processPendingAttacks(ClientPlayerEntity player) {
+    private static void processPendingAttacks(LocalPlayer player) {
         if (MINECRAFT.level == null || PENDING_ATTACKS.isEmpty()) {
             return;
         }
@@ -433,7 +433,7 @@ public final class ClientHooks {
         }
     }
 
-    private static int countEquippedTotems(ClientPlayerEntity player) {
+    private static int countEquippedTotems(LocalPlayer player) {
         int count = 0;
         if (player.getMainHandItem().getItem() == Items.TOTEM_OF_UNDYING) {
             count += player.getMainHandItem().getCount();
@@ -444,10 +444,10 @@ public final class ClientHooks {
         return count;
     }
 
-    private static boolean hasTotemActivationState(ClientPlayerEntity player) {
+    private static boolean hasTotemActivationState(LocalPlayer player) {
         return player.getHealth() <= 2.0F
-            && player.hasEffect(Effects.REGENERATION)
-            && player.hasEffect(Effects.ABSORPTION)
-            && player.hasEffect(Effects.FIRE_RESISTANCE);
+            && player.hasEffect(MobEffects.REGENERATION)
+            && player.hasEffect(MobEffects.ABSORPTION)
+            && player.hasEffect(MobEffects.FIRE_RESISTANCE);
     }
 }

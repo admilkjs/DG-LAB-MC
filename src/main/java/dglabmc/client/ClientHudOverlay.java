@@ -4,9 +4,9 @@ import dglabmc.AppServices;
 import dglabmc.client.ui.UiPalette;
 import dglabmc.client.ui.UiRender;
 import dglabmc.rule.RuleEngine;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Font;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,8 +25,8 @@ public final class ClientHudOverlay {
         }
 
         RuleEngine.RuntimeSnapshot runtime = AppServices.get().getRuleEngine().snapshot();
-        FontRenderer font = minecraft.font;
-        MatrixStack matrixStack = event.getMatrixStack();
+        Font font = minecraft.font;
+        PoseStack matrixStack = event.getMatrixStack();
         String lineA = line("A", runtime.channelA.currentStrength, runtime.channelA.effectiveMaxStrength);
         String lineB = line("B", runtime.channelB.currentStrength, runtime.channelB.effectiveMaxStrength);
         int panelWidth = Math.max(92, Math.max(font.width(lineA), font.width(lineB)) + 26);
@@ -39,7 +39,7 @@ public final class ClientHudOverlay {
         drawLine(matrixStack, font, left + 8, top + 20, lineB, runtime.channelB.outputActive);
     }
 
-    private static void drawLine(MatrixStack matrixStack, FontRenderer font, int x, int y, String line, boolean active) {
+    private static void drawLine(PoseStack matrixStack, Font font, int x, int y, String line, boolean active) {
         font.draw(matrixStack, line, (float) x, (float) y, UiPalette.TEXT_PRIMARY);
         font.draw(matrixStack, "\u25CF", (float) (x + font.width(line) + 6), (float) y, active ? UiPalette.SUCCESS : UiPalette.DANGER);
     }

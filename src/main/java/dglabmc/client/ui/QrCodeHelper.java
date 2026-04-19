@@ -5,13 +5,13 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.AbstractGui;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiComponent;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public final class QrCodeHelper extends AbstractGui {
+public final class QrCodeHelper extends GuiComponent {
     public static final class QrMatrix {
         private final int size;
         private final boolean[] cells;
@@ -57,7 +57,7 @@ public final class QrCodeHelper extends AbstractGui {
         return new QrMatrix(size, cells);
     }
 
-    public static void draw(MatrixStack matrixStack, QrMatrix matrix, int x, int y, int size) {
+    public static void draw(PoseStack matrixStack, QrMatrix matrix, int x, int y, int size) {
         if (matrix == null || size <= 0) {
             return;
         }

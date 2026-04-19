@@ -1,8 +1,8 @@
 package dglabmc.client.ui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,7 @@ public class OptionPickerScreen<T> extends Screen {
     private int page;
 
     public OptionPickerScreen(Screen parent, String heading, String subtitle, List<T> options, Function<T, String> labelProvider, Function<T, String> descriptionProvider, Consumer<T> selectHandler) {
-        super(new StringTextComponent(heading));
+        super(new TextComponent(heading));
         this.parent = parent;
         this.heading = heading;
         this.subtitle = subtitle;
@@ -32,8 +32,7 @@ public class OptionPickerScreen<T> extends Screen {
 
     @Override
     protected void init() {
-        this.buttons.clear();
-        this.children.clear();
+        this.clearWidgets();
         int panelWidth = Math.min(560, this.width - 24);
         int panelHeight = Math.min(300, this.height - 24);
         boolean compact = panelWidth < 520;
@@ -47,30 +46,30 @@ public class OptionPickerScreen<T> extends Screen {
         for (int i = start; i < end; i++) {
             final T value = this.options.get(i);
             int offset = i - start;
-            this.addButton(new StyledButton(left + 18, top + 52 + offset * 26, buttonWidth, 20, new StringTextComponent(trim(this.labelProvider.apply(value), compact ? 32 : 26)), StyledButton.Variant.TAB_IDLE, button -> {
+            this.addRenderableWidget(new StyledButton(left + 18, top + 52 + offset * 26, buttonWidth, 20, new TextComponent(trim(this.labelProvider.apply(value), compact ? 32 : 26)), StyledButton.Variant.TAB_IDLE, button -> {
                 this.selectHandler.accept(value);
             }));
         }
 
-        StyledButton prev = new StyledButton(left + 18, top + panelHeight - 34, compact ? 88 : 74, 20, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
+        StyledButton prev = new StyledButton(left + 18, top + panelHeight - 34, compact ? 88 : 74, 20, new TextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
             this.page = Math.max(0, this.page - 1);
             init();
         });
         prev.active = this.page > 0;
-        this.addButton(prev);
+        this.addRenderableWidget(prev);
 
-        StyledButton next = new StyledButton(left + (compact ? 114 : 98), top + panelHeight - 34, compact ? 88 : 74, 20, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
+        StyledButton next = new StyledButton(left + (compact ? 114 : 98), top + panelHeight - 34, compact ? 88 : 74, 20, new TextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
             this.page++;
             init();
         });
         next.active = end < this.options.size();
-        this.addButton(next);
+        this.addRenderableWidget(next);
 
-        this.addButton(new StyledButton(left + panelWidth - (compact ? 106 : 128), top + panelHeight - 34, compact ? 88 : 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(new StyledButton(left + panelWidth - (compact ? 106 : 128), top + panelHeight - 34, compact ? 88 : 110, 20, new TextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);

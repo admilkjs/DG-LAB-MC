@@ -5,8 +5,8 @@ import dglabmc.client.ui.PasswordGateScreen;
 import dglabmc.platform.PlatformClientBridge;
 import dglabmc.security.DailyPasswordLock;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.Util;
+import net.minecraft.network.chat.TextComponent;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(() -> {
             if (minecraft.player != null) {
-                minecraft.player.sendMessage(new StringTextComponent(message), Util.NIL_UUID);
+                minecraft.player.sendMessage(new TextComponent(message), Util.NIL_UUID);
             }
         });
     }

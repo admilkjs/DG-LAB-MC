@@ -3,9 +3,9 @@ package dglabmc.client.ui;
 import dglabmc.AppServices;
 import dglabmc.config.AppConfig;
 import dglabmc.rule.ChannelTarget;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,15 +18,14 @@ public class ChannelProfileScreen extends Screen {
     private String statusMessage = "";
 
     public ChannelProfileScreen(Screen parent, ChannelTarget channel) {
-        super(new StringTextComponent(channel == ChannelTarget.B ? "B 通道设置" : "A 通道设置"));
+        super(new TextComponent(channel == ChannelTarget.B ? "B 通道设置" : "A 通道设置"));
         this.parent = parent;
         this.channel = channel == ChannelTarget.B ? ChannelTarget.B : ChannelTarget.A;
     }
 
     @Override
     protected void init() {
-        this.buttons.clear();
-        this.children.clear();
+        this.clearWidgets();
 
         int panelWidth = Math.min(560, this.width - 24);
         boolean compact = panelWidth < 520;
@@ -40,43 +39,43 @@ public class ChannelProfileScreen extends Screen {
 
         if (compact) {
             int rowY = innerTop;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelDamageScale(), button -> openDoublePrompt("每伤害强度", "支持小数。", currentProfile().damageScale, value -> updateProfile(profile -> profile.damageScale = clamp(value, 0.0D, 20.0D)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelDamageScale(), button -> openDoublePrompt("每伤害强度", "支持小数。", currentProfile().damageScale, value -> updateProfile(profile -> profile.damageScale = clamp(value, 0.0D, 20.0D)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelEventStrength(), button -> openIntPrompt("普通事件强度", "输入 0 到 200。", currentProfile().eventStrength, value -> updateProfile(profile -> profile.eventStrength = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelEventStrength(), button -> openIntPrompt("普通事件强度", "输入 0 到 200。", currentProfile().eventStrength, value -> updateProfile(profile -> profile.eventStrength = clamp(value, 0, 200)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelDelay(), button -> openIntPrompt("下降等待", "单位毫秒。", currentProfile().delayMs, value -> updateProfile(profile -> profile.delayMs = clamp(value, 0, 600000)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelDelay(), button -> openIntPrompt("下降等待", "单位毫秒。", currentProfile().delayMs, value -> updateProfile(profile -> profile.delayMs = clamp(value, 0, 600000)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelDecayInterval(), button -> openIntPrompt("下降间隔", "单位毫秒，至少 50。", currentProfile().decayIntervalMs, value -> updateProfile(profile -> profile.decayIntervalMs = clamp(value, 50, 600000)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelDecayInterval(), button -> openIntPrompt("下降间隔", "单位毫秒，至少 50。", currentProfile().decayIntervalMs, value -> updateProfile(profile -> profile.decayIntervalMs = clamp(value, 50, 600000)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelDecayValue(), button -> openIntPrompt("下降数值", "输入 0 到 200。", currentProfile().decayValue, value -> updateProfile(profile -> profile.decayValue = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelDecayValue(), button -> openIntPrompt("下降数值", "输入 0 到 200。", currentProfile().decayValue, value -> updateProfile(profile -> profile.decayValue = clamp(value, 0, 200)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelDeathStrength(), button -> openIntPrompt("死亡增加", "输入 0 到 200。", currentProfile().deathStrength, value -> updateProfile(profile -> profile.deathStrength = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelDeathStrength(), button -> openIntPrompt("死亡增加", "输入 0 到 200。", currentProfile().deathStrength, value -> updateProfile(profile -> profile.deathStrength = clamp(value, 0, 200)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelDeathDelay(), button -> openIntPrompt("死亡等待", "单位毫秒。", currentProfile().deathDelayMs, value -> updateProfile(profile -> profile.deathDelayMs = clamp(value, 0, 600000)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelDeathDelay(), button -> openIntPrompt("死亡等待", "单位毫秒。", currentProfile().deathDelayMs, value -> updateProfile(profile -> profile.deathDelayMs = clamp(value, 0, 600000)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelMinStrength(), button -> openIntPrompt("最低强度", "按缺血比例生效，输入 0 到 200。", currentProfile().minStrength, value -> updateProfile(profile -> profile.minStrength = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelMinStrength(), button -> openIntPrompt("最低强度", "按缺血比例生效，输入 0 到 200。", currentProfile().minStrength, value -> updateProfile(profile -> profile.minStrength = clamp(value, 0, 200)))));
             rowY += 24;
-            addButton(actionButton(innerLeft, rowY, columnWidth, labelMaxStrength(), button -> openIntPrompt("全局上限", maxHint(), configuredMax(), value -> updateConfig(config -> setConfiguredMax(config, clamp(value, 0, 200))))));
+            addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelMaxStrength(), button -> openIntPrompt("全局上限", maxHint(), configuredMax(), value -> updateConfig(config -> setConfiguredMax(config, clamp(value, 0, 200))))));
             rowY += 24;
-            addButton(new StyledButton(innerLeft, rowY, columnWidth, 20, new StringTextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
+            addRenderableWidget(new StyledButton(innerLeft, rowY, columnWidth, 20, new TextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
         } else {
-            addButton(actionButton(innerLeft, innerTop, columnWidth, labelDamageScale(), button -> openDoublePrompt("每伤害强度", "支持小数。", currentProfile().damageScale, value -> updateProfile(profile -> profile.damageScale = clamp(value, 0.0D, 20.0D)))));
-            addButton(actionButton(rightLeft, innerTop, columnWidth, labelEventStrength(), button -> openIntPrompt("普通事件强度", "输入 0 到 200。", currentProfile().eventStrength, value -> updateProfile(profile -> profile.eventStrength = clamp(value, 0, 200)))));
-            addButton(actionButton(innerLeft, innerTop + 28, columnWidth, labelDelay(), button -> openIntPrompt("下降等待", "单位毫秒。", currentProfile().delayMs, value -> updateProfile(profile -> profile.delayMs = clamp(value, 0, 600000)))));
-            addButton(actionButton(rightLeft, innerTop + 28, columnWidth, labelDecayInterval(), button -> openIntPrompt("下降间隔", "单位毫秒，至少 50。", currentProfile().decayIntervalMs, value -> updateProfile(profile -> profile.decayIntervalMs = clamp(value, 50, 600000)))));
-            addButton(actionButton(innerLeft, innerTop + 56, columnWidth, labelDecayValue(), button -> openIntPrompt("下降数值", "输入 0 到 200。", currentProfile().decayValue, value -> updateProfile(profile -> profile.decayValue = clamp(value, 0, 200)))));
-            addButton(actionButton(rightLeft, innerTop + 56, columnWidth, labelDeathStrength(), button -> openIntPrompt("死亡增加", "输入 0 到 200。", currentProfile().deathStrength, value -> updateProfile(profile -> profile.deathStrength = clamp(value, 0, 200)))));
-            addButton(actionButton(innerLeft, innerTop + 84, columnWidth, labelDeathDelay(), button -> openIntPrompt("死亡等待", "单位毫秒。", currentProfile().deathDelayMs, value -> updateProfile(profile -> profile.deathDelayMs = clamp(value, 0, 600000)))));
-            addButton(actionButton(rightLeft, innerTop + 84, columnWidth, labelMinStrength(), button -> openIntPrompt("最低强度", "按缺血比例生效，输入 0 到 200。", currentProfile().minStrength, value -> updateProfile(profile -> profile.minStrength = clamp(value, 0, 200)))));
-            addButton(actionButton(innerLeft, innerTop + 112, columnWidth, labelMaxStrength(), button -> openIntPrompt("全局上限", maxHint(), configuredMax(), value -> updateConfig(config -> setConfiguredMax(config, clamp(value, 0, 200))))));
-            addButton(new StyledButton(rightLeft, innerTop + 112, columnWidth, 20, new StringTextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
+            addRenderableWidget(actionButton(innerLeft, innerTop, columnWidth, labelDamageScale(), button -> openDoublePrompt("每伤害强度", "支持小数。", currentProfile().damageScale, value -> updateProfile(profile -> profile.damageScale = clamp(value, 0.0D, 20.0D)))));
+            addRenderableWidget(actionButton(rightLeft, innerTop, columnWidth, labelEventStrength(), button -> openIntPrompt("普通事件强度", "输入 0 到 200。", currentProfile().eventStrength, value -> updateProfile(profile -> profile.eventStrength = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, innerTop + 28, columnWidth, labelDelay(), button -> openIntPrompt("下降等待", "单位毫秒。", currentProfile().delayMs, value -> updateProfile(profile -> profile.delayMs = clamp(value, 0, 600000)))));
+            addRenderableWidget(actionButton(rightLeft, innerTop + 28, columnWidth, labelDecayInterval(), button -> openIntPrompt("下降间隔", "单位毫秒，至少 50。", currentProfile().decayIntervalMs, value -> updateProfile(profile -> profile.decayIntervalMs = clamp(value, 50, 600000)))));
+            addRenderableWidget(actionButton(innerLeft, innerTop + 56, columnWidth, labelDecayValue(), button -> openIntPrompt("下降数值", "输入 0 到 200。", currentProfile().decayValue, value -> updateProfile(profile -> profile.decayValue = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(rightLeft, innerTop + 56, columnWidth, labelDeathStrength(), button -> openIntPrompt("死亡增加", "输入 0 到 200。", currentProfile().deathStrength, value -> updateProfile(profile -> profile.deathStrength = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, innerTop + 84, columnWidth, labelDeathDelay(), button -> openIntPrompt("死亡等待", "单位毫秒。", currentProfile().deathDelayMs, value -> updateProfile(profile -> profile.deathDelayMs = clamp(value, 0, 600000)))));
+            addRenderableWidget(actionButton(rightLeft, innerTop + 84, columnWidth, labelMinStrength(), button -> openIntPrompt("最低强度", "按缺血比例生效，输入 0 到 200。", currentProfile().minStrength, value -> updateProfile(profile -> profile.minStrength = clamp(value, 0, 200)))));
+            addRenderableWidget(actionButton(innerLeft, innerTop + 112, columnWidth, labelMaxStrength(), button -> openIntPrompt("全局上限", maxHint(), configuredMax(), value -> updateConfig(config -> setConfiguredMax(config, clamp(value, 0, 200))))));
+            addRenderableWidget(new StyledButton(rightLeft, innerTop + 112, columnWidth, 20, new TextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
         }
 
-        addButton(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        addRenderableWidget(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new TextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);
@@ -103,7 +102,7 @@ public class ChannelProfileScreen extends Screen {
     }
 
     private StyledButton actionButton(int x, int y, int width, String label, StyledButton.IPressable onPress) {
-        return new StyledButton(x, y, width, 20, new StringTextComponent(label), StyledButton.Variant.GHOST, onPress);
+        return new StyledButton(x, y, width, 20, new TextComponent(label), StyledButton.Variant.GHOST, onPress);
     }
 
     private void openGuide() {

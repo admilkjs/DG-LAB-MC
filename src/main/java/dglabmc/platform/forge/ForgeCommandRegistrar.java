@@ -7,11 +7,11 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -19,17 +19,17 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public final class ForgeCommandRegistrar {
-    private static final SuggestionProvider<CommandSource> RULE_SUGGESTIONS = (context, builder) ->
-        ISuggestionProvider.suggest(collectRuleTokens(), builder);
-    private static final SuggestionProvider<CommandSource> WAVEFORM_SUGGESTIONS = (context, builder) ->
-        ISuggestionProvider.suggest(collectWaveformTokens(), builder);
+    private static final SuggestionProvider<CommandSourceStack> RULE_SUGGESTIONS = (context, builder) ->
+        SharedSuggestionProvider.suggest(collectRuleTokens(), builder);
+    private static final SuggestionProvider<CommandSourceStack> WAVEFORM_SUGGESTIONS = (context, builder) ->
+        SharedSuggestionProvider.suggest(collectWaveformTokens(), builder);
 
     private ForgeCommandRegistrar() {
     }
 
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
-        LiteralArgumentBuilder<CommandSource> root = Commands.literal("dglab")
+        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("dglab")
             .executes(ctx -> run(ctx.getSource(), "/dglab"))
             .then(Commands.literal("password")
                 .then(Commands.argument("value", StringArgumentType.string())
@@ -55,7 +55,7 @@ public final class ForgeCommandRegistrar {
         event.getDispatcher().register(root);
     }
 
-    private static LiteralArgumentBuilder<CommandSource> globalChannelCommands(String channel) {
+    private static LiteralArgumentBuilder<CommandSourceStack> globalChannelCommands(String channel) {
         return Commands.literal(channel)
             .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel))
             .then(Commands.literal("max")
@@ -87,7 +87,7 @@ public final class ForgeCommandRegistrar {
                     .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " min " + IntegerArgumentType.getInteger(ctx, "value")))));
     }
 
-    private static LiteralArgumentBuilder<CommandSource> ruleCommands() {
+    private static LiteralArgumentBuilder<CommandSourceStack> ruleCommands() {
         return Commands.literal("rule")
             .then(Commands.literal("list").executes(ctx -> run(ctx.getSource(), "/dglab rule list")))
             .then(Commands.literal("enable")
@@ -121,7 +121,7 @@ public final class ForgeCommandRegistrar {
                     .then(Commands.literal("splitNext").executes(ctx -> run(ctx.getSource(), "/dglab rule row " + quote(StringArgumentType.getString(ctx, "rule")) + " splitNext")))));
     }
 
-    private static LiteralArgumentBuilder<CommandSource> waveformCommands() {
+    private static LiteralArgumentBuilder<CommandSourceStack> waveformCommands() {
         return Commands.literal("waveform")
             .then(Commands.literal("list").executes(ctx -> run(ctx.getSource(), "/dglab waveform list")))
             .then(Commands.literal("test")
@@ -131,22 +131,22 @@ public final class ForgeCommandRegistrar {
                     .then(Commands.literal("B").executes(ctx -> run(ctx.getSource(), "/dglab waveform test " + quote(StringArgumentType.getString(ctx, "waveform")) + " B")))));
     }
 
-    private static int run(CommandSource source, String command) {
-        ServerPlayerEntity sourcePlayer;
+    private static int run(CommandSourceStack source, String command) {
+        ServerPlayer sourcePlayer;
         try {
             sourcePlayer = source.getPlayerOrException();
         } catch (Exception ignored) {
             return 0;
         }
         if (!isCurrentLocalPlayer(sourcePlayer)) {
-            source.sendFailure(new StringTextComponent("该命令仅本机玩家可用。"));
+            source.sendFailure(new TextComponent("该命令仅本机玩家可用。"));
             return 0;
         }
         ClientCommandRouter.tryHandle(command);
         return 1;
     }
 
-    private static boolean isCurrentLocalPlayer(ServerPlayerEntity sourcePlayer) {
+    private static boolean isCurrentLocalPlayer(ServerPlayer sourcePlayer) {
         net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
         return minecraft.player != null && sourcePlayer.getUUID().equals(minecraft.player.getUUID());
     }

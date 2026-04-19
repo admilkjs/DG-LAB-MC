@@ -2,41 +2,40 @@ package dglabmc.client.ui;
 
 import dglabmc.security.DailyPasswordLock;
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.TextComponent;
 
 public class PasswordGateScreen extends Screen {
     private final Screen nextScreen;
 
-    private TextFieldWidget passwordField;
+    private EditBox passwordField;
     private String status = "";
 
     public PasswordGateScreen(Screen nextScreen) {
-        super(new StringTextComponent("输入密码"));
+        super(new TextComponent("输入密码"));
         this.nextScreen = nextScreen;
     }
 
     @Override
     protected void init() {
-        this.buttons.clear();
-        this.children.clear();
+        this.clearWidgets();
 
         int panelWidth = Math.min(360, this.width - 24);
         int panelHeight = 148;
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, new StringTextComponent("今日密码"));
+        this.passwordField = new EditBox(this.font, left + 18, top + 54, panelWidth - 36, 20, new TextComponent("今日密码"));
         this.passwordField.setMaxLength(64);
         this.passwordField.setValue("");
-        this.children.add(this.passwordField);
+        this.addRenderableWidget(this.passwordField);
         this.setInitialFocus(this.passwordField);
 
         int buttonWidth = (panelWidth - 44) / 2;
-        this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, new StringTextComponent("解锁"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
+        this.addRenderableWidget(new StyledButton(left + 18, top + 90, buttonWidth, 20, new TextComponent("解锁"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
+        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new TextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
     }
 
     @Override
@@ -75,7 +74,7 @@ public class PasswordGateScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(360, this.width - 24);
