@@ -1,78 +1,71 @@
-# DG-LAB 控制中心
+# DG-LAB MC
 
-Forge `1.16.5` 客户端模组。
+Forge `1.16.5` 客户端 DG-LAB 控制模组。
 
-## 功能
+## 当前状态
 
-- 原生 Minecraft 界面，不使用 WebView。
-- DG-LAB 设备桥接，提供配对链接与本地 WebSocket 通道。
-- 规则系统，可把游戏事件映射到波形播放。
-- 自定义波形导入。
-- 支持 `Dungeonlab+pulse` 文本导入。
-- 支持 `HEX` 帧导入。
-- 支持配置打包导出为 `ZIP`。
-- 支持从 `ZIP` 导入配置，便于迁移。
+- 当前可构建目标：Forge `1.16.5`
+- 当前主代码包名：`dglabmc`
+- 当前模组 ID：`dglabmc`
+- 当前默认产物：`build/libs/dglabmc-0.1.0.jar`
+- 当前配置包产物：`dist/dglabmc-pvp-punish.zip`
 
-## 当前实现
+## 已实现内容
 
-- 目标运行环境是 Forge `1.16.5`。
-- 包名为 `cn.admilk.dglabweb`。
-- UI 和提示文本已统一为中文。
-- 已生成构建产物：`build/libs/dglabweb-0.1.0.jar`
-
-## 触发事件
-
-- 受伤
-- 治疗
-- 死亡
-- 击杀
-- 被击杀
-- 低血量
-- 低饥饿
-- 跳跃
-- 摔落伤害
-- 开始冲刺
-- 开始潜行
-- 盾牌格挡
-- 暴击
-- 拉弓释放
-- 图腾触发
-- 护甲低耐久
-
-## 使用方式
-
-1. 安装到 Forge `1.16.5` 客户端。
-2. 进入游戏后按 `O` 打开控制中心。
-3. 在“配对链接”页复制链接，交给 DG-LAB App。
-4. 在“规则”页配置事件到波形的映射。
-5. 在“波形”页导入 `Dungeonlab+pulse` 或 `HEX`。
-6. 在“配置迁移”页导出或导入 `ZIP`。
+- 原生 Minecraft 界面，不内置 WebView
+- DG-LAB 设备配对、本地 WebSocket 桥接
+- 规则系统、波形导入、配置导入导出
+- 聊天密文伪造事件
+- 单独的 PVP 惩罚配置生成
 
 ## 构建
 
-要求：
-
-- Java `11`
-- 建议开启代理，当前项目已在 `gradle.properties` 中预设 `127.0.0.1:7890`
-
-命令：
+本地：
 
 ```powershell
 $env:JAVA_HOME='C:\Program Files\Java\jdk-11'
-.\gradlew.bat build --no-daemon
+.\gradlew.bat shadowJar reobfShadowJar generatePvpPunishConfig --no-daemon
 ```
 
-## 兼容性说明
+发布构建：
 
-- NeoForge 不支持 `1.16.x`，所以当前实际实现仍是 Forge `1.16.5`。
-- 代码里已把路径与客户端桥接做了平台抽象，后续可继续拆分到其他加载器。
-- `图腾触发` 在 Forge `1.16.5` 下没有直接可用的对应事件，目前使用客户端状态近似检测。
+```powershell
+.\gradlew.bat buildRelease --no-daemon
+```
+
+## 工作流产物
+
+GitHub Actions `Build` 工作流会上传：
+
+- `build/libs/*.jar`
+- `dist/*.zip`
+
+本地运行 `buildRelease` 还会生成：
+
+- `dist/release/dglabmc-<version>-release-obf.jar`
+- `dist/release/dglabmc-<version>-release-obf.mapping.txt`
+- `dist/release/dglabmc-<version>-release-obf.seeds.txt`
+
+## 版本线
+
+这个仓库不会用一个 jar 硬兼容 `1.12.2` 到 NeoForge 全线版本。
+
+原因很简单：
+
+- `1.12.2`、`1.16.5`、`NeoForge 1.20.1+` 的加载器、事件总线、注册方式、资源结构、Java 版本要求都不是一套
+- 真要长期维护，只能按版本线拆分
+
+当前仓库已经先把命名空间改成了统一的 `dglabmc`，并准备按分支推进多版本。
+
+详细说明见：
+
+- [版本线与分支策略](docs/version-lines.md)
 
 ## 参考
 
-以下仓库仅用于功能方向、交互思路、协议行为和波形格式参考，没有直接照抄实现：
+以下仓库只作为功能方向、交互思路、协议行为和波形格式参考，没有直接照抄实现：
 
 - `refs/Minecraft-DG-LAB`
 - `refs/DG_LAB`
 - `admilkjs/sse-dg-lab` 的波形导入思路
-- Forge `1.16.x` 官方文档
+- Forge / NeoForge 官方文档

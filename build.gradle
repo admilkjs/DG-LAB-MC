@@ -75,6 +75,7 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     shadowLib 'com.google.zxing:core:3.5.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -162,12 +163,16 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
 tasks.register('generatePvpPunishConfig', JavaExec) {
     dependsOn tasks.named('classes')
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'cn.admilk.dglabweb.tool.PvpPunishConfigGenerator'
+    mainClass = 'dglabmc.tool.PvpPunishConfigGenerator'
     workingDir = project.projectDir
-    args "${project.projectDir}/dist/dglabweb-pvp-punish.zip"
+    args "${project.projectDir}/dist/dglabmc-pvp-punish.zip"
     jvmArgs '-Dfile.encoding=UTF-8'
 }
 

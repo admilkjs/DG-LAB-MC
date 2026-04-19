@@ -33,4 +33,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'dglabweb'
+rootProject.name = 'dglabmc'
