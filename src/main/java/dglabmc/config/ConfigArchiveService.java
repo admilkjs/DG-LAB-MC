@@ -113,7 +113,7 @@ public class ConfigArchiveService {
         private ArchiveManifest(String modVersion, String reason) {
             this.schemaVersion = AppConfig.CURRENT_SCHEMA_VERSION;
             this.modVersion = modVersion;
-            this.loaderFlavor = "neoforge-1.20.4";
+            this.loaderFlavor = "neoforge-1.20.6";
             this.exportedAt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(new Date());
             this.reason = reason == null ? "export" : reason;
         }

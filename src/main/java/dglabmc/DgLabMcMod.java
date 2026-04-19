@@ -8,12 +8,12 @@ import dglabmc.platform.forge.ForgeCommandRegistrar;
 import dglabmc.platform.forge.ForgePlatformPaths;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,12 +25,12 @@ public class DgLabMcMod {
     public static final Logger LOGGER = LogManager.getLogger();
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
-    public DgLabMcMod() {
+    public DgLabMcMod(IEventBus modEventBus, ModContainer modContainer) {
         PlatformServices.configure(new ForgePlatformPaths(), new ForgePlatformClientBridge());
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, StartupConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.CLIENT, StartupConfig.SPEC);
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterKeyMappings);
+        modEventBus.addListener(this::onCommonSetup);
+        modEventBus.addListener(this::onRegisterKeyMappings);
         NeoForge.EVENT_BUS.register(ClientHooks.class);
         NeoForge.EVENT_BUS.register(ForgeCommandRegistrar.class);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {

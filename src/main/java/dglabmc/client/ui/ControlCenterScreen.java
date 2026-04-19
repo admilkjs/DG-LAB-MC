@@ -1026,7 +1026,7 @@ public class ControlCenterScreen extends Screen {
         UiRender.drawPanel(guiGraphics, sidebarLeft(), sidebarTop(), sidebarWidth(), contentHeight(), UiPalette.SIDEBAR, UiPalette.ACCENT);
         UiRender.drawPanel(guiGraphics, contentLeft(), contentTop(), contentWidth(), contentHeight(), UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
 
-        UiRender.drawSectionTitle(guiGraphics, this.font, "DG-LAB", "NeoForge 1.20.4", sidebarLeft() + 12, sidebarTop() + 12);
+        UiRender.drawSectionTitle(guiGraphics, this.font, "DG-LAB", "NeoForge 1.20.6", sidebarLeft() + 12, sidebarTop() + 12);
         UiRender.drawSectionTitle(guiGraphics, this.font, "控制中心", "设备 / 规则 / 波形", contentLeft() + 14, contentTop() + 12);
         int badgeWidth = this.font.width(tabLabel(this.activeTab)) + 12;
         UiRender.drawStatusBadge(guiGraphics, this.font, tabLabel(this.activeTab), contentRight() - badgeWidth - 14, contentTop() + 12, 0x77202838, UiPalette.ACCENT);

@@ -8,17 +8,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.neoforge.client.event.RenderGuiOverlayEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class ClientHudOverlay {
     private ClientHudOverlay() {
     }
 
     @SubscribeEvent
-    public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
+    public static void onRenderOverlay(RenderGuiEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.options.hideGui) {
             return;
@@ -31,7 +31,7 @@ public final class ClientHudOverlay {
         String lineB = line("B", runtime.channelB.currentStrength, runtime.channelB.effectiveMaxStrength);
         int panelWidth = Math.max(92, Math.max(font.width(lineA), font.width(lineB)) + 26);
         int panelHeight = 34;
-        int left = event.getWindow().getGuiScaledWidth() - panelWidth - 8;
+        int left = guiGraphics.guiWidth() - panelWidth - 8;
         int top = 8;
 
         UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, 0xAA101721, UiPalette.ACCENT);
