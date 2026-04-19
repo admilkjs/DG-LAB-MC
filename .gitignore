@@ -26,6 +26,9 @@ logs
 .tmp_mdk
 .tmp_ref_*
 compile-*.log
+.tmp_*
+.tools
+*.log
 
 # other
 eclipse
