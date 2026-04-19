@@ -5,7 +5,7 @@ import dglabmc.platform.PlatformServices;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 public class PasswordGateScreen extends Screen {
     private final Screen nextScreen;
@@ -14,7 +14,7 @@ public class PasswordGateScreen extends Screen {
     private String status = "";
 
     public PasswordGateScreen(Screen nextScreen) {
-        super(new TextComponent("输入密码"));
+        super(Component.literal("输入密码"));
         this.nextScreen = nextScreen;
     }
 
@@ -27,15 +27,15 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.passwordField = new EditBox(this.font, left + 18, top + 54, panelWidth - 36, 20, new TextComponent("今日密码"));
+        this.passwordField = new EditBox(this.font, left + 18, top + 54, panelWidth - 36, 20, Component.literal("今日密码"));
         this.passwordField.setMaxLength(64);
         this.passwordField.setValue("");
         this.addRenderableWidget(this.passwordField);
         this.setInitialFocus(this.passwordField);
 
         int buttonWidth = (panelWidth - 44) / 2;
-        this.addRenderableWidget(new StyledButton(left + 18, top + 90, buttonWidth, 20, new TextComponent("解锁"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new TextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
+        this.addRenderableWidget(new StyledButton(left + 18, top + 90, buttonWidth, 20, Component.literal("解锁"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
+        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, Component.literal("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
     }
 
     @Override

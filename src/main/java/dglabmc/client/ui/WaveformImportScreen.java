@@ -5,7 +5,7 @@ import dglabmc.platform.PlatformServices;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 public class WaveformImportScreen extends Screen {
     private final Screen parent;
@@ -16,7 +16,7 @@ public class WaveformImportScreen extends Screen {
     private String status = "";
 
     public WaveformImportScreen(Screen parent, String importMode) {
-        super(new TextComponent("导入波形"));
+        super(Component.literal("导入波形"));
         this.parent = parent;
         this.importMode = importMode;
     }
@@ -29,28 +29,28 @@ public class WaveformImportScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.nameField = new EditBox(this.font, left + 18, top + 52, panelWidth - 36, 20, new TextComponent("名称"));
+        this.nameField = new EditBox(this.font, left + 18, top + 52, panelWidth - 36, 20, Component.literal("名称"));
         this.nameField.setMaxLength(80);
         this.nameField.setValue("pulse".equals(this.importMode) ? "导入的 pulse 波形" : "导入的 HEX 波形");
         this.addRenderableWidget(this.nameField);
 
-        this.descriptionField = new EditBox(this.font, left + 18, top + 86, panelWidth - 36, 20, new TextComponent("说明"));
+        this.descriptionField = new EditBox(this.font, left + 18, top + 86, panelWidth - 36, 20, Component.literal("说明"));
         this.descriptionField.setMaxLength(120);
         this.addRenderableWidget(this.descriptionField);
 
-        this.rawInputField = new EditBox(this.font, left + 18, top + 120, panelWidth - 36, 20, new TextComponent("原始输入"));
+        this.rawInputField = new EditBox(this.font, left + 18, top + 120, panelWidth - 36, 20, Component.literal("原始输入"));
         this.rawInputField.setMaxLength(16000);
         this.addRenderableWidget(this.rawInputField);
         this.setInitialFocus(this.rawInputField);
 
         if (compact) {
-            this.addRenderableWidget(new StyledButton(left + 18, top + 164, panelWidth - 36, 20, new TextComponent("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
-            this.addRenderableWidget(new StyledButton(left + 18, top + 188, panelWidth - 36, 20, new TextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
-            this.addRenderableWidget(new StyledButton(left + 18, top + 212, panelWidth - 36, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 164, panelWidth - 36, 20, Component.literal("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 188, panelWidth - 36, 20, Component.literal("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 212, panelWidth - 36, 20, Component.literal("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         } else {
-            this.addRenderableWidget(new StyledButton(left + 18, top + 164, 108, 20, new TextComponent("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
-            this.addRenderableWidget(new StyledButton(left + 134, top + 164, 108, 20, new TextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
-            this.addRenderableWidget(new StyledButton(left + 250, top + 164, 152, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 164, 108, 20, Component.literal("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
+            this.addRenderableWidget(new StyledButton(left + 134, top + 164, 108, 20, Component.literal("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
+            this.addRenderableWidget(new StyledButton(left + 250, top + 164, 152, 20, Component.literal("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         }
     }
 

@@ -11,7 +11,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -139,7 +139,7 @@ public final class ForgeCommandRegistrar {
             return 0;
         }
         if (!isCurrentLocalPlayer(sourcePlayer)) {
-            source.sendFailure(new TextComponent("该命令仅本机玩家可用。"));
+            source.sendFailure(Component.literal("该命令仅本机玩家可用。"));
             return 0;
         }
         ClientCommandRouter.tryHandle(command);

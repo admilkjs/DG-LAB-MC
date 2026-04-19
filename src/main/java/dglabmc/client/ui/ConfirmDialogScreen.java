@@ -2,7 +2,7 @@ package dglabmc.client.ui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 public class ConfirmDialogScreen extends Screen {
     private final Screen parent;
@@ -13,7 +13,7 @@ public class ConfirmDialogScreen extends Screen {
     private String status = "";
 
     public ConfirmDialogScreen(Screen parent, String heading, String description, String confirmLabel, Runnable confirmAction) {
-        super(new TextComponent(heading));
+        super(Component.literal(heading));
         this.parent = parent;
         this.heading = heading;
         this.description = description;
@@ -29,11 +29,11 @@ public class ConfirmDialogScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
         if (compact) {
-            this.addRenderableWidget(new StyledButton(left + 18, top + 102, panelWidth - 36, 20, new TextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
-            this.addRenderableWidget(new StyledButton(left + 18, top + 126, panelWidth - 36, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 102, panelWidth - 36, 20, Component.literal(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 126, panelWidth - 36, 20, Component.literal("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         } else {
-            this.addRenderableWidget(new StyledButton(left + 18, top + 102, 110, 20, new TextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
-            this.addRenderableWidget(new StyledButton(left + 136, top + 102, 110, 20, new TextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 102, 110, 20, Component.literal(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
+            this.addRenderableWidget(new StyledButton(left + 136, top + 102, 110, 20, Component.literal("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         }
     }
 

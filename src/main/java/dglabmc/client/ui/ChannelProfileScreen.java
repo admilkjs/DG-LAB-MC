@@ -5,7 +5,7 @@ import dglabmc.config.AppConfig;
 import dglabmc.rule.ChannelTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class ChannelProfileScreen extends Screen {
     private String statusMessage = "";
 
     public ChannelProfileScreen(Screen parent, ChannelTarget channel) {
-        super(new TextComponent(channel == ChannelTarget.B ? "B 通道设置" : "A 通道设置"));
+        super(Component.literal(channel == ChannelTarget.B ? "B 通道设置" : "A 通道设置"));
         this.parent = parent;
         this.channel = channel == ChannelTarget.B ? ChannelTarget.B : ChannelTarget.A;
     }
@@ -57,7 +57,7 @@ public class ChannelProfileScreen extends Screen {
             rowY += 24;
             addRenderableWidget(actionButton(innerLeft, rowY, columnWidth, labelMaxStrength(), button -> openIntPrompt("全局上限", maxHint(), configuredMax(), value -> updateConfig(config -> setConfiguredMax(config, clamp(value, 0, 200))))));
             rowY += 24;
-            addRenderableWidget(new StyledButton(innerLeft, rowY, columnWidth, 20, new TextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
+            addRenderableWidget(new StyledButton(innerLeft, rowY, columnWidth, 20, Component.literal("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
         } else {
             addRenderableWidget(actionButton(innerLeft, innerTop, columnWidth, labelDamageScale(), button -> openDoublePrompt("每伤害强度", "支持小数。", currentProfile().damageScale, value -> updateProfile(profile -> profile.damageScale = clamp(value, 0.0D, 20.0D)))));
             addRenderableWidget(actionButton(rightLeft, innerTop, columnWidth, labelEventStrength(), button -> openIntPrompt("普通事件强度", "输入 0 到 200。", currentProfile().eventStrength, value -> updateProfile(profile -> profile.eventStrength = clamp(value, 0, 200)))));
@@ -68,10 +68,10 @@ public class ChannelProfileScreen extends Screen {
             addRenderableWidget(actionButton(innerLeft, innerTop + 84, columnWidth, labelDeathDelay(), button -> openIntPrompt("死亡等待", "单位毫秒。", currentProfile().deathDelayMs, value -> updateProfile(profile -> profile.deathDelayMs = clamp(value, 0, 600000)))));
             addRenderableWidget(actionButton(rightLeft, innerTop + 84, columnWidth, labelMinStrength(), button -> openIntPrompt("最低强度", "按缺血比例生效，输入 0 到 200。", currentProfile().minStrength, value -> updateProfile(profile -> profile.minStrength = clamp(value, 0, 200)))));
             addRenderableWidget(actionButton(innerLeft, innerTop + 112, columnWidth, labelMaxStrength(), button -> openIntPrompt("全局上限", maxHint(), configuredMax(), value -> updateConfig(config -> setConfiguredMax(config, clamp(value, 0, 200))))));
-            addRenderableWidget(new StyledButton(rightLeft, innerTop + 112, columnWidth, 20, new TextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
+            addRenderableWidget(new StyledButton(rightLeft, innerTop + 112, columnWidth, 20, Component.literal("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
         }
 
-        addRenderableWidget(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new TextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        addRenderableWidget(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, Component.literal("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override
@@ -102,7 +102,7 @@ public class ChannelProfileScreen extends Screen {
     }
 
     private StyledButton actionButton(int x, int y, int width, String label, StyledButton.IPressable onPress) {
-        return new StyledButton(x, y, width, 20, new TextComponent(label), StyledButton.Variant.GHOST, onPress);
+        return new StyledButton(x, y, width, 20, Component.literal(label), StyledButton.Variant.GHOST, onPress);
     }
 
     private void openGuide() {

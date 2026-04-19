@@ -75,6 +75,7 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     shadowLib 'com.google.zxing:core:3.5.3'
+    compileOnly 'io.netty:netty-codec-http:4.1.82.Final'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 

@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -18,7 +18,7 @@ public final class ClientHudOverlay {
     }
 
     @SubscribeEvent
-    public static void onRenderOverlay(RenderGameOverlayEvent.Text event) {
+    public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.options.hideGui) {
             return;
@@ -26,7 +26,7 @@ public final class ClientHudOverlay {
 
         RuleEngine.RuntimeSnapshot runtime = AppServices.get().getRuleEngine().snapshot();
         Font font = minecraft.font;
-        PoseStack matrixStack = event.getMatrixStack();
+        PoseStack matrixStack = event.getPoseStack();
         String lineA = line("A", runtime.channelA.currentStrength, runtime.channelA.effectiveMaxStrength);
         String lineB = line("B", runtime.channelB.currentStrength, runtime.channelB.effectiveMaxStrength);
         int panelWidth = Math.max(92, Math.max(font.width(lineA), font.width(lineB)) + 26);

@@ -6,7 +6,7 @@ import dglabmc.rule.RuleDefinition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class RuleOrderScreen extends Screen {
     private StyledButton nextPageButton;
 
     public RuleOrderScreen(Screen parent) {
-        super(new TextComponent("规则顺序"));
+        super(Component.literal("规则顺序"));
         this.parent = parent;
     }
 
@@ -72,34 +72,34 @@ public class RuleOrderScreen extends Screen {
         int blockTop = buttonBlockTop();
         if (compact()) {
             int halfWidth = (innerWidth - 8) / 2;
-            this.movePreviousButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop, halfWidth, 20, new TextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
-            this.moveNextButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop, halfWidth, 20, new TextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
-            this.mergeButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop + 24, halfWidth, 20, new TextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
-            this.splitButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop + 24, halfWidth, 20, new TextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
-            this.previousPageButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop + 48, halfWidth, 20, new TextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
+            this.movePreviousButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop, halfWidth, 20, Component.literal("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
+            this.moveNextButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop, halfWidth, 20, Component.literal("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
+            this.mergeButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop + 24, halfWidth, 20, Component.literal("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
+            this.splitButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop + 24, halfWidth, 20, Component.literal("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
+            this.previousPageButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop + 48, halfWidth, 20, Component.literal("上一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.max(0, this.page - 1);
                 init();
             }));
-            this.nextPageButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop + 48, halfWidth, 20, new TextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
+            this.nextPageButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop + 48, halfWidth, 20, Component.literal("下一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.min(maxPageForRowCount(buildRows(false).size()), this.page + 1);
                 init();
             }));
         } else {
             int buttonWidth = (innerWidth - 40) / 6;
-            this.movePreviousButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop, buttonWidth, 20, new TextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
-            this.moveNextButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8), blockTop, buttonWidth, 20, new TextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
-            this.mergeButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 2, blockTop, buttonWidth, 20, new TextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
-            this.splitButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 3, blockTop, buttonWidth, 20, new TextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
-            this.previousPageButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 4, blockTop, buttonWidth, 20, new TextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
+            this.movePreviousButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop, buttonWidth, 20, Component.literal("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
+            this.moveNextButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8), blockTop, buttonWidth, 20, Component.literal("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
+            this.mergeButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 2, blockTop, buttonWidth, 20, Component.literal("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
+            this.splitButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 3, blockTop, buttonWidth, 20, Component.literal("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
+            this.previousPageButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 4, blockTop, buttonWidth, 20, Component.literal("上一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.max(0, this.page - 1);
                 init();
             }));
-            this.nextPageButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 5, blockTop, buttonWidth, 20, new TextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
+            this.nextPageButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 5, blockTop, buttonWidth, 20, Component.literal("下一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.min(maxPageForRowCount(buildRows(false).size()), this.page + 1);
                 init();
             }));
         }
-        this.addRenderableWidget(new StyledButton(panelLeft() + panelWidth() - 116, panelTop() + 16, 98, 20, new TextComponent("返回"), StyledButton.Variant.PRIMARY, button -> onClose()));
+        this.addRenderableWidget(new StyledButton(panelLeft() + panelWidth() - 116, panelTop() + 16, 98, 20, Component.literal("返回"), StyledButton.Variant.PRIMARY, button -> onClose()));
 
         updateButtonState();
     }

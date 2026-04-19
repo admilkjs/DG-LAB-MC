@@ -22,6 +22,7 @@ import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -29,7 +30,6 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.ArrowLooseEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
@@ -61,18 +61,20 @@ public final class ClientHooks {
     private ClientHooks() {
     }
 
-    public static void registerKeyBinding() {
-        openMenuKey = new KeyMapping(
-            "key.dglabmc.open",
-            KeyConflictContext.IN_GAME,
-            InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_O),
-            "key.categories.dglabmc"
-        );
-        ClientRegistry.registerKeyBinding(openMenuKey);
+    public static void registerKeyBindings(RegisterKeyMappingsEvent event) {
+        if (openMenuKey == null) {
+            openMenuKey = new KeyMapping(
+                "key.dglabmc.open",
+                KeyConflictContext.IN_GAME,
+                InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_O),
+                "key.categories.dglabmc"
+            );
+        }
+        event.register(openMenuKey);
     }
 
     @SubscribeEvent
-    public static void onKeyInput(InputEvent.KeyInputEvent event) {
+    public static void onKeyInput(InputEvent.Key event) {
         if (openMenuKey == null) {
             return;
         }
@@ -111,7 +113,7 @@ public final class ClientHooks {
     }
 
     @SubscribeEvent
-    public static void onPlayerLogin(ClientPlayerNetworkEvent.LoggedInEvent event) {
+    public static void onPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         PlatformServices.client().showPlayerMessage("DG-LAB 控制中心已就绪，按 O 打开。");
         if (StartupConfig.OPEN_MENU_ON_LOGIN.get()) {
             PlatformServices.client().openControlCenter();
@@ -203,15 +205,15 @@ public final class ClientHooks {
 
     @SubscribeEvent
     public static void onJump(LivingEvent.LivingJumpEvent event) {
-        if (event.getEntityLiving().level.isClientSide && ForgeRuleEventBridge.isLocalPlayer(event.getEntityLiving())) {
-            fireTrigger(ForgeRuleEventBridge.createContext((Player) event.getEntityLiving(), TriggerRegistry.JUMP));
+        if (event.getEntity().level.isClientSide && ForgeRuleEventBridge.isLocalPlayer(event.getEntity())) {
+            fireTrigger(ForgeRuleEventBridge.createContext((Player) event.getEntity(), TriggerRegistry.JUMP));
         }
     }
 
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
         LocalPlayer player = MINECRAFT.player;
-        if (player == null || event.getPlayer() == null || !player.getUUID().equals(event.getPlayer().getUUID())) {
+        if (player == null || event.getEntity() == null || !player.getUUID().equals(event.getEntity().getUUID())) {
             return;
         }
         if (event.getTarget() instanceof LivingEntity && isClientSideEntity(event.getTarget())) {
@@ -223,9 +225,9 @@ public final class ClientHooks {
     public static void onCriticalHit(CriticalHitEvent event) {
         LocalPlayer player = MINECRAFT.player;
         if (player != null
-            && event.getPlayer() != null
-            && event.getPlayer().level.isClientSide
-            && event.getPlayer().getUUID().equals(player.getUUID())
+            && event.getEntity() != null
+            && event.getEntity().level.isClientSide
+            && event.getEntity().getUUID().equals(player.getUUID())
             && event.isVanillaCritical()
             && event.getTarget() instanceof LivingEntity) {
             trackOutgoingAttack((LivingEntity) event.getTarget(), true);
@@ -236,9 +238,9 @@ public final class ClientHooks {
     public static void onArrowLoose(ArrowLooseEvent event) {
         LocalPlayer player = MINECRAFT.player;
         if (player != null
-            && event.getPlayer() != null
-            && event.getPlayer().level.isClientSide
-            && event.getPlayer().getUUID().equals(player.getUUID())) {
+            && event.getEntity() != null
+            && event.getEntity().level.isClientSide
+            && event.getEntity().getUUID().equals(player.getUUID())) {
             fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.BOW_RELEASE));
         }
     }

@@ -2,7 +2,7 @@ package dglabmc.client.ui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ public class InfoScreen extends Screen {
     private final List<String> lines;
 
     public InfoScreen(Screen parent, String heading, String subtitle, List<String> lines) {
-        super(new TextComponent(heading));
+        super(Component.literal(heading));
         this.parent = parent;
         this.heading = heading;
         this.subtitle = subtitle;
@@ -27,7 +27,7 @@ public class InfoScreen extends Screen {
         int panelHeight = Math.min(300, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        this.addRenderableWidget(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new TextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        this.addRenderableWidget(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, Component.literal("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override

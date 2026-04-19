@@ -16,7 +16,7 @@ import dglabmc.security.DailyPasswordLock;
 import dglabmc.wave.WaveformDefinition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +58,7 @@ public class ControlCenterScreen extends Screen {
     }
 
     public ControlCenterScreen(Tab activeTab, String statusMessage) {
-        super(new TextComponent("DG-LAB 控制中心"));
+        super(Component.literal("DG-LAB 控制中心"));
         this.activeTab = activeTab;
         this.statusMessage = statusMessage == null ? "" : statusMessage;
         this.pairingLink = AppServices.get().getPairingLink();
@@ -109,7 +109,7 @@ public class ControlCenterScreen extends Screen {
         }
     }
 
-    private void rebuildWidgets() {
+    protected void rebuildWidgets() {
         this.clearWidgets();
         this.pairingLink = AppServices.get().getPairingLink();
 
@@ -157,12 +157,12 @@ public class ControlCenterScreen extends Screen {
         addRenderableWidget(navButton(left, top + gap, width, height, Tab.RULES));
         addRenderableWidget(navButton(left, top + gap * 2, width, height, Tab.WAVEFORMS));
         addRenderableWidget(navButton(left, top + gap * 3, width, height, Tab.TRANSFER));
-        addRenderableWidget(new StyledButton(left, contentBottom() - 26, width, 20, new TextComponent("关闭"), StyledButton.Variant.GHOST, button -> onClose()));
+        addRenderableWidget(new StyledButton(left, contentBottom() - 26, width, 20, Component.literal("关闭"), StyledButton.Variant.GHOST, button -> onClose()));
     }
 
     private StyledButton navButton(int x, int y, int width, int height, Tab tab) {
         StyledButton.Variant variant = this.activeTab == tab ? StyledButton.Variant.TAB_ACTIVE : StyledButton.Variant.TAB_IDLE;
-        return new StyledButton(x, y, width, height, new TextComponent(tabLabel(tab)), variant, button -> switchTab(tab));
+        return new StyledButton(x, y, width, height, Component.literal(tabLabel(tab)), variant, button -> switchTab(tab));
     }
 
     private void buildDashboardWidgets() {
@@ -198,19 +198,19 @@ public class ControlCenterScreen extends Screen {
             halfWidth = Math.max(90, (controlWidth - 8) / 2);
         }
 
-        addRenderableWidget(new StyledButton(controlLeft, controlTop, halfWidth, 20, new TextComponent("刷新链接"), StyledButton.Variant.PRIMARY, button -> {
+        addRenderableWidget(new StyledButton(controlLeft, controlTop, halfWidth, 20, Component.literal("刷新链接"), StyledButton.Variant.PRIMARY, button -> {
             this.pairingLink = AppServices.get().refreshPairingLink();
             this.statusMessage = "配对链接已刷新。";
             rebuildWidgets();
         }));
-        addRenderableWidget(new StyledButton(controlLeft + halfWidth + 8, controlTop, halfWidth, 20, new TextComponent("复制链接"), StyledButton.Variant.SECONDARY, button -> {
+        addRenderableWidget(new StyledButton(controlLeft + halfWidth + 8, controlTop, halfWidth, 20, Component.literal("复制链接"), StyledButton.Variant.SECONDARY, button -> {
             PlatformServices.client().copyToClipboard(this.pairingLink);
             this.statusMessage = "配对链接已复制。";
             rebuildWidgets();
         }));
-        addRenderableWidget(new StyledButton(controlLeft, controlTop + 24, halfWidth, 20, new TextComponent("A 通道设置"), StyledButton.Variant.GHOST, button -> openChannelProfileScreen(ChannelTarget.A)));
-        addRenderableWidget(new StyledButton(controlLeft + halfWidth + 8, controlTop + 24, halfWidth, 20, new TextComponent("B 通道设置"), StyledButton.Variant.GHOST, button -> openChannelProfileScreen(ChannelTarget.B)));
-        addRenderableWidget(new StyledButton(controlLeft, controlTop + 48, controlWidth, 20, new TextComponent("显示二维码"), StyledButton.Variant.GHOST, button -> openPairingQrScreen()));
+        addRenderableWidget(new StyledButton(controlLeft, controlTop + 24, halfWidth, 20, Component.literal("A 通道设置"), StyledButton.Variant.GHOST, button -> openChannelProfileScreen(ChannelTarget.A)));
+        addRenderableWidget(new StyledButton(controlLeft + halfWidth + 8, controlTop + 24, halfWidth, 20, Component.literal("B 通道设置"), StyledButton.Variant.GHOST, button -> openChannelProfileScreen(ChannelTarget.B)));
+        addRenderableWidget(new StyledButton(controlLeft, controlTop + 48, controlWidth, 20, Component.literal("显示二维码"), StyledButton.Variant.GHOST, button -> openPairingQrScreen()));
     }
 
     private void buildRuleWidgets() {
@@ -262,7 +262,7 @@ public class ControlCenterScreen extends Screen {
             final int index = startIndex + i;
             RuleDefinition rule = config.rules.get(index);
             StyledButton.Variant variant = (!this.creatingRule && index == this.selectedRuleIndex) ? StyledButton.Variant.TAB_ACTIVE : StyledButton.Variant.TAB_IDLE;
-            addRenderableWidget(new StyledButton(listLeft, listTop + i * 24, listWidth, 20, new TextComponent(trim(labelForRule(rule), 26)), variant, button -> {
+            addRenderableWidget(new StyledButton(listLeft, listTop + i * 24, listWidth, 20, Component.literal(trim(labelForRule(rule), 26)), variant, button -> {
                 this.selectedRuleIndex = index;
                 this.creatingRule = false;
                 this.editingRule = copyRule(config.rules.get(index));
@@ -270,13 +270,13 @@ public class ControlCenterScreen extends Screen {
             }));
         }
         int listActionWidth = (listWidth - 8) / 2;
-        addRenderableWidget(new StyledButton(listLeft, listActionY, listActionWidth, 20, new TextComponent("新建规则"), StyledButton.Variant.GHOST, button -> {
+        addRenderableWidget(new StyledButton(listLeft, listActionY, listActionWidth, 20, Component.literal("新建规则"), StyledButton.Variant.GHOST, button -> {
             this.creatingRule = true;
             this.selectedRuleIndex = -1;
             this.editingRule = createDefaultRuleDraft();
             rebuildWidgets();
         }));
-        addRenderableWidget(new StyledButton(listLeft + listActionWidth + 8, listActionY, listActionWidth, 20, new TextComponent("顺序设置"), StyledButton.Variant.SECONDARY, button -> openRuleOrderScreen()));
+        addRenderableWidget(new StyledButton(listLeft + listActionWidth + 8, listActionY, listActionWidth, 20, Component.literal("顺序设置"), StyledButton.Variant.SECONDARY, button -> openRuleOrderScreen()));
 
         int editorPanelTop = compact ? panelTop + listPanelHeight + 12 : panelTop;
         int editorPanelLeft = compact ? contentLeft() + 10 : contentLeft() + ruleListWidth() + 22;
@@ -291,40 +291,40 @@ public class ControlCenterScreen extends Screen {
         boolean stackedActions = editorWidth < 404;
         int rowY = editorTop;
 
-        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("规则名： " + trim(ruleDisplayName(this.editingRule), stackedEditor ? 22 : 28)), StyledButton.Variant.SECONDARY, button -> openRuleNamePrompt()));
+        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("规则名： " + trim(ruleDisplayName(this.editingRule), stackedEditor ? 22 : 28)), StyledButton.Variant.SECONDARY, button -> openRuleNamePrompt()));
         rowY += 24;
-        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("触发： " + trim(triggerLabel(this.editingRule.trigger), stackedEditor ? 22 : 28)), StyledButton.Variant.SECONDARY, button -> openTriggerPicker()));
+        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("触发： " + trim(triggerLabel(this.editingRule.trigger), stackedEditor ? 22 : 28)), StyledButton.Variant.SECONDARY, button -> openTriggerPicker()));
         rowY += 24;
-        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("波形： " + trim(resolveWaveformName(this.editingRule), stackedEditor ? 22 : 28)), StyledButton.Variant.SECONDARY, button -> openWaveformPicker()));
+        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("波形： " + trim(resolveWaveformName(this.editingRule), stackedEditor ? 22 : 28)), StyledButton.Variant.SECONDARY, button -> openWaveformPicker()));
         rowY += 24;
         if (stackedEditor) {
-            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("通道： " + channelLabel(this.editingRule.channel)), StyledButton.Variant.GHOST, button -> {
+            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("通道： " + channelLabel(this.editingRule.channel)), StyledButton.Variant.GHOST, button -> {
                 this.editingRule.channel = nextChannel(this.editingRule.channel);
                 rebuildWidgets();
             }));
             rowY += 24;
-            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("清空队列： " + booleanLabel(this.editingRule.clearBeforeSend)), StyledButton.Variant.GHOST, button -> {
+            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("清空队列： " + booleanLabel(this.editingRule.clearBeforeSend)), StyledButton.Variant.GHOST, button -> {
                 this.editingRule.clearBeforeSend = !this.editingRule.clearBeforeSend;
                 rebuildWidgets();
             }));
             rowY += 24;
         } else {
-            addRenderableWidget(new StyledButton(editorLeft, rowY, halfWidth, 20, new TextComponent("通道： " + channelLabel(this.editingRule.channel)), StyledButton.Variant.GHOST, button -> {
+            addRenderableWidget(new StyledButton(editorLeft, rowY, halfWidth, 20, Component.literal("通道： " + channelLabel(this.editingRule.channel)), StyledButton.Variant.GHOST, button -> {
                 this.editingRule.channel = nextChannel(this.editingRule.channel);
                 rebuildWidgets();
             }));
-            addRenderableWidget(new StyledButton(editorLeft + halfWidth + 8, rowY, halfWidth, 20, new TextComponent("清空队列： " + booleanLabel(this.editingRule.clearBeforeSend)), StyledButton.Variant.GHOST, button -> {
+            addRenderableWidget(new StyledButton(editorLeft + halfWidth + 8, rowY, halfWidth, 20, Component.literal("清空队列： " + booleanLabel(this.editingRule.clearBeforeSend)), StyledButton.Variant.GHOST, button -> {
                 this.editingRule.clearBeforeSend = !this.editingRule.clearBeforeSend;
                 rebuildWidgets();
             }));
             rowY += 24;
         }
-        StyledButton conditionButton = new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("条件： " + trim(conditionSummary(this.editingRule), stackedEditor ? 24 : 30)), StyledButton.Variant.GHOST, button -> openRuleConditionPrompt());
+        StyledButton conditionButton = new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("条件： " + trim(conditionSummary(this.editingRule), stackedEditor ? 24 : 30)), StyledButton.Variant.GHOST, button -> openRuleConditionPrompt());
         conditionButton.active = isConditionEditable(this.editingRule);
         addRenderableWidget(conditionButton);
         rowY += 24;
 
-        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("冷却： " + this.editingRule.cooldownMs + "ms"), StyledButton.Variant.GHOST, button -> openLongPrompt(
+        addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("冷却： " + this.editingRule.cooldownMs + "ms"), StyledButton.Variant.GHOST, button -> openLongPrompt(
             "冷却时间",
             "输入毫秒，不小于 0。",
             "毫秒",
@@ -337,25 +337,25 @@ public class ControlCenterScreen extends Screen {
         rowY += 28;
 
         if (stackedEditor && editorWidth < 320) {
-            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("启用： " + booleanLabel(this.editingRule.enabled)), StyledButton.Variant.SECONDARY, button -> {
+            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("启用： " + booleanLabel(this.editingRule.enabled)), StyledButton.Variant.SECONDARY, button -> {
                 this.editingRule.enabled = !this.editingRule.enabled;
                 rebuildWidgets();
             }));
             rowY += 24;
-            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openRuleGuideScreen()));
+            addRenderableWidget(new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("说明"), StyledButton.Variant.SECONDARY, button -> openRuleGuideScreen()));
             rowY += 28;
         } else {
-            addRenderableWidget(new StyledButton(editorLeft, rowY, halfWidth, 20, new TextComponent("启用： " + booleanLabel(this.editingRule.enabled)), StyledButton.Variant.SECONDARY, button -> {
+            addRenderableWidget(new StyledButton(editorLeft, rowY, halfWidth, 20, Component.literal("启用： " + booleanLabel(this.editingRule.enabled)), StyledButton.Variant.SECONDARY, button -> {
                 this.editingRule.enabled = !this.editingRule.enabled;
                 rebuildWidgets();
             }));
-            addRenderableWidget(new StyledButton(editorLeft + halfWidth + 8, rowY, halfWidth, 20, new TextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openRuleGuideScreen()));
+            addRenderableWidget(new StyledButton(editorLeft + halfWidth + 8, rowY, halfWidth, 20, Component.literal("说明"), StyledButton.Variant.SECONDARY, button -> openRuleGuideScreen()));
             rowY += 28;
         }
 
         boolean deviceReady = AppServices.get().isDeviceBound();
         if (stackedActions) {
-            StyledButton testButton = new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("测试"), StyledButton.Variant.PRIMARY, button -> {
+            StyledButton testButton = new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("测试"), StyledButton.Variant.PRIMARY, button -> {
                 try {
                     AppServices.get().testRule(this.editingRule);
                     this.statusMessage = "规则测试已发送。";
@@ -368,12 +368,12 @@ public class ControlCenterScreen extends Screen {
             addRenderableWidget(testButton);
             rowY += 24;
 
-            StyledButton saveButton = new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent("保存"), StyledButton.Variant.SECONDARY, button -> saveEditingRule());
+            StyledButton saveButton = new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal("保存"), StyledButton.Variant.SECONDARY, button -> saveEditingRule());
             saveButton.active = canSaveRule(this.editingRule);
             addRenderableWidget(saveButton);
             rowY += 24;
 
-            StyledButton deleteButton = new StyledButton(editorLeft, rowY, editorWidth, 20, new TextComponent(this.creatingRule ? "放弃" : "删除"), this.creatingRule ? StyledButton.Variant.GHOST : StyledButton.Variant.DANGER, button -> {
+            StyledButton deleteButton = new StyledButton(editorLeft, rowY, editorWidth, 20, Component.literal(this.creatingRule ? "放弃" : "删除"), this.creatingRule ? StyledButton.Variant.GHOST : StyledButton.Variant.DANGER, button -> {
                 if (this.creatingRule || this.editingRule.id == null || this.editingRule.id.trim().isEmpty()) {
                     cancelRuleEditing();
                     return;
@@ -402,7 +402,7 @@ public class ControlCenterScreen extends Screen {
         }
 
         int actionWidth = (editorWidth - 16) / 3;
-        StyledButton testButton = new StyledButton(editorLeft, rowY, actionWidth, 20, new TextComponent("测试"), StyledButton.Variant.PRIMARY, button -> {
+        StyledButton testButton = new StyledButton(editorLeft, rowY, actionWidth, 20, Component.literal("测试"), StyledButton.Variant.PRIMARY, button -> {
             try {
                 AppServices.get().testRule(this.editingRule);
                 this.statusMessage = "规则测试已发送。";
@@ -414,11 +414,11 @@ public class ControlCenterScreen extends Screen {
         testButton.active = deviceReady;
         addRenderableWidget(testButton);
 
-        StyledButton saveButton = new StyledButton(editorLeft + actionWidth + 8, rowY, actionWidth, 20, new TextComponent("保存"), StyledButton.Variant.SECONDARY, button -> saveEditingRule());
+        StyledButton saveButton = new StyledButton(editorLeft + actionWidth + 8, rowY, actionWidth, 20, Component.literal("保存"), StyledButton.Variant.SECONDARY, button -> saveEditingRule());
         saveButton.active = canSaveRule(this.editingRule);
         addRenderableWidget(saveButton);
 
-        StyledButton deleteButton = new StyledButton(editorLeft + (actionWidth + 8) * 2, rowY, actionWidth, 20, new TextComponent(this.creatingRule ? "放弃" : "删除"), this.creatingRule ? StyledButton.Variant.GHOST : StyledButton.Variant.DANGER, button -> {
+        StyledButton deleteButton = new StyledButton(editorLeft + (actionWidth + 8) * 2, rowY, actionWidth, 20, Component.literal(this.creatingRule ? "放弃" : "删除"), this.creatingRule ? StyledButton.Variant.GHOST : StyledButton.Variant.DANGER, button -> {
             if (this.creatingRule || this.editingRule.id == null || this.editingRule.id.trim().isEmpty()) {
                 cancelRuleEditing();
                 return;
@@ -465,14 +465,14 @@ public class ControlCenterScreen extends Screen {
             final int index = i;
             WaveformDefinition waveform = config.waveforms.get(i);
             StyledButton.Variant variant = index == this.selectedWaveformIndex ? StyledButton.Variant.TAB_ACTIVE : StyledButton.Variant.TAB_IDLE;
-            addRenderableWidget(new StyledButton(listLeft, listTop + i * 24, listWidth, 20, new TextComponent(trim(waveform.name, 26)), variant, button -> {
+            addRenderableWidget(new StyledButton(listLeft, listTop + i * 24, listWidth, 20, Component.literal(trim(waveform.name, 26)), variant, button -> {
                 this.selectedWaveformIndex = index;
                 rebuildWidgets();
             }));
         }
 
         int listActionY = panelTop + listPanelHeight - 30;
-        addRenderableWidget(new StyledButton(listLeft, listActionY, listWidth, 20, new TextComponent("导入说明"), StyledButton.Variant.GHOST, button -> openWaveformImportGuide()));
+        addRenderableWidget(new StyledButton(listLeft, listActionY, listWidth, 20, Component.literal("导入说明"), StyledButton.Variant.GHOST, button -> openWaveformImportGuide()));
 
         int detailTop = compact ? panelTop + listPanelHeight + 12 : panelTop;
         int detailPanelLeft = compact ? contentLeft() + 10 : contentLeft() + ruleListWidth() + 22;
@@ -481,13 +481,13 @@ public class ControlCenterScreen extends Screen {
         int actionWidth = compact ? contentWidth() - 48 : contentRight() - detailPanelLeft - 10 - 28;
         int halfWidth = (actionWidth - 8) / 2;
         boolean stackedTests = compact || actionWidth < 320;
-        addRenderableWidget(new StyledButton(actionLeft, actionTop, actionWidth, 20, new TextComponent("导入 pulse 文本"), StyledButton.Variant.PRIMARY, button -> this.minecraft.setScreen(new WaveformImportScreen(this, "pulse"))));
-        addRenderableWidget(new StyledButton(actionLeft, actionTop + 24, actionWidth, 20, new TextComponent("导入 HEX 帧"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(new WaveformImportScreen(this, "hex"))));
+        addRenderableWidget(new StyledButton(actionLeft, actionTop, actionWidth, 20, Component.literal("导入 pulse 文本"), StyledButton.Variant.PRIMARY, button -> this.minecraft.setScreen(new WaveformImportScreen(this, "pulse"))));
+        addRenderableWidget(new StyledButton(actionLeft, actionTop + 24, actionWidth, 20, Component.literal("导入 HEX 帧"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(new WaveformImportScreen(this, "hex"))));
 
         if (!config.waveforms.isEmpty()) {
             WaveformDefinition selected = config.waveforms.get(this.selectedWaveformIndex);
-            addRenderableWidget(new StyledButton(actionLeft, actionTop + 52, actionWidth, 20, new TextComponent("重命名： " + trim(selected.name, 28)), StyledButton.Variant.GHOST, button -> openWaveformRenamePrompt(selected)));
-            addRenderableWidget(new StyledButton(actionLeft, actionTop + 76, actionWidth, 20, new TextComponent("删除波形"), StyledButton.Variant.DANGER, button -> {
+            addRenderableWidget(new StyledButton(actionLeft, actionTop + 52, actionWidth, 20, Component.literal("重命名： " + trim(selected.name, 28)), StyledButton.Variant.GHOST, button -> openWaveformRenamePrompt(selected)));
+            addRenderableWidget(new StyledButton(actionLeft, actionTop + 76, actionWidth, 20, Component.literal("删除波形"), StyledButton.Variant.DANGER, button -> {
                 try {
                     AppServices.get().deleteWaveform(selected.id);
                     this.statusMessage = "波形已删除。";
@@ -500,7 +500,7 @@ public class ControlCenterScreen extends Screen {
 
             boolean deviceReady = AppServices.get().isDeviceBound();
             int actionRowY = actionTop + 104;
-            StyledButton testAButton = new StyledButton(actionLeft, actionRowY, stackedTests ? actionWidth : halfWidth, 20, new TextComponent("试发 A"), StyledButton.Variant.GHOST, button -> {
+            StyledButton testAButton = new StyledButton(actionLeft, actionRowY, stackedTests ? actionWidth : halfWidth, 20, Component.literal("试发 A"), StyledButton.Variant.GHOST, button -> {
                 try {
                     AppServices.get().testWaveform(selected.id, DeviceChannel.A);
                     this.statusMessage = "波形已发送到 A 通道。";
@@ -512,7 +512,7 @@ public class ControlCenterScreen extends Screen {
             testAButton.active = deviceReady;
             addRenderableWidget(testAButton);
 
-            StyledButton testBButton = new StyledButton(stackedTests ? actionLeft : actionLeft + halfWidth + 8, stackedTests ? actionRowY + 24 : actionRowY, stackedTests ? actionWidth : halfWidth, 20, new TextComponent("试发 B"), StyledButton.Variant.GHOST, button -> {
+            StyledButton testBButton = new StyledButton(stackedTests ? actionLeft : actionLeft + halfWidth + 8, stackedTests ? actionRowY + 24 : actionRowY, stackedTests ? actionWidth : halfWidth, 20, Component.literal("试发 B"), StyledButton.Variant.GHOST, button -> {
                 try {
                     AppServices.get().testWaveform(selected.id, DeviceChannel.B);
                     this.statusMessage = "波形已发送到 B 通道。";
@@ -532,7 +532,7 @@ public class ControlCenterScreen extends Screen {
         int width = contentWidth() - 28;
         boolean compact = width < 420;
         int buttonWidth = compact ? width : (width - 16) / 3;
-        addRenderableWidget(new StyledButton(left, top, buttonWidth, 20, new TextComponent("导出 ZIP"), StyledButton.Variant.PRIMARY, button -> {
+        addRenderableWidget(new StyledButton(left, top, buttonWidth, 20, Component.literal("导出 ZIP"), StyledButton.Variant.PRIMARY, button -> {
             try {
                 Path path = AppServices.get().exportConfigArchive();
                 this.lastExportPath = path.toString();
@@ -548,8 +548,8 @@ public class ControlCenterScreen extends Screen {
         int thirdTop = compact ? top + 48 : top;
         int secondLeft = compact ? left : left + buttonWidth + 8;
         int thirdLeft = compact ? left : left + (buttonWidth + 8) * 2;
-        addRenderableWidget(new StyledButton(secondLeft, secondTop, buttonWidth, 20, new TextComponent("导入路径"), StyledButton.Variant.SECONDARY, button -> openImportPrompt()));
-        addRenderableWidget(new StyledButton(thirdLeft, thirdTop, buttonWidth, 20, new TextComponent("恢复默认"), StyledButton.Variant.DANGER, button -> openRestoreDefaultsPrompt()));
+        addRenderableWidget(new StyledButton(secondLeft, secondTop, buttonWidth, 20, Component.literal("导入路径"), StyledButton.Variant.SECONDARY, button -> openImportPrompt()));
+        addRenderableWidget(new StyledButton(thirdLeft, thirdTop, buttonWidth, 20, Component.literal("恢复默认"), StyledButton.Variant.DANGER, button -> openRestoreDefaultsPrompt()));
     }
 
     private void openImportPrompt() {

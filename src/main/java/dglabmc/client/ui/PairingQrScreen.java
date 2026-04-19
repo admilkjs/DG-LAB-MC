@@ -4,7 +4,7 @@ import dglabmc.AppServices;
 import dglabmc.platform.PlatformServices;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 public class PairingQrScreen extends Screen {
     private final Screen parent;
@@ -13,7 +13,7 @@ public class PairingQrScreen extends Screen {
     private String errorMessage = "";
 
     public PairingQrScreen(Screen parent) {
-        super(new TextComponent("扫码连接"));
+        super(Component.literal("扫码连接"));
         this.parent = parent;
     }
 
@@ -32,21 +32,21 @@ public class PairingQrScreen extends Screen {
         int buttonY = top + panelHeight - 34;
 
         if (compact) {
-            this.addRenderableWidget(new StyledButton(left + 18, buttonY - 48, innerWidth, 20, new TextComponent("刷新链接"), StyledButton.Variant.GHOST, button -> {
+            this.addRenderableWidget(new StyledButton(left + 18, buttonY - 48, innerWidth, 20, Component.literal("刷新链接"), StyledButton.Variant.GHOST, button -> {
                 reloadPairingLink(true);
                 init();
             }));
-            this.addRenderableWidget(new StyledButton(left + 18, buttonY - 24, innerWidth, 20, new TextComponent("复制链接"), StyledButton.Variant.SECONDARY, button -> PlatformServices.client().copyToClipboard(this.pairingLink)));
-            this.addRenderableWidget(new StyledButton(left + 18, buttonY, innerWidth, 20, new TextComponent("关闭"), StyledButton.Variant.PRIMARY, button -> onClose()));
+            this.addRenderableWidget(new StyledButton(left + 18, buttonY - 24, innerWidth, 20, Component.literal("复制链接"), StyledButton.Variant.SECONDARY, button -> PlatformServices.client().copyToClipboard(this.pairingLink)));
+            this.addRenderableWidget(new StyledButton(left + 18, buttonY, innerWidth, 20, Component.literal("关闭"), StyledButton.Variant.PRIMARY, button -> onClose()));
             return;
         }
 
-        this.addRenderableWidget(new StyledButton(left + 18, buttonY, buttonWidth, 20, new TextComponent("刷新链接"), StyledButton.Variant.GHOST, button -> {
+        this.addRenderableWidget(new StyledButton(left + 18, buttonY, buttonWidth, 20, Component.literal("刷新链接"), StyledButton.Variant.GHOST, button -> {
             reloadPairingLink(true);
             init();
         }));
-        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, buttonY, buttonWidth, 20, new TextComponent("复制链接"), StyledButton.Variant.SECONDARY, button -> PlatformServices.client().copyToClipboard(this.pairingLink)));
-        this.addRenderableWidget(new StyledButton(left + 34 + buttonWidth * 2, buttonY, buttonWidth, 20, new TextComponent("关闭"), StyledButton.Variant.PRIMARY, button -> onClose()));
+        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, buttonY, buttonWidth, 20, Component.literal("复制链接"), StyledButton.Variant.SECONDARY, button -> PlatformServices.client().copyToClipboard(this.pairingLink)));
+        this.addRenderableWidget(new StyledButton(left + 34 + buttonWidth * 2, buttonY, buttonWidth, 20, Component.literal("关闭"), StyledButton.Variant.PRIMARY, button -> onClose()));
     }
 
     @Override
