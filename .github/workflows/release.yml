@@ -41,7 +41,7 @@ jobs:
 
       - name: Build Release Artifacts
         shell: pwsh
-        run: .\gradlew.bat shadowJar reobfShadowJar generatePvpPunishConfig buildRelease --no-daemon
+        run: .\gradlew.bat shadowJar reobfShadowJar generatePvpPunishConfig --no-daemon
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -52,5 +52,3 @@ jobs:
           files: |
             build/libs/*.jar
             dist/*.zip
-            dist/release/*.jar
-            dist/release/*.txt

@@ -27,7 +27,7 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-11'
 .\gradlew.bat shadowJar reobfShadowJar generatePvpPunishConfig --no-daemon
 ```
 
-发布构建：
+本地混淆发布构建：
 
 ```powershell
 .\gradlew.bat buildRelease --no-daemon
@@ -50,7 +50,11 @@ GitHub `Release` 工作流会在版本 tag 推送后发布：
 
 - `build/libs/*.jar`
 - `dist/*.zip`
-- 自动生成对应的 GitHub Release
+
+说明：
+
+- GitHub Release 当前发布标准可用产物：重映射后的主 jar 和配置 zip
+- ProGuard 混淆发布包暂时保留为本地手动构建，避免 CI 环境差异导致发布失败
 
 ## 版本线
 
