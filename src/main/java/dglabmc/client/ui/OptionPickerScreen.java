@@ -1,6 +1,6 @@
 package dglabmc.client.ui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -69,30 +69,30 @@ public class OptionPickerScreen<T> extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);
         int panelHeight = Math.min(300, this.height - 24);
         boolean compact = panelWidth < 520;
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, this.heading, this.subtitle, left + 18, top + 16);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, this.heading, this.subtitle, left + 18, top + 16);
         int pageSize = compact ? 6 : 8;
         int previewIndex = Math.min(this.options.size() - 1, this.page * pageSize);
         if (!compact) {
-            UiRender.drawPanel(matrixStack, left + 286, top + 52, 256, 196, UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
+            UiRender.drawPanel(guiGraphics, left + 286, top + 52, 256, 196, UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
         }
         if (previewIndex >= 0 && !this.options.isEmpty() && !compact) {
             T preview = this.options.get(previewIndex);
-            this.font.draw(matrixStack, trim(this.labelProvider.apply(preview), 22), (float) (left + 300), (float) (top + 68), UiPalette.TEXT_PRIMARY);
-            UiRender.drawWrappedText(matrixStack, this.font, this.descriptionProvider.apply(preview), left + 300, top + 88, 228, UiPalette.TEXT_MUTED, 10);
-            this.font.draw(matrixStack, "点击左侧条目立即选择", (float) (left + 300), (float) (top + 228), UiPalette.TEXT_DIM);
+            guiGraphics.drawString(this.font, trim(this.labelProvider.apply(preview), 22), (left + 300), (top + 68), UiPalette.TEXT_PRIMARY);
+            UiRender.drawWrappedText(guiGraphics, this.font, this.descriptionProvider.apply(preview), left + 300, top + 88, 228, UiPalette.TEXT_MUTED, 10);
+            guiGraphics.drawString(this.font, "点击左侧条目立即选择", (left + 300), (top + 228), UiPalette.TEXT_DIM);
         } else if (compact) {
-            this.font.draw(matrixStack, "点击条目立即选择", (float) (left + 18), (float) (top + panelHeight - 54), UiPalette.TEXT_DIM);
+            guiGraphics.drawString(this.font, "点击条目立即选择", (left + 18), (top + panelHeight - 54), UiPalette.TEXT_DIM);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     private String trim(String text, int maxChars) {
@@ -102,3 +102,5 @@ public class OptionPickerScreen<T> extends Screen {
         return text.length() <= maxChars ? text : text.substring(0, Math.max(0, maxChars - 3)) + "...";
     }
 }
+
+

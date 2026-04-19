@@ -2,7 +2,7 @@ package dglabmc.client.ui;
 
 import dglabmc.AppServices;
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -67,9 +67,9 @@ public class PairingQrScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
 
         int panelWidth = Math.min(560, this.width - 24);
         boolean compact = panelWidth < 420;
@@ -82,23 +82,23 @@ public class PairingQrScreen extends Screen {
         int qrX = left + ((panelWidth - qrSize) / 2);
         int qrY = qrAreaTop + Math.max(0, ((qrAreaBottom - qrAreaTop) - qrSize) / 2);
 
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "扫码连接", "绑定后自动关闭，Esc 退出", left + 18, top + 16);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, "扫码连接", "绑定后自动关闭，Esc 退出", left + 18, top + 16);
 
         if (this.pairingQrMatrix != null) {
-            QrCodeHelper.draw(matrixStack, this.pairingQrMatrix, qrX, qrY, qrSize);
+            QrCodeHelper.draw(guiGraphics, this.pairingQrMatrix, qrX, qrY, qrSize);
         } else {
-            UiRender.drawPanel(matrixStack, qrX, qrY, qrSize, qrSize, 0xFFF8FAFC, 0xFFCBD5E1);
-            this.font.draw(matrixStack, "二维码失败", (float) (qrX + ((qrSize - this.font.width("二维码失败")) / 2)), (float) (qrY + (qrSize / 2) - 4), 0xFF0F172A);
+            UiRender.drawPanel(guiGraphics, qrX, qrY, qrSize, qrSize, 0xFFF8FAFC, 0xFFCBD5E1);
+            guiGraphics.drawString(this.font, "二维码失败", (qrX + ((qrSize - this.font.width("二维码失败")) / 2)), (qrY + (qrSize / 2) - 4), 0xFF0F172A);
         }
 
         int linkY = qrY + qrSize + 10;
-        UiRender.drawWrappedText(matrixStack, this.font, this.pairingLink, left + 18, linkY, panelWidth - 36, UiPalette.TEXT_MUTED, compact ? 2 : 3);
+        UiRender.drawWrappedText(guiGraphics, this.font, this.pairingLink, left + 18, linkY, panelWidth - 36, UiPalette.TEXT_MUTED, compact ? 2 : 3);
         if (!this.errorMessage.isEmpty()) {
-            UiRender.drawWrappedText(matrixStack, this.font, this.errorMessage, left + 18, linkY + 28, panelWidth - 36, UiPalette.WARNING, 3);
+            UiRender.drawWrappedText(guiGraphics, this.font, this.errorMessage, left + 18, linkY + 28, panelWidth - 36, UiPalette.WARNING, 3);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     private void reloadPairingLink(boolean refresh) {
@@ -113,3 +113,5 @@ public class PairingQrScreen extends Screen {
         }
     }
 }
+
+

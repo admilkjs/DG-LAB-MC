@@ -3,7 +3,7 @@ package dglabmc.client.ui;
 import dglabmc.AppServices;
 import dglabmc.config.AppConfig;
 import dglabmc.rule.RuleDefinition;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
@@ -164,9 +164,9 @@ public class RuleOrderScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
 
         int left = panelLeft();
         int top = panelTop();
@@ -176,80 +176,80 @@ public class RuleOrderScreen extends Screen {
         int currentPage = Math.min(this.page, totalPages - 1) + 1;
         String pageLabel = "第 " + currentPage + " / " + totalPages + " 页";
 
-        UiRender.drawPanel(matrixStack, left, top, panelWidth(), panelHeight(), UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, top + 16);
-        this.font.draw(matrixStack, pageLabel, (float) (left + panelWidth() - 18 - this.font.width(pageLabel)), (float) (top + 28), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth(), panelHeight(), UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, top + 16);
+        guiGraphics.drawString(this.font, pageLabel, (left + panelWidth() - 18 - this.font.width(pageLabel)), (top + 28), UiPalette.TEXT_MUTED);
 
-        renderRows(matrixStack, mouseX, mouseY);
+        renderRows(guiGraphics, mouseX, mouseY);
 
         if (rows.isEmpty()) {
-            this.font.draw(matrixStack, "当前没有规则", (float) innerLeft, (float) (listTop() + 12), UiPalette.TEXT_MUTED);
+            guiGraphics.drawString(this.font, "当前没有规则", innerLeft, (listTop() + 12), UiPalette.TEXT_MUTED);
         } else {
             RulePosition selectedPosition = findPosition(rows, selectedRuleId());
             if (selectedPosition != null) {
                 RuleDefinition selected = rules().get(this.selectedIndex);
-                this.font.draw(matrixStack, "已选：第 " + (selectedPosition.rowIndex + 1) + " 行 / " + displayRuleName(selected), (float) innerLeft, (float) infoTop(), UiPalette.TEXT_MUTED);
+                guiGraphics.drawString(this.font, "已选：第 " + (selectedPosition.rowIndex + 1) + " 行 / " + displayRuleName(selected), innerLeft, infoTop(), UiPalette.TEXT_MUTED);
             }
         }
 
         if (!this.statusMessage.isEmpty()) {
-            this.font.draw(matrixStack, this.statusMessage, (float) innerLeft, (float) (infoTop() + 14), UiPalette.WARNING);
+            guiGraphics.drawString(this.font, this.statusMessage, innerLeft, (infoTop() + 14), UiPalette.WARNING);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
-    private void renderRows(PoseStack matrixStack, int mouseX, int mouseY) {
+    private void renderRows(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         List<RowLayout> layouts = buildVisibleRowLayouts(this.dragMoved);
         CardLayout hoveredCard = this.dragMoved ? null : findCardAt(mouseX, mouseY, false);
         if (this.dragMoved && layouts.isEmpty()) {
-            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, 0x66172233, UiPalette.ACCENT);
-            this.font.draw(matrixStack, "松开后建立第一行", (float) (listLeft() + 16), (float) (listTop() + 17), UiPalette.TEXT_PRIMARY);
+            UiRender.drawPanel(guiGraphics, listLeft(), listTop(), listWidth(), ROW_HEIGHT, 0x66172233, UiPalette.ACCENT);
+            guiGraphics.drawString(this.font, "松开后建立第一行", (listLeft() + 16), (listTop() + 17), UiPalette.TEXT_PRIMARY);
         }
 
         for (RowLayout row : layouts) {
             boolean rowTarget = this.dragMoved && this.dropTarget != null && this.dropTarget.mode == DropMode.IN_ROW && this.dropTarget.rowIndex == row.rowIndex;
-            drawRowBackground(matrixStack, row, rowTarget);
+            drawRowBackground(guiGraphics, row, rowTarget);
             for (CardLayout card : row.cards) {
                 boolean selected = card.absoluteIndex == this.selectedIndex;
                 boolean hovered = hoveredCard != null && hoveredCard.absoluteIndex == card.absoluteIndex;
-                drawCard(matrixStack, card.x, card.y, card.width, card.height, card.rule, selected, hovered, false);
+                drawCard(guiGraphics, card.x, card.y, card.width, card.height, card.rule, selected, hovered, false);
             }
         }
 
         if (this.dragMoved && this.dropTarget != null) {
-            drawDropTarget(matrixStack, layouts, this.dropTarget);
+            drawDropTarget(guiGraphics, layouts, this.dropTarget);
         }
         if (this.dragMoved && this.draggingIndex >= 0 && this.draggingIndex < rules().size()) {
             int drawX = Mth.floor(this.draggingMouseX - this.draggingOffsetX);
             int drawY = Mth.floor(this.draggingMouseY - this.draggingOffsetY);
-            drawCard(matrixStack, drawX, drawY, Math.max(72, this.draggingCardWidth), Math.max(CARD_HEIGHT, this.draggingCardHeight), rules().get(this.draggingIndex), true, true, true);
+            drawCard(guiGraphics, drawX, drawY, Math.max(72, this.draggingCardWidth), Math.max(CARD_HEIGHT, this.draggingCardHeight), rules().get(this.draggingIndex), true, true, true);
         }
     }
 
-    private void drawRowBackground(PoseStack matrixStack, RowLayout row, boolean targetRow) {
+    private void drawRowBackground(GuiGraphics guiGraphics, RowLayout row, boolean targetRow) {
         int border = targetRow ? UiPalette.ACCENT : UiPalette.BORDER;
         int accent = targetRow ? UiPalette.ACCENT : UiPalette.INFO;
-        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, 0x66172233, border);
-        fill(matrixStack, row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
-        this.font.draw(matrixStack, "第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(guiGraphics, row.x, row.y, row.width, row.height, 0x66172233, border);
+        guiGraphics.fill( row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
+        guiGraphics.drawString(this.font, "第" + (row.rowIndex + 1) + "行", (row.x + 18), (row.y + 16), UiPalette.TEXT_MUTED);
     }
 
-    private void drawCard(PoseStack matrixStack, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
+    private void drawCard(GuiGraphics guiGraphics, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
         int background = selected ? 0xCC243041 : hovered ? 0xB3233043 : rule.enabled ? 0x99172233 : 0x77202A38;
         int border = selected ? UiPalette.ACCENT : hovered ? UiPalette.BORDER_STRONG : UiPalette.BORDER;
         if (floating) {
             background = 0xD9243041;
         }
-        UiRender.drawPanel(matrixStack, x, y, width, height, background, border);
-        fill(matrixStack, x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
+        UiRender.drawPanel(guiGraphics, x, y, width, height, background, border);
+        guiGraphics.fill( x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
         String label = trimToWidth(displayRuleName(rule), width - 22);
-        this.font.draw(matrixStack, label, (float) (x + 16), (float) (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
+        guiGraphics.drawString(this.font, label, (x + 16), (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
     }
 
-    private void drawDropTarget(PoseStack matrixStack, List<RowLayout> layouts, DropTarget target) {
+    private void drawDropTarget(GuiGraphics guiGraphics, List<RowLayout> layouts, DropTarget target) {
         if (target.mode == DropMode.EMPTY) {
-            fill(matrixStack, listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
+            guiGraphics.fill( listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
             return;
         }
         if (target.mode == DropMode.IN_ROW) {
@@ -258,7 +258,7 @@ public class RuleOrderScreen extends Screen {
                 return;
             }
             int x = dropMarkerX(row, target.slotIndex);
-            fill(matrixStack, x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
+            guiGraphics.fill( x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
             return;
         }
 
@@ -270,7 +270,7 @@ public class RuleOrderScreen extends Screen {
             RowLayout row = findRowLayout(layouts, target.rowIndex);
             y = row == null ? listTop() + ROW_HEIGHT + 2 : row.y + row.height + 1;
         }
-        fill(matrixStack, listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
+        guiGraphics.fill( listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
     }
 
     private int dropMarkerX(RowLayout row, int slotIndex) {
@@ -861,3 +861,5 @@ public class RuleOrderScreen extends Screen {
         }
     }
 }
+
+

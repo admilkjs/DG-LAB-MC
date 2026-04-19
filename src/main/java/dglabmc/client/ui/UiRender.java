@@ -1,48 +1,47 @@
 package dglabmc.client.ui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 
-public final class UiRender extends GuiComponent {
+public final class UiRender {
     private UiRender() {
     }
 
-    public static void drawPanel(PoseStack matrixStack, int x, int y, int width, int height, int backgroundColor, int accentColor) {
-        fill(matrixStack, x, y, x + width, y + height, backgroundColor);
-        fill(matrixStack, x, y, x + width, y + 2, accentColor);
-        fill(matrixStack, x, y, x + 1, y + height, UiPalette.BORDER);
-        fill(matrixStack, x + width - 1, y, x + width, y + height, UiPalette.BORDER);
-        fill(matrixStack, x, y + height - 1, x + width, y + height, UiPalette.BORDER);
+    public static void drawPanel(GuiGraphics guiGraphics, int x, int y, int width, int height, int backgroundColor, int accentColor) {
+        guiGraphics.fill(x, y, x + width, y + height, backgroundColor);
+        guiGraphics.fill(x, y, x + width, y + 2, accentColor);
+        guiGraphics.fill(x, y, x + 1, y + height, UiPalette.BORDER);
+        guiGraphics.fill(x + width - 1, y, x + width, y + height, UiPalette.BORDER);
+        guiGraphics.fill(x, y + height - 1, x + width, y + height, UiPalette.BORDER);
     }
 
-    public static void drawSectionTitle(PoseStack matrixStack, Font font, String title, String subtitle, int x, int y) {
-        font.draw(matrixStack, title, (float) x, (float) y, UiPalette.TEXT_PRIMARY);
+    public static void drawSectionTitle(GuiGraphics guiGraphics, Font font, String title, String subtitle, int x, int y) {
+        guiGraphics.drawString(font, title, x, y, UiPalette.TEXT_PRIMARY);
         if (subtitle != null && !subtitle.isEmpty()) {
-            font.draw(matrixStack, subtitle, (float) x, (float) (y + 12), UiPalette.TEXT_MUTED);
+            guiGraphics.drawString(font, subtitle, x, y + 12, UiPalette.TEXT_MUTED);
         }
     }
 
-    public static void drawStatusBadge(PoseStack matrixStack, Font font, String text, int x, int y, int backgroundColor, int borderColor) {
+    public static void drawStatusBadge(GuiGraphics guiGraphics, Font font, String text, int x, int y, int backgroundColor, int borderColor) {
         int textWidth = font.width(text);
         int width = textWidth + 12;
-        fill(matrixStack, x, y, x + width, y + 14, backgroundColor);
-        fill(matrixStack, x, y, x + width, y + 1, borderColor);
-        fill(matrixStack, x, y + 13, x + width, y + 14, borderColor);
-        fill(matrixStack, x, y, x + 1, y + 14, borderColor);
-        fill(matrixStack, x + width - 1, y, x + width, y + 14, borderColor);
-        font.draw(matrixStack, text, (float) (x + 6), (float) (y + 3), UiPalette.TEXT_PRIMARY);
+        guiGraphics.fill(x, y, x + width, y + 14, backgroundColor);
+        guiGraphics.fill(x, y, x + width, y + 1, borderColor);
+        guiGraphics.fill(x, y + 13, x + width, y + 14, borderColor);
+        guiGraphics.fill(x, y, x + 1, y + 14, borderColor);
+        guiGraphics.fill(x + width - 1, y, x + width, y + 14, borderColor);
+        guiGraphics.drawString(font, text, x + 6, y + 3, UiPalette.TEXT_PRIMARY);
     }
 
-    public static void drawDivider(PoseStack matrixStack, int x, int y, int width) {
-        fill(matrixStack, x, y, x + width, y + 1, UiPalette.BORDER);
+    public static void drawDivider(GuiGraphics guiGraphics, int x, int y, int width) {
+        guiGraphics.fill(x, y, x + width, y + 1, UiPalette.BORDER);
     }
 
-    public static int drawWrappedText(PoseStack matrixStack, Font font, String text, int x, int y, int width, int color, int maxLines) {
-        return drawWrappedText(matrixStack, font, text, x, y, width, color, maxLines, 12);
+    public static int drawWrappedText(GuiGraphics guiGraphics, Font font, String text, int x, int y, int width, int color, int maxLines) {
+        return drawWrappedText(guiGraphics, font, text, x, y, width, color, maxLines, 12);
     }
 
-    public static int drawWrappedText(PoseStack matrixStack, Font font, String text, int x, int y, int width, int color, int maxLines, int lineHeight) {
+    public static int drawWrappedText(GuiGraphics guiGraphics, Font font, String text, int x, int y, int width, int color, int maxLines, int lineHeight) {
         if (text == null || text.isEmpty() || width <= 0 || maxLines <= 0) {
             return 0;
         }
@@ -54,7 +53,7 @@ public final class UiRender extends GuiComponent {
             if (line.isEmpty()) {
                 break;
             }
-            font.draw(matrixStack, line, (float) x, (float) drawY, color);
+            guiGraphics.drawString(font, line, x, drawY, color);
             remaining = remaining.substring(line.length()).trim();
             drawY += lineHeight;
             lines++;

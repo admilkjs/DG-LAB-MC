@@ -2,7 +2,7 @@ package dglabmc.client.ui;
 
 import dglabmc.AppServices;
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -100,32 +100,34 @@ public class WaveformImportScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(420, this.width - 24);
         boolean compact = panelWidth < 400;
         int panelHeight = Math.min(compact ? 268 : 220, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL_ELEVATED, UiPalette.ACCENT);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL_ELEVATED, UiPalette.ACCENT);
         UiRender.drawSectionTitle(
-            matrixStack,
+            guiGraphics,
             this.font,
             "导入 " + ("pulse".equals(this.importMode) ? "Dungeonlab+pulse" : "HEX 帧"),
             "粘贴 pulse 文本或 HEX 帧。",
             left + 18,
             top + 16
         );
-        this.font.draw(matrixStack, "名称", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "说明", (float) (left + 18), (float) (top + 76), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "原始输入", (float) (left + 18), (float) (top + 110), UiPalette.TEXT_MUTED);
-        this.nameField.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.descriptionField.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.rawInputField.render(matrixStack, mouseX, mouseY, partialTicks);
+        guiGraphics.drawString(this.font, "名称", (left + 18), (top + 42), UiPalette.TEXT_MUTED);
+        guiGraphics.drawString(this.font, "说明", (left + 18), (top + 76), UiPalette.TEXT_MUTED);
+        guiGraphics.drawString(this.font, "原始输入", (left + 18), (top + 110), UiPalette.TEXT_MUTED);
+        this.nameField.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.descriptionField.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.rawInputField.render(guiGraphics, mouseX, mouseY, partialTicks);
         if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
+            guiGraphics.drawString(this.font, this.status, (left + 18), (top + panelHeight - 22), UiPalette.WARNING);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 }
+
+

@@ -86,7 +86,7 @@ public class ConfigRepository {
         AppConfig resolved = config == null ? DefaultConfigFactory.create() : config;
         int loadedSchemaVersion = resolved.schemaVersion <= 0 ? AppConfig.CURRENT_SCHEMA_VERSION : resolved.schemaVersion;
         if (resolved.loaderFlavor == null || resolved.loaderFlavor.trim().isEmpty()) {
-            resolved.loaderFlavor = "forge-1.16.5";
+            resolved.loaderFlavor = "forge-1.20.1";
         }
         if (resolved.ruleProcessingMode == null) {
             resolved.ruleProcessingMode = RuleProcessingMode.PARALLEL;

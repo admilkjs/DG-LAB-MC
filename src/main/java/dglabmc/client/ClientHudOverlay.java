@@ -4,9 +4,9 @@ import dglabmc.AppServices;
 import dglabmc.client.ui.UiPalette;
 import dglabmc.client.ui.UiRender;
 import dglabmc.rule.RuleEngine;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -26,7 +26,7 @@ public final class ClientHudOverlay {
 
         RuleEngine.RuntimeSnapshot runtime = AppServices.get().getRuleEngine().snapshot();
         Font font = minecraft.font;
-        PoseStack matrixStack = event.getPoseStack();
+        GuiGraphics guiGraphics = event.getGuiGraphics();
         String lineA = line("A", runtime.channelA.currentStrength, runtime.channelA.effectiveMaxStrength);
         String lineB = line("B", runtime.channelB.currentStrength, runtime.channelB.effectiveMaxStrength);
         int panelWidth = Math.max(92, Math.max(font.width(lineA), font.width(lineB)) + 26);
@@ -34,14 +34,14 @@ public final class ClientHudOverlay {
         int left = event.getWindow().getGuiScaledWidth() - panelWidth - 8;
         int top = 8;
 
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, 0xAA101721, UiPalette.ACCENT);
-        drawLine(matrixStack, font, left + 8, top + 8, lineA, runtime.channelA.outputActive);
-        drawLine(matrixStack, font, left + 8, top + 20, lineB, runtime.channelB.outputActive);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, 0xAA101721, UiPalette.ACCENT);
+        drawLine(guiGraphics, font, left + 8, top + 8, lineA, runtime.channelA.outputActive);
+        drawLine(guiGraphics, font, left + 8, top + 20, lineB, runtime.channelB.outputActive);
     }
 
-    private static void drawLine(PoseStack matrixStack, Font font, int x, int y, String line, boolean active) {
-        font.draw(matrixStack, line, (float) x, (float) y, UiPalette.TEXT_PRIMARY);
-        font.draw(matrixStack, "\u25CF", (float) (x + font.width(line) + 6), (float) y, active ? UiPalette.SUCCESS : UiPalette.DANGER);
+    private static void drawLine(GuiGraphics guiGraphics, Font font, int x, int y, String line, boolean active) {
+        guiGraphics.drawString(font, line, x, y, UiPalette.TEXT_PRIMARY);
+        guiGraphics.drawString(font, "\u25CF", x + font.width(line) + 6, y, active ? UiPalette.SUCCESS : UiPalette.DANGER);
     }
 
     private static String line(String channel, int current, int max) {

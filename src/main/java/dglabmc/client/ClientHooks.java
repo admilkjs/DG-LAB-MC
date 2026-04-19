@@ -17,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
@@ -205,7 +206,7 @@ public final class ClientHooks {
 
     @SubscribeEvent
     public static void onJump(LivingEvent.LivingJumpEvent event) {
-        if (event.getEntity().level.isClientSide && ForgeRuleEventBridge.isLocalPlayer(event.getEntity())) {
+        if (event.getEntity().level().isClientSide && ForgeRuleEventBridge.isLocalPlayer(event.getEntity())) {
             fireTrigger(ForgeRuleEventBridge.createContext((Player) event.getEntity(), TriggerRegistry.JUMP));
         }
     }
@@ -226,7 +227,7 @@ public final class ClientHooks {
         LocalPlayer player = MINECRAFT.player;
         if (player != null
             && event.getEntity() != null
-            && event.getEntity().level.isClientSide
+            && event.getEntity().level().isClientSide
             && event.getEntity().getUUID().equals(player.getUUID())
             && event.isVanillaCritical()
             && event.getTarget() instanceof LivingEntity) {
@@ -239,7 +240,7 @@ public final class ClientHooks {
         LocalPlayer player = MINECRAFT.player;
         if (player != null
             && event.getEntity() != null
-            && event.getEntity().level.isClientSide
+            && event.getEntity().level().isClientSide
             && event.getEntity().getUUID().equals(player.getUUID())) {
             fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.BOW_RELEASE));
         }
@@ -321,7 +322,7 @@ public final class ClientHooks {
     }
 
     private static boolean isFallDamageSource(DamageSource source) {
-        return source != null && (source == DamageSource.FALL || "fall".equals(source.msgId));
+        return source != null && (source.is(DamageTypes.FALL) || "fall".equals(source.getMsgId()));
     }
 
     private static void fireAttackDamageTriggers(Player player, LivingEntity target, float damage) {
@@ -351,7 +352,7 @@ public final class ClientHooks {
     }
 
     private static boolean isClientSideEntity(Entity entity) {
-        return entity != null && entity.level != null && entity.level.isClientSide;
+        return entity != null && entity.level().isClientSide;
     }
 
     private static void trackOutgoingAttack(LivingEntity target, boolean critical) {

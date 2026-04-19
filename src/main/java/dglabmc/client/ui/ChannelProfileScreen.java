@@ -3,7 +3,7 @@ package dglabmc.client.ui;
 import dglabmc.AppServices;
 import dglabmc.config.AppConfig;
 import dglabmc.rule.ChannelTarget;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -75,30 +75,30 @@ public class ChannelProfileScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);
         boolean compact = panelWidth < 520;
         int panelHeight = Math.min(compact ? 340 : 278, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, title(), "强度逻辑", left + 18, top + 16);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, title(), "强度逻辑", left + 18, top + 16);
 
         AppServices.get().getRuleRuntimeSnapshot();
         AppConfig.ChannelStrengthProfile profile = currentProfile();
         int infoX = left + 18;
         int infoY = compact ? top + panelHeight - 86 : top + 182;
-        UiRender.drawPanel(matrixStack, infoX, infoY, panelWidth - 36, 48, 0x44172233, UiPalette.BORDER_STRONG);
-        this.font.draw(matrixStack, "当前: " + currentStrength() + " | 上限: " + effectiveMaxText(), (float) (infoX + 10), (float) (infoY + 10), UiPalette.TEXT_PRIMARY);
-        this.font.draw(matrixStack, "普通 " + profile.eventStrength + "  伤害 " + formatDouble(profile.damageScale) + "  死亡 +" + profile.deathStrength, (float) (infoX + 10), (float) (infoY + 24), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "等待 " + profile.delayMs + "  下降 " + profile.decayIntervalMs + "/" + profile.decayValue + "  最低 " + profile.minStrength, (float) (infoX + 10), (float) (infoY + 36), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(guiGraphics, infoX, infoY, panelWidth - 36, 48, 0x44172233, UiPalette.BORDER_STRONG);
+        guiGraphics.drawString(this.font, "当前: " + currentStrength() + " | 上限: " + effectiveMaxText(), (infoX + 10), (infoY + 10), UiPalette.TEXT_PRIMARY);
+        guiGraphics.drawString(this.font, "普通 " + profile.eventStrength + "  伤害 " + formatDouble(profile.damageScale) + "  死亡 +" + profile.deathStrength, (infoX + 10), (infoY + 24), UiPalette.TEXT_MUTED);
+        guiGraphics.drawString(this.font, "等待 " + profile.delayMs + "  下降 " + profile.decayIntervalMs + "/" + profile.decayValue + "  最低 " + profile.minStrength, (infoX + 10), (infoY + 36), UiPalette.TEXT_MUTED);
         if (!this.statusMessage.isEmpty()) {
-            UiRender.drawWrappedText(matrixStack, this.font, this.statusMessage, left + 18, top + panelHeight - 106, panelWidth - 36, UiPalette.WARNING, 2);
+            UiRender.drawWrappedText(guiGraphics, this.font, this.statusMessage, left + 18, top + panelHeight - 106, panelWidth - 36, UiPalette.WARNING, 2);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     private StyledButton actionButton(int x, int y, int width, String label, StyledButton.IPressable onPress) {
@@ -269,3 +269,5 @@ public class ChannelProfileScreen extends Screen {
         return Math.max(min, Math.min(max, value));
     }
 }
+
+

@@ -1,7 +1,7 @@
 package dglabmc.client.ui;
 
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -98,21 +98,23 @@ public class TextPromptScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(380, this.width - 24);
         boolean compact = panelWidth < 360;
         int panelHeight = Math.min(compact ? 194 : 146, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, this.heading, this.description, left + 18, top + 14);
-        this.font.draw(matrixStack, this.inputLabel, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
-        this.inputField.render(matrixStack, mouseX, mouseY, partialTicks);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, this.heading, this.description, left + 18, top + 14);
+        guiGraphics.drawString(this.font, this.inputLabel, (left + 18), (top + 42), UiPalette.TEXT_MUTED);
+        this.inputField.render(guiGraphics, mouseX, mouseY, partialTicks);
         if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
+            guiGraphics.drawString(this.font, this.status, (left + 18), (top + panelHeight - 22), UiPalette.WARNING);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 }
+
+

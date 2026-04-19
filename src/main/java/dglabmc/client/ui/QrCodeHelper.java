@@ -5,13 +5,12 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public final class QrCodeHelper extends GuiComponent {
+public final class QrCodeHelper {
     public static final class QrMatrix {
         private final int size;
         private final boolean[] cells;
@@ -57,7 +56,7 @@ public final class QrCodeHelper extends GuiComponent {
         return new QrMatrix(size, cells);
     }
 
-    public static void draw(PoseStack matrixStack, QrMatrix matrix, int x, int y, int size) {
+    public static void draw(GuiGraphics guiGraphics, QrMatrix matrix, int x, int y, int size) {
         if (matrix == null || size <= 0) {
             return;
         }
@@ -67,11 +66,11 @@ public final class QrCodeHelper extends GuiComponent {
         int startX = x + ((size - actualSize) / 2);
         int startY = y + ((size - actualSize) / 2);
 
-        fill(matrixStack, x, y, x + size, y + size, 0xFFF8FAFC);
-        fill(matrixStack, x, y, x + size, y + 1, 0xFFCBD5E1);
-        fill(matrixStack, x, y + size - 1, x + size, y + size, 0xFFCBD5E1);
-        fill(matrixStack, x, y, x + 1, y + size, 0xFFCBD5E1);
-        fill(matrixStack, x + size - 1, y, x + size, y + size, 0xFFCBD5E1);
+        guiGraphics.fill(x, y, x + size, y + size, 0xFFF8FAFC);
+        guiGraphics.fill(x, y, x + size, y + 1, 0xFFCBD5E1);
+        guiGraphics.fill(x, y + size - 1, x + size, y + size, 0xFFCBD5E1);
+        guiGraphics.fill(x, y, x + 1, y + size, 0xFFCBD5E1);
+        guiGraphics.fill(x + size - 1, y, x + size, y + size, 0xFFCBD5E1);
 
         for (int row = 0; row < matrixSize; row++) {
             for (int col = 0; col < matrixSize; col++) {
@@ -80,7 +79,7 @@ public final class QrCodeHelper extends GuiComponent {
                 }
                 int left = startX + (col * cell);
                 int top = startY + (row * cell);
-                fill(matrixStack, left, top, left + cell, top + cell, 0xFF020617);
+                guiGraphics.fill(left, top, left + cell, top + cell, 0xFF020617);
             }
         }
     }

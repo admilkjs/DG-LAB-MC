@@ -1,8 +1,7 @@
 package dglabmc.client.ui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 
@@ -26,23 +25,27 @@ public class StyledButton extends Button {
     }
 
     public StyledButton(int x, int y, int width, int height, Component title, Variant variant, IPressable onPress) {
-        super(x, y, width, height, title, onPress);
+        super(x, y, width, height, title, onPress, DEFAULT_NARRATION);
         this.variant = variant;
     }
 
     @Override
-    public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         Minecraft minecraft = Minecraft.getInstance();
         int background = backgroundColor();
         int border = borderColor();
         int textColor = this.active ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_DIM;
-        GuiComponent.fill(matrixStack, this.x, this.y, this.x + this.width, this.y + this.height, background);
-        GuiComponent.fill(matrixStack, this.x, this.y, this.x + this.width, this.y + 1, border);
-        GuiComponent.fill(matrixStack, this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, border);
-        GuiComponent.fill(matrixStack, this.x, this.y, this.x + 1, this.y + this.height, border);
-        GuiComponent.fill(matrixStack, this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, border);
-        String label = fitLabel(minecraft, this.getMessage().getString(), this.width - 10);
-        drawCenteredString(matrixStack, minecraft.font, label, this.x + this.width / 2, this.y + (this.height - 8) / 2, textColor);
+        int x = this.getX();
+        int y = this.getY();
+        int width = this.getWidth();
+        int height = this.getHeight();
+        guiGraphics.fill(x, y, x + width, y + height, background);
+        guiGraphics.fill(x, y, x + width, y + 1, border);
+        guiGraphics.fill(x, y + height - 1, x + width, y + height, border);
+        guiGraphics.fill(x, y, x + 1, y + height, border);
+        guiGraphics.fill(x + width - 1, y, x + width, y + height, border);
+        String label = fitLabel(minecraft, this.getMessage().getString(), width - 10);
+        guiGraphics.drawCenteredString(minecraft.font, label, x + width / 2, y + (height - 8) / 2, textColor);
     }
 
     private int backgroundColor() {

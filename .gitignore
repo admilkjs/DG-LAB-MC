@@ -23,6 +23,8 @@ run
 run-data
 logs
 .tmp_err_*
+.tmp_mdk
+compile-*.log
 
 # other
 eclipse

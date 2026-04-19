@@ -2,7 +2,7 @@ package dglabmc.client.ui;
 
 import dglabmc.security.DailyPasswordLock;
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -74,22 +74,24 @@ public class PasswordGateScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(360, this.width - 24);
         int panelHeight = 148;
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "输入今日密码", "未解锁前不能使用界面和指令", left + 18, top + 14);
-        this.font.draw(matrixStack, "密码", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, "输入今日密码", "未解锁前不能使用界面和指令", left + 18, top + 14);
+        guiGraphics.drawString(this.font, "密码", (left + 18), (top + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
-            this.passwordField.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.passwordField.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
         if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
+            guiGraphics.drawString(this.font, this.status, (left + 18), (top + panelHeight - 22), UiPalette.WARNING);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 }
+
+
