@@ -200,6 +200,14 @@ def configureJavaRuntimeLibraryJars = { ProGuardTask task ->
     if (rtJar.exists()) {
         task.libraryjars(rtJar.absolutePath)
     }
+
+    File jceJar = new File(javaHomeDir, 'lib/jce.jar')
+    if (!jceJar.exists() && javaHomeDir.parentFile != null) {
+        jceJar = new File(javaHomeDir.parentFile, 'jre/lib/jce.jar')
+    }
+    if (jceJar.exists()) {
+        task.libraryjars(jceJar.absolutePath)
+    }
 }
 
 tasks.register('obfuscateShadowJar', ProGuardTask) {
@@ -208,6 +216,10 @@ tasks.register('obfuscateShadowJar', ProGuardTask) {
     doFirst {
         proguardTempDir.get().asFile.mkdirs()
         proguardMappingFile.get().asFile.parentFile.mkdirs()
+        sourceSets.main.compileClasspath.files.findAll { it.exists() }.sort().each { File dependency ->
+            libraryjars(dependency.absolutePath)
+        }
+        configureJavaRuntimeLibraryJars(delegate as ProGuardTask)
     }
 
     injars(tasks.named('shadowJar').get().archiveFile.get().asFile)
@@ -216,11 +228,6 @@ tasks.register('obfuscateShadowJar', ProGuardTask) {
     configuration "${project.projectDir}/proguard-rules.pro"
     printmapping(proguardMappingFile.get().asFile)
     printseeds(proguardSeedsFile.get().asFile)
-
-    sourceSets.main.compileClasspath.files.findAll { it.exists() }.sort().each { File dependency ->
-        libraryjars(dependency.absolutePath)
-    }
-    configureJavaRuntimeLibraryJars(delegate as ProGuardTask)
 }
 
 tasks.register('obfuscatedJar', Jar) {
