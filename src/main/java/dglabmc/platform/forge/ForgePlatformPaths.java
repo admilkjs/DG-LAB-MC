@@ -1,13 +1,18 @@
 package dglabmc.platform.forge;
 
 import dglabmc.platform.PlatformPaths;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.nio.file.Path;
 
 public class ForgePlatformPaths implements PlatformPaths {
+    private final Path configRoot;
+
+    public ForgePlatformPaths(Path configRoot) {
+        this.configRoot = configRoot;
+    }
+
     @Override
     public Path resolveConfigDirectory(String modId) {
-        return FMLPaths.CONFIGDIR.get().resolve(modId);
+        return this.configRoot.resolve(modId);
     }
 }

@@ -29,7 +29,8 @@ public class StyledButton extends Button {
 
     @Override
     public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        Minecraft minecraft = Minecraft.getInstance();
+        Minecraft minecraft = Minecraft.getMinecraft();
+        FontAdapter font = new FontAdapter(minecraft.fontRenderer);
         int background = backgroundColor();
         int border = borderColor();
         int textColor = this.active ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_DIM;
@@ -38,8 +39,8 @@ public class StyledButton extends Button {
         AbstractGui.fill(matrixStack, this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, border);
         AbstractGui.fill(matrixStack, this.x, this.y, this.x + 1, this.y + this.height, border);
         AbstractGui.fill(matrixStack, this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, border);
-        String label = fitLabel(minecraft, this.getMessage().getString(), this.width - 10);
-        drawCenteredString(matrixStack, minecraft.font, label, this.x + this.width / 2, this.y + (this.height - 8) / 2, textColor);
+        String label = fitLabel(font, this.getMessage().getString(), this.width - 10);
+        AbstractGui.drawCenteredString(matrixStack, minecraft.fontRenderer, label, this.x + this.width / 2, this.y + (this.height - 8) / 2, textColor);
     }
 
     private int backgroundColor() {
@@ -82,14 +83,14 @@ public class StyledButton extends Button {
         }
     }
 
-    private String fitLabel(Minecraft minecraft, String raw, int maxWidth) {
+    private String fitLabel(FontAdapter font, String raw, int maxWidth) {
         if (raw == null || raw.isEmpty() || maxWidth <= 0) {
             return "";
         }
-        if (minecraft.font.width(raw) <= maxWidth) {
+        if (font.width(raw) <= maxWidth) {
             return raw;
         }
-        String clipped = minecraft.font.plainSubstrByWidth(raw, Math.max(0, maxWidth - minecraft.font.width("...")));
+        String clipped = font.plainSubstrByWidth(raw, Math.max(0, maxWidth - font.width("...")));
         if (clipped == null || clipped.isEmpty()) {
             return "";
         }

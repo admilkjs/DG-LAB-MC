@@ -2,7 +2,8 @@ package dglabmc.client.ui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
+
+import java.util.List;
 
 public final class UiRender extends AbstractGui {
     private UiRender() {
@@ -16,14 +17,14 @@ public final class UiRender extends AbstractGui {
         fill(matrixStack, x, y + height - 1, x + width, y + height, UiPalette.BORDER);
     }
 
-    public static void drawSectionTitle(MatrixStack matrixStack, FontRenderer font, String title, String subtitle, int x, int y) {
+    public static void drawSectionTitle(MatrixStack matrixStack, FontAdapter font, String title, String subtitle, int x, int y) {
         font.draw(matrixStack, title, (float) x, (float) y, UiPalette.TEXT_PRIMARY);
         if (subtitle != null && !subtitle.isEmpty()) {
             font.draw(matrixStack, subtitle, (float) x, (float) (y + 12), UiPalette.TEXT_MUTED);
         }
     }
 
-    public static void drawStatusBadge(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int backgroundColor, int borderColor) {
+    public static void drawStatusBadge(MatrixStack matrixStack, FontAdapter font, String text, int x, int y, int backgroundColor, int borderColor) {
         int textWidth = font.width(text);
         int width = textWidth + 12;
         fill(matrixStack, x, y, x + width, y + 14, backgroundColor);
@@ -38,48 +39,30 @@ public final class UiRender extends AbstractGui {
         fill(matrixStack, x, y, x + width, y + 1, UiPalette.BORDER);
     }
 
-    public static int drawWrappedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int width, int color, int maxLines) {
+    public static int drawWrappedText(MatrixStack matrixStack, FontAdapter font, String text, int x, int y, int width, int color, int maxLines) {
         return drawWrappedText(matrixStack, font, text, x, y, width, color, maxLines, 12);
     }
 
-    public static int drawWrappedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int width, int color, int maxLines, int lineHeight) {
+    public static int drawWrappedText(MatrixStack matrixStack, FontAdapter font, String text, int x, int y, int width, int color, int maxLines, int lineHeight) {
         if (text == null || text.isEmpty() || width <= 0 || maxLines <= 0) {
             return 0;
         }
-        String remaining = text;
-        int lines = 0;
-        int drawY = y;
-        while (!remaining.isEmpty() && lines < maxLines) {
-            String line = font.plainSubstrByWidth(remaining, width);
-            if (line.isEmpty()) {
-                break;
-            }
-            font.draw(matrixStack, line, (float) x, (float) drawY, color);
-            remaining = remaining.substring(line.length()).trim();
-            drawY += lineHeight;
-            lines++;
+        List<String> lines = font.wrap(text, width);
+        int count = Math.min(maxLines, lines.size());
+        for (int i = 0; i < count; i++) {
+            font.draw(matrixStack, lines.get(i), (float) x, (float) (y + i * lineHeight), color);
         }
-        return lines;
+        return count;
     }
 
-    public static int measureWrappedTextHeight(FontRenderer font, String text, int width, int maxLines) {
+    public static int measureWrappedTextHeight(FontAdapter font, String text, int width, int maxLines) {
         return measureWrappedTextHeight(font, text, width, maxLines, 12);
     }
 
-    public static int measureWrappedTextHeight(FontRenderer font, String text, int width, int maxLines, int lineHeight) {
+    public static int measureWrappedTextHeight(FontAdapter font, String text, int width, int maxLines, int lineHeight) {
         if (text == null || text.isEmpty() || width <= 0 || maxLines <= 0) {
             return 0;
         }
-        String remaining = text;
-        int lines = 0;
-        while (!remaining.isEmpty() && lines < maxLines) {
-            String line = font.plainSubstrByWidth(remaining, width);
-            if (line.isEmpty()) {
-                break;
-            }
-            remaining = remaining.substring(line.length()).trim();
-            lines++;
-        }
-        return lines * lineHeight;
+        return Math.min(maxLines, font.wrap(text, width).size()) * lineHeight;
     }
 }

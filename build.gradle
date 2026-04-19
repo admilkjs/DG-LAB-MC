@@ -1,155 +1,115 @@
 buildscript {
     repositories {
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        maven { url = 'https://maven.minecraftforge.net/' }
         mavenCentral()
     }
     dependencies {
-        classpath 'com.guardsquare:proguard-gradle:7.5.0'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
     }
 }
 
-plugins {
-    id 'eclipse'
-    id 'idea'
-    id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
-}
-
-import proguard.gradle.ProGuardTask
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
 
 version = mod_version
 group = mod_group_id
+archivesBaseName = mod_id
 
-base {
-    archivesName = mod_id
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 println "Java: ${System.getProperty('java.version')}, JVM: ${System.getProperty('java.vm.version')} (${System.getProperty('java.vendor')}), Arch: ${System.getProperty('os.arch')}"
 
 configurations {
-    shadowLib
-    implementation.extendsFrom shadowLib
+    shade
+    compile.extendsFrom shade
 }
 
 minecraft {
-    mappings channel: mapping_channel, version: mapping_version
-    copyIdeResources = true
+    mappings channel: 'snapshot', version: '20171003-1.12'
 
     runs {
-        configureEach {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
         client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
         }
 
         server {
-            args '--nogui'
-        }
-
-        data {
-            workingDirectory project.file('run-data')
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            workingDirectory project.file('run-server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
         }
     }
 }
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    shadowLib 'com.google.zxing:core:3.5.3'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2861'
+    compile 'com.google.zxing:core:3.5.3'
+    shade 'com.google.zxing:core:3.5.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 }
 
-tasks.named('processResources', ProcessResources).configure {
-    filteringCharset = 'UTF-8'
-    def replaceProperties = [
-        minecraft_version      : minecraft_version,
-        minecraft_version_range: minecraft_version_range,
-        forge_version          : forge_version,
-        forge_version_range    : forge_version_range,
-        loader_version_range   : loader_version_range,
-        mod_id                 : mod_id,
-        mod_name               : mod_name,
-        mod_license            : mod_license,
-        mod_version            : mod_version,
-        mod_authors            : mod_authors,
-        mod_description        : mod_description,
-    ]
-    inputs.properties replaceProperties
+processResources {
+    inputs.property 'version', mod_version
+    inputs.property 'mcversion', minecraft_version
+    inputs.property 'modid', mod_id
+    inputs.property 'name', mod_name
+    inputs.property 'description', mod_description
+    inputs.property 'authors', mod_authors
 
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        include 'pack.mcmeta'
+        expand(
+            version: mod_version,
+            mcversion: minecraft_version,
+            modid: mod_id,
+            name: mod_name,
+            description: mod_description,
+            authors: mod_authors
+        )
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+        exclude 'pack.mcmeta'
     }
 }
 
-tasks.named('jar', Jar).configure {
-    archiveClassifier = 'slim'
+jar {
     manifest {
         attributes([
             'Specification-Title'     : mod_id,
             'Specification-Vendor'    : mod_authors,
             'Specification-Version'   : '1',
             'Implementation-Title'    : project.name,
-            'Implementation-Version'  : project.jar.archiveVersion,
+            'Implementation-Version'  : "${version}",
             'Implementation-Vendor'   : mod_authors,
             'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-}
 
-tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configure {
-    archiveClassifier = ''
-    configurations = [project.configurations.shadowLib]
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    relocate 'com.google.zxing', "${mod_group_id}.shadow.zxing"
-    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
-    manifest {
-        attributes([
-            'Specification-Title'     : mod_id,
-            'Specification-Vendor'    : mod_authors,
-            'Specification-Version'   : '1',
-            'Implementation-Title'    : project.name,
-            'Implementation-Version'  : project.version,
-            'Implementation-Vendor'   : mod_authors,
-            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
+    from {
+        configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
     }
 }
 
-reobf {
-    shadowJar {}
-}
-
-tasks.named('assemble').configure {
-    dependsOn tasks.named('shadowJar')
-}
-
-tasks.named('build').configure {
-    dependsOn tasks.named('reobfShadowJar')
-}
+jar.finalizedBy('reobfJar')
 
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
-            artifact tasks.named('shadowJar')
+        mavenJava(MavenPublication) {
+            artifact jar
         }
     }
     repositories {
@@ -163,112 +123,31 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-tasks.withType(Test).configureEach {
+test {
     useJUnitPlatform()
 }
 
-tasks.register('generatePvpPunishConfig', JavaExec) {
-    dependsOn tasks.named('classes')
+task generatePvpPunishConfig(type: JavaExec) {
+    dependsOn classes
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'dglabmc.tool.PvpPunishConfigGenerator'
+    main = 'dglabmc.tool.PvpPunishConfigGenerator'
     workingDir = project.projectDir
     args "${project.projectDir}/dist/dglabmc-pvp-punish.zip"
     jvmArgs '-Dfile.encoding=UTF-8'
 }
 
-def releaseOutputDir = layout.projectDirectory.dir('dist/release')
-def proguardTempDir = layout.buildDirectory.dir('tmp/proguard')
-def proguardMappingFile = layout.buildDirectory.file('reports/proguard/mapping.txt')
-def proguardSeedsFile = layout.buildDirectory.file('reports/proguard/seeds.txt')
-def obfuscatedDevJar = layout.buildDirectory.file("tmp/proguard/${mod_id}-${mod_version}-obf-dev.jar")
-
-def configureJavaRuntimeLibraryJars = { ProGuardTask task ->
-    File javaHomeDir = new File(System.getProperty('java.home'))
-    File jmodsDir = new File(javaHomeDir, 'jmods')
-    if (jmodsDir.isDirectory()) {
-        fileTree(jmodsDir).matching { include '*.jmod' }.files.sort().each { File jmod ->
-            task.libraryjars(jmod.absolutePath, jarfilter: '!**.jar', filter: '!module-info.class')
-        }
-        return
-    }
-
-    File rtJar = new File(javaHomeDir, 'lib/rt.jar')
-    if (!rtJar.exists() && javaHomeDir.parentFile != null) {
-        rtJar = new File(javaHomeDir.parentFile, 'jre/lib/rt.jar')
-    }
-    if (rtJar.exists()) {
-        task.libraryjars(rtJar.absolutePath)
-    }
-}
-
-tasks.register('obfuscateShadowJar', ProGuardTask) {
-    dependsOn tasks.named('shadowJar')
-
-    doFirst {
-        proguardTempDir.get().asFile.mkdirs()
-        proguardMappingFile.get().asFile.parentFile.mkdirs()
-    }
-
-    injars(tasks.named('shadowJar').get().archiveFile.get().asFile)
-    outjars(obfuscatedDevJar.get().asFile)
-
-    configuration "${project.projectDir}/proguard-rules.pro"
-    printmapping(proguardMappingFile.get().asFile)
-    printseeds(proguardSeedsFile.get().asFile)
-
-    sourceSets.main.compileClasspath.files.findAll { it.exists() }.sort().each { File dependency ->
-        libraryjars(dependency.absolutePath)
-    }
-    configureJavaRuntimeLibraryJars(delegate as ProGuardTask)
-}
-
-tasks.register('obfuscatedJar', Jar) {
-    dependsOn tasks.named('obfuscateShadowJar')
-    archiveClassifier = 'obf-dev'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from({
-        zipTree(obfuscatedDevJar.get().asFile)
-    })
-    manifest {
-        attributes([
-            'Specification-Title'     : mod_id,
-            'Specification-Vendor'    : mod_authors,
-            'Specification-Version'   : '1',
-            'Implementation-Title'    : project.name,
-            'Implementation-Version'  : project.version,
-            'Implementation-Vendor'   : mod_authors,
-            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-}
-
-reobf {
-    obfuscatedJar {}
-}
-
-tasks.register('copyReleaseArtifacts', Copy) {
-    dependsOn tasks.named('reobfObfuscatedJar')
-    into(releaseOutputDir)
-
-    from(layout.buildDirectory.file('reobfObfuscatedJar/output.jar')) {
+task copyReleaseArtifacts(type: Copy) {
+    dependsOn 'reobfJar'
+    into file("${project.projectDir}/dist/release")
+    from("${buildDir}/reobfJar/output.jar") {
         rename { String ignored ->
-            "${mod_id}-${mod_version}-release-obf.jar"
-        }
-    }
-    from(proguardMappingFile) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-release-obf.mapping.txt"
-        }
-    }
-    from(proguardSeedsFile) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-release-obf.seeds.txt"
+            "${mod_id}-${mod_version}-release.jar"
         }
     }
 }
 
-tasks.register('buildRelease') {
+task buildRelease {
     group = 'build'
-    description = 'Builds the shaded Forge jar, obfuscates it, reobfuscates Minecraft mappings, and copies release artifacts to dist/release.'
-    dependsOn tasks.named('copyReleaseArtifacts')
+    description = 'Builds the Forge 1.12.2 jar and copies release artifacts to dist/release.'
+    dependsOn copyReleaseArtifacts
 }

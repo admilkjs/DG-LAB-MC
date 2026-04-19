@@ -5,8 +5,8 @@ import dglabmc.client.ui.PasswordGateScreen;
 import dglabmc.platform.PlatformClientBridge;
 import dglabmc.security.DailyPasswordLock;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.text.TextComponentString;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -16,34 +16,34 @@ import java.nio.file.Path;
 public class ForgePlatformClientBridge implements PlatformClientBridge {
     @Override
     public void openControlCenter() {
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.execute(() -> {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        minecraft.addScheduledTask(() -> {
             if (minecraft.player != null) {
                 DailyPasswordLock.clearExpiredLock();
-                minecraft.setScreen(DailyPasswordLock.isUnlocked() ? new ControlCenterScreen() : new PasswordGateScreen(new ControlCenterScreen()));
+                minecraft.displayGuiScreen(DailyPasswordLock.isUnlocked() ? new ControlCenterScreen() : new PasswordGateScreen(new ControlCenterScreen()));
             }
         });
     }
 
     @Override
     public void showPlayerMessage(String message) {
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.execute(() -> {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        minecraft.addScheduledTask(() -> {
             if (minecraft.player != null) {
-                minecraft.player.sendMessage(new StringTextComponent(message), Util.NIL_UUID);
+                minecraft.player.sendMessage(new TextComponentString(message));
             }
         });
     }
 
     @Override
     public void copyToClipboard(String value) {
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.execute(() -> minecraft.keyboardHandler.setClipboard(value == null ? "" : value));
+        Minecraft minecraft = Minecraft.getMinecraft();
+        minecraft.addScheduledTask(() -> GuiScreen.setClipboardString(value == null ? "" : value));
     }
 
     @Override
     public String readClipboard() {
-        return Minecraft.getInstance().keyboardHandler.getClipboard();
+        return GuiScreen.getClipboardString();
     }
 
     @Override

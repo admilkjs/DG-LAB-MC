@@ -2,158 +2,132 @@ package dglabmc.platform.forge;
 
 import dglabmc.AppServices;
 import dglabmc.client.ClientCommandRouter;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import dglabmc.rule.RuleDefinition;
+import dglabmc.wave.WaveformDefinition;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.client.IClientCommand;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
-public final class ForgeCommandRegistrar {
-    private static final SuggestionProvider<CommandSource> RULE_SUGGESTIONS = (context, builder) ->
-        ISuggestionProvider.suggest(collectRuleTokens(), builder);
-    private static final SuggestionProvider<CommandSource> WAVEFORM_SUGGESTIONS = (context, builder) ->
-        ISuggestionProvider.suggest(collectWaveformTokens(), builder);
-
-    private ForgeCommandRegistrar() {
+public class ForgeCommandRegistrar extends CommandBase implements IClientCommand {
+    public static void register() {
+        ClientCommandHandler.instance.registerCommand(new ForgeCommandRegistrar());
     }
 
-    @SubscribeEvent
-    public static void register(RegisterCommandsEvent event) {
-        LiteralArgumentBuilder<CommandSource> root = Commands.literal("dglab")
-            .executes(ctx -> run(ctx.getSource(), "/dglab"))
-            .then(Commands.literal("password")
-                .then(Commands.argument("value", StringArgumentType.string())
-                    .executes(ctx -> run(ctx.getSource(), "/dglab password " + quote(StringArgumentType.getString(ctx, "value"))))))
-            .then(Commands.literal("ui").executes(ctx -> run(ctx.getSource(), "/dglab ui")))
-            .then(Commands.literal("open").executes(ctx -> run(ctx.getSource(), "/dglab open")))
-            .then(Commands.literal("status").executes(ctx -> run(ctx.getSource(), "/dglab status")))
-            .then(Commands.literal("pair")
-                .executes(ctx -> run(ctx.getSource(), "/dglab pair"))
-                .then(Commands.literal("refresh").executes(ctx -> run(ctx.getSource(), "/dglab pair refresh"))))
-            .then(Commands.literal("export").executes(ctx -> run(ctx.getSource(), "/dglab export")))
-            .then(Commands.literal("global")
-                .executes(ctx -> run(ctx.getSource(), "/dglab global"))
-                .then(globalChannelCommands("a"))
-                .then(globalChannelCommands("b"))
-                .then(Commands.literal("strength")
-                    .then(Commands.argument("base", IntegerArgumentType.integer(0, 200))
-                        .executes(ctx -> run(ctx.getSource(), "/dglab global strength " + IntegerArgumentType.getInteger(ctx, "base")))
-                        .then(Commands.argument("max", IntegerArgumentType.integer(0, 200))
-                            .executes(ctx -> run(ctx.getSource(), "/dglab global strength " + IntegerArgumentType.getInteger(ctx, "base") + " " + IntegerArgumentType.getInteger(ctx, "max")))))))
-            .then(ruleCommands())
-            .then(waveformCommands());
-        event.getDispatcher().register(root);
+    @Override
+    public String getName() {
+        return "dglab";
     }
 
-    private static LiteralArgumentBuilder<CommandSource> globalChannelCommands(String channel) {
-        return Commands.literal(channel)
-            .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel))
-            .then(Commands.literal("max")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 200))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " max " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("event")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 200))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " event " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("damage")
-                .then(Commands.argument("value", DoubleArgumentType.doubleArg(0.0D, 20.0D))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " damage " + DoubleArgumentType.getDouble(ctx, "value")))))
-            .then(Commands.literal("delay")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 600000))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " delay " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("decayInterval")
-                .then(Commands.argument("value", IntegerArgumentType.integer(50, 600000))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " decayInterval " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("decayValue")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 200))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " decayValue " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("death")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 200))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " death " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("deathDelay")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 600000))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " deathDelay " + IntegerArgumentType.getInteger(ctx, "value")))))
-            .then(Commands.literal("min")
-                .then(Commands.argument("value", IntegerArgumentType.integer(0, 200))
-                    .executes(ctx -> run(ctx.getSource(), "/dglab global " + channel + " min " + IntegerArgumentType.getInteger(ctx, "value")))));
+    @Override
+    public String getUsage(ICommandSender sender) {
+        return "/dglab";
     }
 
-    private static LiteralArgumentBuilder<CommandSource> ruleCommands() {
-        return Commands.literal("rule")
-            .then(Commands.literal("list").executes(ctx -> run(ctx.getSource(), "/dglab rule list")))
-            .then(Commands.literal("enable")
-                .then(Commands.argument("rule", StringArgumentType.string())
-                    .suggests(RULE_SUGGESTIONS)
-                    .executes(ctx -> run(ctx.getSource(), "/dglab rule enable " + quote(StringArgumentType.getString(ctx, "rule"))))))
-            .then(Commands.literal("disable")
-                .then(Commands.argument("rule", StringArgumentType.string())
-                    .suggests(RULE_SUGGESTIONS)
-                    .executes(ctx -> run(ctx.getSource(), "/dglab rule disable " + quote(StringArgumentType.getString(ctx, "rule"))))))
-            .then(Commands.literal("test")
-                .then(Commands.argument("rule", StringArgumentType.string())
-                    .suggests(RULE_SUGGESTIONS)
-                    .executes(ctx -> run(ctx.getSource(), "/dglab rule test " + quote(StringArgumentType.getString(ctx, "rule"))))))
-            .then(Commands.literal("rename")
-                .then(Commands.argument("rule", StringArgumentType.string())
-                    .suggests(RULE_SUGGESTIONS)
-                    .then(Commands.argument("name", StringArgumentType.greedyString())
-                        .executes(ctx -> run(ctx.getSource(), "/dglab rule rename " + quote(StringArgumentType.getString(ctx, "rule")) + " " + quote(StringArgumentType.getString(ctx, "name")))))))
-            .then(Commands.literal("move")
-                .then(Commands.argument("rule", StringArgumentType.string())
-                    .suggests(RULE_SUGGESTIONS)
-                    .then(Commands.literal("up").executes(ctx -> run(ctx.getSource(), "/dglab rule move " + quote(StringArgumentType.getString(ctx, "rule")) + " up")))
-                    .then(Commands.literal("down").executes(ctx -> run(ctx.getSource(), "/dglab rule move " + quote(StringArgumentType.getString(ctx, "rule")) + " down")))
-                    .then(Commands.literal("top").executes(ctx -> run(ctx.getSource(), "/dglab rule move " + quote(StringArgumentType.getString(ctx, "rule")) + " top")))
-                    .then(Commands.literal("bottom").executes(ctx -> run(ctx.getSource(), "/dglab rule move " + quote(StringArgumentType.getString(ctx, "rule")) + " bottom")))))
-            .then(Commands.literal("row")
-                .then(Commands.argument("rule", StringArgumentType.string())
-                    .suggests(RULE_SUGGESTIONS)
-                    .then(Commands.literal("mergeUp").executes(ctx -> run(ctx.getSource(), "/dglab rule row " + quote(StringArgumentType.getString(ctx, "rule")) + " mergeUp")))
-                    .then(Commands.literal("splitNext").executes(ctx -> run(ctx.getSource(), "/dglab rule row " + quote(StringArgumentType.getString(ctx, "rule")) + " splitNext")))));
+    @Override
+    public List<String> getAliases() {
+        return Collections.singletonList("dgl");
     }
 
-    private static LiteralArgumentBuilder<CommandSource> waveformCommands() {
-        return Commands.literal("waveform")
-            .then(Commands.literal("list").executes(ctx -> run(ctx.getSource(), "/dglab waveform list")))
-            .then(Commands.literal("test")
-                .then(Commands.argument("waveform", StringArgumentType.string())
-                    .suggests(WAVEFORM_SUGGESTIONS)
-                    .then(Commands.literal("A").executes(ctx -> run(ctx.getSource(), "/dglab waveform test " + quote(StringArgumentType.getString(ctx, "waveform")) + " A")))
-                    .then(Commands.literal("B").executes(ctx -> run(ctx.getSource(), "/dglab waveform test " + quote(StringArgumentType.getString(ctx, "waveform")) + " B")))));
-    }
-
-    private static int run(CommandSource source, String command) {
-        ServerPlayerEntity sourcePlayer;
-        try {
-            sourcePlayer = source.getPlayerOrException();
-        } catch (Exception ignored) {
-            return 0;
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        StringBuilder command = new StringBuilder("/dglab");
+        for (String arg : args) {
+            command.append(' ').append(quote(arg));
         }
-        if (!isCurrentLocalPlayer(sourcePlayer)) {
-            source.sendFailure(new StringTextComponent("该命令仅本机玩家可用。"));
-            return 0;
-        }
-        ClientCommandRouter.tryHandle(command);
-        return 1;
+        ClientCommandRouter.tryHandle(command.toString());
     }
 
-    private static boolean isCurrentLocalPlayer(ServerPlayerEntity sourcePlayer) {
-        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-        return minecraft.player != null && sourcePlayer.getUUID().equals(minecraft.player.getUUID());
+    @Override
+    public boolean allowUsageWithoutPrefix(ICommandSender sender, String message) {
+        return false;
+    }
+
+    @Override
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+        return true;
+    }
+
+    @Override
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
+        if (args.length <= 1) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("password", "ui", "open", "status", "pair", "export", "global", "rule", "waveform"));
+        }
+        String root = lower(args[0]);
+        if ("pair".equals(root) && args.length == 2) {
+            return getListOfStringsMatchingLastWord(args, Collections.singletonList("refresh"));
+        }
+        if ("global".equals(root)) {
+            return tabGlobal(args);
+        }
+        if ("rule".equals(root)) {
+            return tabRule(args);
+        }
+        if ("waveform".equals(root) || "wave".equals(root)) {
+            return tabWaveform(args);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public int compareTo(net.minecraft.command.ICommand other) {
+        return this.getName().compareTo(other.getName());
+    }
+
+    private List<String> tabGlobal(String[] args) {
+        if (args.length == 2) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("a", "b", "strength"));
+        }
+        if (args.length == 3 && ("a".equalsIgnoreCase(args[1]) || "b".equalsIgnoreCase(args[1]))) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("max", "event", "damage", "delay", "decayInterval", "decayValue", "death", "deathDelay", "min"));
+        }
+        return Collections.emptyList();
+    }
+
+    private List<String> tabRule(String[] args) {
+        if (args.length == 2) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("list", "enable", "disable", "test", "rename", "move", "row"));
+        }
+        if (args.length == 3 && !"list".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, toList(collectRuleTokens()));
+        }
+        if (args.length == 4 && "move".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("up", "down", "top", "bottom"));
+        }
+        if (args.length == 4 && "row".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("mergeUp", "splitNext"));
+        }
+        return Collections.emptyList();
+    }
+
+    private List<String> tabWaveform(String[] args) {
+        if (args.length == 2) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("list", "test"));
+        }
+        if (args.length == 3 && "test".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, toList(collectWaveformTokens()));
+        }
+        if (args.length == 4 && "test".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, Arrays.asList("A", "B"));
+        }
+        return Collections.emptyList();
     }
 
     private static Iterable<String> collectRuleTokens() {
         Set<String> tokens = new LinkedHashSet<String>();
-        for (dglabmc.rule.RuleDefinition rule : AppServices.get().getConfig().rules) {
+        for (RuleDefinition rule : AppServices.get().getConfig().rules) {
             addToken(tokens, rule.id);
             addToken(tokens, rule.name);
         }
@@ -162,7 +136,7 @@ public final class ForgeCommandRegistrar {
 
     private static Iterable<String> collectWaveformTokens() {
         Set<String> tokens = new LinkedHashSet<String>();
-        for (dglabmc.wave.WaveformDefinition waveform : AppServices.get().getConfig().waveforms) {
+        for (WaveformDefinition waveform : AppServices.get().getConfig().waveforms) {
             addToken(tokens, waveform.id);
             addToken(tokens, waveform.name);
         }
@@ -176,6 +150,18 @@ public final class ForgeCommandRegistrar {
                 tokens.add(trimmed);
             }
         }
+    }
+
+    private static List<String> toList(Iterable<String> values) {
+        List<String> result = new ArrayList<String>();
+        for (String value : values) {
+            result.add(value);
+        }
+        return result;
+    }
+
+    private static String lower(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
 
     private static String quote(String value) {
