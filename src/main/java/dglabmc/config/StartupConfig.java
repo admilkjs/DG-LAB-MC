@@ -1,16 +1,16 @@
 package dglabmc.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class StartupConfig {
     private static final int LEGACY_DEFAULT_PORT = 27852;
     private static final int CURRENT_DEFAULT_PORT = 21733;
-    public static final ForgeConfigSpec SPEC;
-    public static final ForgeConfigSpec.IntValue DEVICE_WS_PORT;
-    public static final ForgeConfigSpec.BooleanValue OPEN_MENU_ON_LOGIN;
+    public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.IntValue DEVICE_WS_PORT;
+    public static final ModConfigSpec.BooleanValue OPEN_MENU_ON_LOGIN;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("ui");
         OPEN_MENU_ON_LOGIN = builder
             .comment("客户端进入世界后自动打开 DG-LAB 控制中心。")

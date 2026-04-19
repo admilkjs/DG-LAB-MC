@@ -8,14 +8,13 @@ import dglabmc.platform.forge.ForgeCommandRegistrar;
 import dglabmc.platform.forge.ForgePlatformPaths;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.network.NetworkConstants;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,12 +28,11 @@ public class DgLabMcMod {
     public DgLabMcMod() {
         PlatformServices.configure(new ForgePlatformPaths(), new ForgePlatformClientBridge());
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, StartupConfig.SPEC);
-        ModLoadingContext.get().registerDisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (remote, server) -> true);
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterKeyMappings);
-        MinecraftForge.EVENT_BUS.register(ClientHooks.class);
-        MinecraftForge.EVENT_BUS.register(ForgeCommandRegistrar.class);
+        NeoForge.EVENT_BUS.register(ClientHooks.class);
+        NeoForge.EVENT_BUS.register(ForgeCommandRegistrar.class);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {

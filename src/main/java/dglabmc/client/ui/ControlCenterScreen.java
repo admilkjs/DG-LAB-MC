@@ -83,18 +83,18 @@ public class ControlCenterScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         if (this.activeTab == Tab.RULES && isMouseWithinRuleList(mouseX, mouseY)) {
             AppConfig config = AppServices.get().getConfig();
             int visibleSlots = visibleRuleSlots();
             int maxScroll = Math.max(0, config.rules.size() - visibleSlots);
             if (maxScroll > 0) {
-                this.ruleListScroll = clamp(this.ruleListScroll + (delta < 0.0D ? 1 : -1), 0, maxScroll);
+                this.ruleListScroll = clamp(this.ruleListScroll + (deltaY < 0.0D ? 1 : -1), 0, maxScroll);
                 rebuildWidgets();
                 return true;
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
     }
 
     private static Tab resolveInitialTab() {
@@ -1021,12 +1021,12 @@ public class ControlCenterScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
         guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         UiRender.drawPanel(guiGraphics, sidebarLeft(), sidebarTop(), sidebarWidth(), contentHeight(), UiPalette.SIDEBAR, UiPalette.ACCENT);
         UiRender.drawPanel(guiGraphics, contentLeft(), contentTop(), contentWidth(), contentHeight(), UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
 
-        UiRender.drawSectionTitle(guiGraphics, this.font, "DG-LAB", "Forge 1.20.1", sidebarLeft() + 12, sidebarTop() + 12);
+        UiRender.drawSectionTitle(guiGraphics, this.font, "DG-LAB", "NeoForge 1.20.2", sidebarLeft() + 12, sidebarTop() + 12);
         UiRender.drawSectionTitle(guiGraphics, this.font, "控制中心", "设备 / 规则 / 波形", contentLeft() + 14, contentTop() + 12);
         int badgeWidth = this.font.width(tabLabel(this.activeTab)) + 12;
         UiRender.drawStatusBadge(guiGraphics, this.font, tabLabel(this.activeTab), contentRight() - badgeWidth - 14, contentTop() + 12, 0x77202838, UiPalette.ACCENT);

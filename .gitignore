@@ -24,6 +24,7 @@ run-data
 logs
 .tmp_err_*
 .tmp_mdk
+.tmp_ref_*
 compile-*.log
 
 # other

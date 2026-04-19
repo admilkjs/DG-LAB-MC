@@ -64,7 +64,6 @@ public class TextPromptScreen extends Screen {
 
     @Override
     public void tick() {
-        this.inputField.tick();
     }
 
     @Override
@@ -99,7 +98,7 @@ public class TextPromptScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
         guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(380, this.width - 24);
         boolean compact = panelWidth < 360;
