@@ -46,6 +46,12 @@ GitHub Actions `Build` 工作流会上传：
 - `dist/release/dglabmc-<version>-release-obf.mapping.txt`
 - `dist/release/dglabmc-<version>-release-obf.seeds.txt`
 
+GitHub `Release` 工作流会在版本 tag 推送后发布：
+
+- `build/libs/*.jar`
+- `dist/*.zip`
+- 自动生成对应的 GitHub Release
+
 ## 版本线
 
 这个仓库不会用一个 jar 硬兼容 `1.12.2` 到 NeoForge 全线版本。

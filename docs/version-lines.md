@@ -8,14 +8,23 @@
 
 - `main`
   当前稳定线，保留 Forge `1.16.5`
+- `forge/1.16.5`
+  当前实际发布线
 - `forge/1.12.2`
   低版本兼容线
-- `forge/1.16.5`
-  Forge 中期稳定线
 - `neoforge/1.20.1`
   NeoForge 最低支持线
 - `neoforge/1.20.2+`
   NeoForge 后续主维护线
+
+## 推荐 tag
+
+- `forge-1.16.5-v0.1.0`
+- `forge-1.12.2-v0.1.0`
+- `neoforge-1.20.1-v0.1.0`
+- `neoforge-1.20.2-v0.1.0`
+
+只有对应版本线真正可构建时，才应该打 release tag。
 
 ## 为什么要拆
 
@@ -39,3 +48,11 @@
 - Forge 1.16.x: https://docs.minecraftforge.net/en/1.16.x/
 - NeoForge 1.20.1: https://docs.neoforged.net/docs/1.20.1/
 - NeoForge 1.20.2+: https://docs.neoforged.net/docs/1.20.2/
+
+## 当前判断
+
+按 2026-04-20 查到的 NeoForge 官方文档：
+
+- 官方用户指南明确写了 NeoForge 虽然存在于 `1.20.1`，但更推荐在 `1.20.2+` 使用
+- 当前公开文档覆盖到了 `1.21.x`
+- 没查到 `1.22` 的官方 NeoForge 文档入口，所以当前不把 `1.22` 作为可发布目标
