@@ -11,7 +11,7 @@ public class AppConfig {
     public static final int CURRENT_SCHEMA_VERSION = 9;
 
     public int schemaVersion = CURRENT_SCHEMA_VERSION;
-    public String loaderFlavor = "neoforge-1.20.2";
+    public String loaderFlavor = "neoforge-1.20.4";
     @Deprecated
     public RuleProcessingMode ruleProcessingMode = RuleProcessingMode.PARALLEL;
     public ConnectionPreferences connection = new ConnectionPreferences();

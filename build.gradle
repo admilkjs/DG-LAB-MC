@@ -12,8 +12,8 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.116'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'net.neoforged.gradle.userdev' version '7.1.25'
+    id 'com.gradleup.shadow' version '9.4.1'
 }
 
 import proguard.gradle.ProGuardTask
@@ -26,8 +26,6 @@ base {
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
 
 println "Java: ${System.getProperty('java.version')}, JVM: ${System.getProperty('java.vm.version')} (${System.getProperty('java.vendor')}), Arch: ${System.getProperty('os.arch')}"
 
@@ -47,21 +45,21 @@ runs {
     }
 
     client {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
     }
 
     server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        argument '--nogui'
     }
 
     gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
     }
 
     data {
         workingDirectory project.file('run-data')
-        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
 
@@ -74,6 +72,7 @@ dependencies {
     shadowLib 'com.google.zxing:core:3.5.3'
     compileOnly 'io.netty:netty-codec-http:4.1.82.Final'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -113,7 +112,7 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configure {
+tasks.named('shadowJar').configure {
     archiveClassifier = ''
     configurations = [project.configurations.shadowLib]
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
