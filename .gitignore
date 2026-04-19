@@ -1,0 +1,34 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+dist
+
+# runtime
+run
+run-data
+logs
+.tmp_err_*
+
+# other
+eclipse
+refs
+mdk
+forge-1.16.5-36.2.42-mdk.zip
+
+# Files from Forge MDK
+forge*changelog.txt
