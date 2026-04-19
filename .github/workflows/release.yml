@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'forge-*-v*'
+      - 'neoforge-*-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Tag Toolchain
+        id: toolchain
+        shell: pwsh
+        run: |
+          $refName = "${{ github.ref_name }}"
+
+          switch -Regex ($refName) {
+            '^forge-1\.12\.2-v.+$' { $targetRef = 'forge/1.12.2'; $javaVersion = '8' }
+            '^forge-1\.16\.5-v.+$' { $targetRef = 'forge/1.16.5'; $javaVersion = '8' }
+            '^forge-1\.18\.2-v.+$' { $targetRef = 'forge/1.18.2'; $javaVersion = '17' }
+            '^forge-1\.19\.2-v.+$' { $targetRef = 'forge/1.19.2'; $javaVersion = '17' }
+            '^forge-1\.20\.1-v.+$' { $targetRef = 'forge/1.20.1'; $javaVersion = '17' }
+            '^neoforge-1\.20\.2-v.+$' { $targetRef = 'neoforge/1.20.2'; $javaVersion = '17' }
+            '^neoforge-1\.20\.4-v.+$' { $targetRef = 'neoforge/1.20.4'; $javaVersion = '17' }
+            '^neoforge-1\.20\.6-v.+$' { $targetRef = 'neoforge/1.20.6'; $javaVersion = '21' }
+            default { throw "Unsupported tag for release workflow: $refName" }
+          }
+
+          "target_ref=$targetRef" >> $env:GITHUB_OUTPUT
+          "java_version=$javaVersion" >> $env:GITHUB_OUTPUT
+          "gradle_args=clean build generatePvpPunishConfig buildRelease --no-daemon" >> $env:GITHUB_OUTPUT
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.toolchain.outputs.java_version }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare Gradle Properties For CI
+        shell: pwsh
+        run: |
+          $path = 'gradle.properties'
+          $lines = Get-Content -LiteralPath $path
+          $filtered = $lines | Where-Object { $_ -notmatch '^systemProp\.(http|https)\.proxy(Host|Port)=' }
+          Set-Content -LiteralPath $path -Value $filtered -Encoding utf8
+
+      - name: Build Release Artifacts
+        shell: pwsh
+        run: .\gradlew.bat ${{ steps.toolchain.outputs.gradle_args }}
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/release/*
+            dist/*.zip
