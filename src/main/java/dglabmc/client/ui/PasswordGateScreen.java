@@ -93,7 +93,7 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "杈撳叆浠婃棩瀵嗙爜", "鏈В閿佸墠涓嶈兘浣跨敤鐣岄潰鍜屾寚浠?, left + 18, top + 14);
+        UiRender.drawSectionTitle(matrixStack, this.font, "输入今日密码", "解锁后可用界面和指令", left + 18, top + 14);
         this.font.drawString("瀵嗙爜", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
             this.passwordField.render(mouseX, mouseY, partialTicks);
