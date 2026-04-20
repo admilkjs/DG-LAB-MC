@@ -29,6 +29,9 @@ jobs:
 
           switch -Regex ($refName) {
             '^forge-1\.12\.2-v.+$' { $targetRef = 'forge/1.12.2'; $javaVersion = '8' }
+            '^forge-1\.13\.2-v.+$' { $targetRef = 'forge/1.13.2'; $javaVersion = '11' }
+            '^forge-1\.14\.4-v.+$' { $targetRef = 'forge/1.14.4'; $javaVersion = '11' }
+            '^forge-1\.15\.2-v.+$' { $targetRef = 'forge/1.15.2'; $javaVersion = '11' }
             '^forge-1\.16\.5-v.+$' { $targetRef = 'forge/1.16.5'; $javaVersion = '8' }
             '^forge-1\.18\.2-v.+$' { $targetRef = 'forge/1.18.2'; $javaVersion = '17' }
             '^forge-1\.19\.2-v.+$' { $targetRef = 'forge/1.19.2'; $javaVersion = '17' }
@@ -36,6 +39,7 @@ jobs:
             '^neoforge-1\.20\.2-v.+$' { $targetRef = 'neoforge/1.20.2'; $javaVersion = '17' }
             '^neoforge-1\.20\.4-v.+$' { $targetRef = 'neoforge/1.20.4'; $javaVersion = '17' }
             '^neoforge-1\.20\.6-v.+$' { $targetRef = 'neoforge/1.20.6'; $javaVersion = '21' }
+            '^neoforge-1\.21\.4-v.+$' { $targetRef = 'neoforge/1.21.4'; $javaVersion = '21' }
             default { throw "Unsupported tag for release workflow: $refName" }
           }
 
@@ -48,6 +52,10 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ steps.toolchain.outputs.java_version }}
+
+      - name: Checkout Target Branch
+        shell: pwsh
+        run: git checkout ${{ steps.toolchain.outputs.target_ref }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
