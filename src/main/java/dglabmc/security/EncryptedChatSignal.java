@@ -11,13 +11,9 @@ import java.util.Base64;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.Pattern;
 
 public final class EncryptedChatSignal {
-    public static final String TOKEN_PREFIX = "DGLAB$";
-
-    private static final String SALT = "admilk-dglab-signal-v1";
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("DGLAB\\$([A-Za-z0-9_-]+)");
-
     private EncryptedChatSignal() {
     }
 
@@ -29,8 +25,8 @@ public final class EncryptedChatSignal {
         String target = normalizePlayerName(playerName);
         String trigger = normalizeTrigger(triggerId);
         String date = normalizeDate(dateToken);
-        String payload = "v1|" + trigger + "|" + target + "|" + date;
-        return TOKEN_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(encrypt(payload, date));
+        String payload = (String) SecurityVm.v(1, trigger, target, date);
+        return ((String) SecurityVm.v(3)) + Base64.getUrlEncoder().withoutPadding().encodeToString(encrypt(payload, date));
     }
 
     public static String createDeathSignal(String playerName) {
@@ -49,7 +45,7 @@ public final class EncryptedChatSignal {
         if (message == null || message.isEmpty() || playerName == null || playerName.trim().isEmpty()) {
             return "";
         }
-        Matcher matcher = TOKEN_PATTERN.matcher(message);
+        Matcher matcher = ((Pattern) SecurityVm.v(4)).matcher(message);
         while (matcher.find()) {
             String triggerId = decodeTriggerForPlayer(matcher.group(1), playerName);
             if (!triggerId.isEmpty()) {
@@ -65,11 +61,11 @@ public final class EncryptedChatSignal {
         if (decrypted.isEmpty()) {
             return "";
         }
-        String[] parts = decrypted.split("\\|");
+        String[] parts = (String[]) SecurityVm.v(5, decrypted);
         if (parts.length != 4) {
             return "";
         }
-        if (!"v1".equals(parts[0])) {
+        if (!((String) SecurityVm.v(6)).equals(parts[0])) {
             return "";
         }
         if (!dateToken.equals(parts[3])) {
@@ -107,7 +103,7 @@ public final class EncryptedChatSignal {
     private static byte[] resolveKey(String dateToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashed = digest.digest((SALT + ":" + normalizeDate(dateToken)).getBytes(StandardCharsets.UTF_8));
+            byte[] hashed = digest.digest(((String) SecurityVm.v(2, normalizeDate(dateToken))).getBytes(StandardCharsets.UTF_8));
             byte[] key = new byte[16];
             System.arraycopy(hashed, 0, key, 0, key.length);
             return key;
