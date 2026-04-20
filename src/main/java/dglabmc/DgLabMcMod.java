@@ -48,20 +48,10 @@ public class DgLabMcMod {
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(new Runnable() {
-            @Override
-            public void run() {
-                AppServices.get().initialize();
-            }
-        });
+        AppServices.get().initialize();
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(new Runnable() {
-            @Override
-            public void run() {
-                ClientHooks.registerKeyBinding();
-            }
-        });
+        ClientHooks.registerKeyBinding();
     }
 }

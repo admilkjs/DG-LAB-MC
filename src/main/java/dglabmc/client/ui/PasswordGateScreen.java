@@ -28,15 +28,15 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, new StringTextComponent("今日密码"));
-        this.passwordField.setMaxLength(64);
-        this.passwordField.setValue("");
+        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, "今日密码");
+        this.passwordField.setMaxStringLength(64);
+        this.passwordField.setText("");
         this.children.add(this.passwordField);
-        this.setInitialFocus(this.passwordField);
+        this.passwordField.setFocused2(true);
 
         int buttonWidth = (panelWidth - 44) / 2;
         this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, new StringTextComponent("解锁"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
+        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setText(PlatformServices.client().readClipboard())));
     }
 
     @Override
@@ -52,7 +52,7 @@ public class PasswordGateScreen extends Screen {
             submitPassword();
             return true;
         }
-        if (this.passwordField != null && (this.passwordField.keyPressed(keyCode, scanCode, modifiers) || this.passwordField.canConsumeInput())) {
+        if (this.passwordField != null && this.passwordField.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -64,10 +64,10 @@ public class PasswordGateScreen extends Screen {
     }
 
     private void submitPassword() {
-        if (DailyPasswordLock.unlock(this.passwordField == null ? "" : this.passwordField.getValue().trim())) {
+        if (DailyPasswordLock.unlock(this.passwordField == null ? "" : this.passwordField.getText().trim())) {
             this.status = "";
             if (this.minecraft != null) {
-                this.minecraft.setScreen(this.nextScreen);
+                this.minecraft.displayGuiScreen(this.nextScreen);
             }
             return;
         }
@@ -75,22 +75,23 @@ public class PasswordGateScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(360, this.width - 24);
         int panelHeight = 148;
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
         UiRender.drawSectionTitle(matrixStack, this.font, "输入今日密码", "未解锁前不能使用界面和指令", left + 18, top + 14);
-        this.font.draw(matrixStack, "密码", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+        this.font.drawString("密码", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
-            this.passwordField.render(matrixStack, mouseX, mouseY, partialTicks);
+            this.passwordField.render(mouseX, mouseY, partialTicks);
         }
         if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
+            this.font.drawString(this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 }

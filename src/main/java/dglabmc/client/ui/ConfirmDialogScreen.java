@@ -30,10 +30,10 @@ public class ConfirmDialogScreen extends Screen {
         int top = (this.height - panelHeight) / 2;
         if (compact) {
             this.addButton(new StyledButton(left + 18, top + 102, panelWidth - 36, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
-            this.addButton(new StyledButton(left + 18, top + 126, panelWidth - 36, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addButton(new StyledButton(left + 18, top + 126, panelWidth - 36, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
         } else {
             this.addButton(new StyledButton(left + 18, top + 102, 110, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onConfirm()));
-            this.addButton(new StyledButton(left + 136, top + 102, 110, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addButton(new StyledButton(left + 136, top + 102, 110, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
         }
     }
 
@@ -46,9 +46,10 @@ public class ConfirmDialogScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(420, this.width - 24);
         boolean compact = panelWidth < 360;
         int panelHeight = Math.min(compact ? 174 : 150, this.height - 24);
@@ -58,8 +59,8 @@ public class ConfirmDialogScreen extends Screen {
         UiRender.drawSectionTitle(matrixStack, this.font, this.heading, "", left + 18, top + 16);
         UiRender.drawWrappedText(matrixStack, this.font, this.description, left + 18, top + 42, panelWidth - 36, UiPalette.TEXT_MUTED, 4);
         if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
+            this.font.drawString(this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 }

@@ -45,20 +45,20 @@ public class TextPromptScreen extends Screen {
         panelHeight = Math.min(panelHeight, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        this.inputField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, new StringTextComponent(this.inputLabel));
-        this.inputField.setMaxLength(512);
-        this.inputField.setValue(this.initialValue);
+        this.inputField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, this.inputLabel);
+        this.inputField.setMaxStringLength(512);
+        this.inputField.setText(this.initialValue);
         this.children.add(this.inputField);
-        this.setInitialFocus(this.inputField);
+        this.inputField.setFocused2(true);
 
         if (compact) {
             this.addButton(new StyledButton(left + 18, top + 90, panelWidth - 36, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onSubmit()));
-            this.addButton(new StyledButton(left + 18, top + 114, panelWidth - 36, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setValue(PlatformServices.client().readClipboard())));
-            this.addButton(new StyledButton(left + 18, top + 138, panelWidth - 36, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addButton(new StyledButton(left + 18, top + 114, panelWidth - 36, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setText(PlatformServices.client().readClipboard())));
+            this.addButton(new StyledButton(left + 18, top + 138, panelWidth - 36, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
         } else {
             this.addButton(new StyledButton(left + 18, top + 90, 100, 20, new StringTextComponent(this.confirmLabel), StyledButton.Variant.PRIMARY, button -> onSubmit()));
-            this.addButton(new StyledButton(left + 126, top + 90, 100, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setValue(PlatformServices.client().readClipboard())));
-            this.addButton(new StyledButton(left + 234, top + 90, 128, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addButton(new StyledButton(left + 126, top + 90, 100, 20, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.inputField.setText(PlatformServices.client().readClipboard())));
+            this.addButton(new StyledButton(left + 234, top + 90, 128, 20, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
         }
     }
 
@@ -69,7 +69,7 @@ public class TextPromptScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.inputField.keyPressed(keyCode, scanCode, modifiers) || this.inputField.canConsumeInput()) {
+        if (this.inputField.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -80,27 +80,27 @@ public class TextPromptScreen extends Screen {
         return this.inputField.charTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers);
     }
 
-    @Override
     public void onFilesDrop(List<Path> paths) {
         if (paths == null || paths.isEmpty()) {
             return;
         }
-        this.inputField.setValue(paths.get(0).toString());
+        this.inputField.setText(paths.get(0).toString());
         this.status = "已填入拖入的文件路径。";
     }
 
     private void onSubmit() {
         try {
-            this.submitHandler.accept(this.inputField.getValue().trim());
+            this.submitHandler.accept(this.inputField.getText().trim());
         } catch (RuntimeException exception) {
             this.status = exception.getMessage() == null ? "操作失败。" : exception.getMessage();
         }
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(380, this.width - 24);
         boolean compact = panelWidth < 360;
         int panelHeight = Math.min(compact ? 194 : 146, this.height - 24);
@@ -108,11 +108,11 @@ public class TextPromptScreen extends Screen {
         int top = (this.height - panelHeight) / 2;
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
         UiRender.drawSectionTitle(matrixStack, this.font, this.heading, this.description, left + 18, top + 14);
-        this.font.draw(matrixStack, this.inputLabel, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
-        this.inputField.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.font.drawString(this.inputLabel, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+        this.inputField.render(mouseX, mouseY, partialTicks);
         if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
+            this.font.drawString(this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 }

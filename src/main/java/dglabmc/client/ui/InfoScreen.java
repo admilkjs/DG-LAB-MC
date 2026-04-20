@@ -27,13 +27,14 @@ public class InfoScreen extends Screen {
         int panelHeight = Math.min(300, this.height - 24);
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
-        this.addButton(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        this.addButton(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);
         int panelHeight = Math.min(300, this.height - 24);
         int left = (this.width - panelWidth) / 2;
@@ -48,6 +49,6 @@ public class InfoScreen extends Screen {
                 break;
             }
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 }

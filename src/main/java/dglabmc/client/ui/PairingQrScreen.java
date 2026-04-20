@@ -59,7 +59,7 @@ public class PairingQrScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(this.parent);
+        this.minecraft.displayGuiScreen(this.parent);
     }
 
     @Override
@@ -68,9 +68,10 @@ public class PairingQrScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
 
         int panelWidth = Math.min(560, this.width - 24);
         boolean compact = panelWidth < 420;
@@ -90,7 +91,7 @@ public class PairingQrScreen extends Screen {
             QrCodeHelper.draw(matrixStack, this.pairingQrMatrix, qrX, qrY, qrSize);
         } else {
             UiRender.drawPanel(matrixStack, qrX, qrY, qrSize, qrSize, 0xFFF8FAFC, 0xFFCBD5E1);
-            this.font.draw(matrixStack, "二维码失败", (float) (qrX + ((qrSize - this.font.width("二维码失败")) / 2)), (float) (qrY + (qrSize / 2) - 4), 0xFF0F172A);
+            this.font.drawString("二维码失败", (float) (qrX + ((qrSize - this.font.getStringWidth("二维码失败")) / 2)), (float) (qrY + (qrSize / 2) - 4), 0xFF0F172A);
         }
 
         int linkY = qrY + qrSize + 10;
@@ -99,7 +100,7 @@ public class PairingQrScreen extends Screen {
             UiRender.drawWrappedText(matrixStack, this.font, this.errorMessage, left + 18, linkY + 28, panelWidth - 36, UiPalette.WARNING, 3);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 
     private void reloadPairingLink(boolean refresh) {

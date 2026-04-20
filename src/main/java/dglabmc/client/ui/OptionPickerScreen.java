@@ -66,13 +66,14 @@ public class OptionPickerScreen<T> extends Screen {
         next.active = end < this.options.size();
         this.addButton(next);
 
-        this.addButton(new StyledButton(left + panelWidth - (compact ? 106 : 128), top + panelHeight - 34, compact ? 88 : 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        this.addButton(new StyledButton(left + panelWidth - (compact ? 106 : 128), top + panelHeight - 34, compact ? 88 : 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);
         int panelHeight = Math.min(300, this.height - 24);
         boolean compact = panelWidth < 520;
@@ -87,13 +88,13 @@ public class OptionPickerScreen<T> extends Screen {
         }
         if (previewIndex >= 0 && !this.options.isEmpty() && !compact) {
             T preview = this.options.get(previewIndex);
-            this.font.draw(matrixStack, trim(this.labelProvider.apply(preview), 22), (float) (left + 300), (float) (top + 68), UiPalette.TEXT_PRIMARY);
+            this.font.drawString(trim(this.labelProvider.apply(preview), 22), (float) (left + 300), (float) (top + 68), UiPalette.TEXT_PRIMARY);
             UiRender.drawWrappedText(matrixStack, this.font, this.descriptionProvider.apply(preview), left + 300, top + 88, 228, UiPalette.TEXT_MUTED, 10);
-            this.font.draw(matrixStack, "点击左侧条目立即选择", (float) (left + 300), (float) (top + 228), UiPalette.TEXT_DIM);
+            this.font.drawString("点击左侧条目立即选择", (float) (left + 300), (float) (top + 228), UiPalette.TEXT_DIM);
         } else if (compact) {
-            this.font.draw(matrixStack, "点击条目立即选择", (float) (left + 18), (float) (top + panelHeight - 54), UiPalette.TEXT_DIM);
+            this.font.drawString("点击条目立即选择", (float) (left + 18), (float) (top + panelHeight - 54), UiPalette.TEXT_DIM);
         }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 
     private String trim(String text, int maxChars) {

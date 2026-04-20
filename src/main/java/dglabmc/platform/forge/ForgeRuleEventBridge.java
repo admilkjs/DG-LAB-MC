@@ -14,7 +14,7 @@ public final class ForgeRuleEventBridge {
 
     public static boolean isLocalPlayer(LivingEntity entity) {
         PlayerEntity player = Minecraft.getInstance().player;
-        return player != null && entity != null && entity.getUUID().equals(player.getUUID());
+        return player != null && entity != null && entity.getUniqueID().equals(player.getUniqueID());
     }
 
     public static RuleEventContext createContext(PlayerEntity player, String triggerId) {
@@ -22,7 +22,7 @@ public final class ForgeRuleEventBridge {
         context.triggerId = triggerId;
         context.currentHealth = player.getHealth();
         context.maxHealth = player.getMaxHealth();
-        context.currentFood = player.getFoodData().getFoodLevel();
+        context.currentFood = player.getFoodStats().getFoodLevel();
         context.lowestArmorRatio = lowestArmorRatio(player);
         return context;
     }
@@ -64,14 +64,14 @@ public final class ForgeRuleEventBridge {
     public static double lowestArmorRatio(PlayerEntity player) {
         double lowest = 1.0D;
         for (EquipmentSlotType slot : EquipmentSlotType.values()) {
-            if (slot.getType() != EquipmentSlotType.Group.ARMOR) {
+            if (slot.getSlotType() != EquipmentSlotType.Group.ARMOR) {
                 continue;
             }
-            ItemStack stack = player.getItemBySlot(slot);
-            if (stack.isEmpty() || !stack.isDamageableItem()) {
+            ItemStack stack = player.getItemStackFromSlot(slot);
+            if (stack.isEmpty() || !stack.isDamageable()) {
                 continue;
             }
-            double remaining = 1.0D - ((double) stack.getDamageValue() / (double) stack.getMaxDamage());
+            double remaining = 1.0D - ((double) stack.getDamage() / (double) stack.getMaxDamage());
             lowest = Math.min(lowest, remaining);
         }
         return lowest;

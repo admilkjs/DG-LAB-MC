@@ -9,7 +9,7 @@ version="${mod_version}"
 displayName="\\u0044\\u0047\\u002d\\u004c\\u0041\\u0042 \\u63a7\\u5236\\u4e2d\\u5fc3"
 authors="${mod_authors}"
 description="""
-\\u0046\\u006f\\u0072\\u0067\\u0065 1.16.5 \\u5ba2\\u6237\\u7aef \\u0044\\u0047\\u002d\\u004c\\u0041\\u0042 \\u63a7\\u5236\\u6a21\\u7ec4
+\\u0046\\u006f\\u0072\\u0067\\u0065 1.15.2 \\u5ba2\\u6237\\u7aef \\u0044\\u0047\\u002d\\u004c\\u0041\\u0042 \\u63a7\\u5236\\u6a21\\u7ec4
 """
 
 [[dependencies.${mod_id}]]

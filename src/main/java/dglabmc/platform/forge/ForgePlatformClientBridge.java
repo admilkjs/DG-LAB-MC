@@ -5,9 +5,12 @@ import dglabmc.client.ui.PasswordGateScreen;
 import dglabmc.platform.PlatformClientBridge;
 import dglabmc.security.DailyPasswordLock;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Util;
 import net.minecraft.util.text.StringTextComponent;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +23,7 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
         minecraft.execute(() -> {
             if (minecraft.player != null) {
                 DailyPasswordLock.clearExpiredLock();
-                minecraft.setScreen(DailyPasswordLock.isUnlocked() ? new ControlCenterScreen() : new PasswordGateScreen(new ControlCenterScreen()));
+                minecraft.displayGuiScreen(DailyPasswordLock.isUnlocked() ? new ControlCenterScreen() : new PasswordGateScreen(new ControlCenterScreen()));
             }
         });
     }
@@ -30,20 +33,28 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(() -> {
             if (minecraft.player != null) {
-                minecraft.player.sendMessage(new StringTextComponent(message), Util.NIL_UUID);
+                minecraft.player.sendMessage(new StringTextComponent(message));
             }
         });
     }
 
     @Override
     public void copyToClipboard(String value) {
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.execute(() -> minecraft.keyboardHandler.setClipboard(value == null ? "" : value));
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(new StringSelection(value == null ? "" : value), null);
     }
 
     @Override
     public String readClipboard() {
-        return Minecraft.getInstance().keyboardHandler.getClipboard();
+        try {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
+                Object value = clipboard.getData(DataFlavor.stringFlavor);
+                return value instanceof String ? (String) value : "";
+            }
+        } catch (Exception ignored) {
+        }
+        return "";
     }
 
     @Override

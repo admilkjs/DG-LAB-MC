@@ -65,7 +65,7 @@ public final class ClientHooks {
         openMenuKey = new KeyBinding(
             "key.dglabmc.open",
             KeyConflictContext.IN_GAME,
-            InputMappings.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_O),
+            InputMappings.Type.KEYSYM.getOrMakeInput(GLFW.GLFW_KEY_O),
             "key.categories.dglabmc"
         );
         ClientRegistry.registerKeyBinding(openMenuKey);
@@ -76,7 +76,7 @@ public final class ClientHooks {
         if (openMenuKey == null) {
             return;
         }
-        boolean down = openMenuKey.isDown();
+        boolean down = openMenuKey.isKeyDown();
         if (down && !menuKeyLatch) {
             PlatformServices.client().openControlCenter();
         }
@@ -87,8 +87,8 @@ public final class ClientHooks {
     public static void onClientChat(ClientChatEvent event) {
         String message = event.getMessage().trim();
         if (("dgDebug".equals(message) || message.startsWith("/dglab")) && ClientCommandRouter.tryHandle(message)) {
-            if (message.startsWith("/dglab") && MINECRAFT.gui != null && MINECRAFT.gui.getChat() != null) {
-                MINECRAFT.gui.getChat().addRecentChat(message);
+            if (message.startsWith("/dglab") && MINECRAFT.ingameGUI != null && MINECRAFT.ingameGUI.getChatGUI() != null) {
+                MINECRAFT.ingameGUI.getChatGUI().addToSentMessages(message);
             }
             event.setCanceled(true);
         }
@@ -171,7 +171,7 @@ public final class ClientHooks {
             lowHealthLatched = false;
         }
 
-        int foodLevel = player.getFoodData().getFoodLevel();
+        int foodLevel = player.getFoodStats().getFoodLevel();
         if (foodLevel <= 6) {
             if (!lowFoodLatched) {
                 fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.LOW_FOOD));
@@ -203,7 +203,7 @@ public final class ClientHooks {
 
     @SubscribeEvent
     public static void onJump(LivingEvent.LivingJumpEvent event) {
-        if (event.getEntityLiving().level.isClientSide && ForgeRuleEventBridge.isLocalPlayer(event.getEntityLiving())) {
+        if (event.getEntityLiving().world.isRemote && ForgeRuleEventBridge.isLocalPlayer(event.getEntityLiving())) {
             fireTrigger(ForgeRuleEventBridge.createContext((PlayerEntity) event.getEntityLiving(), TriggerRegistry.JUMP));
         }
     }
@@ -211,7 +211,7 @@ public final class ClientHooks {
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
         ClientPlayerEntity player = MINECRAFT.player;
-        if (player == null || event.getPlayer() == null || !player.getUUID().equals(event.getPlayer().getUUID())) {
+        if (player == null || event.getPlayer() == null || !player.getUniqueID().equals(event.getPlayer().getUniqueID())) {
             return;
         }
         if (event.getTarget() instanceof LivingEntity && isClientSideEntity(event.getTarget())) {
@@ -224,8 +224,8 @@ public final class ClientHooks {
         ClientPlayerEntity player = MINECRAFT.player;
         if (player != null
             && event.getPlayer() != null
-            && event.getPlayer().level.isClientSide
-            && event.getPlayer().getUUID().equals(player.getUUID())
+            && event.getPlayer().world.isRemote
+            && event.getPlayer().getUniqueID().equals(player.getUniqueID())
             && event.isVanillaCritical()
             && event.getTarget() instanceof LivingEntity) {
             trackOutgoingAttack((LivingEntity) event.getTarget(), true);
@@ -237,8 +237,8 @@ public final class ClientHooks {
         ClientPlayerEntity player = MINECRAFT.player;
         if (player != null
             && event.getPlayer() != null
-            && event.getPlayer().level.isClientSide
-            && event.getPlayer().getUUID().equals(player.getUUID())) {
+            && event.getPlayer().world.isRemote
+            && event.getPlayer().getUniqueID().equals(player.getUniqueID())) {
             fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.BOW_RELEASE));
         }
     }
@@ -295,7 +295,7 @@ public final class ClientHooks {
             }
         }
 
-        if (hurtAnimationStarted && player.isBlocking()) {
+        if (hurtAnimationStarted && player.isActiveItemStackBlocking()) {
             RuleEventContext blockContext = ForgeRuleEventBridge.createContext(player, TriggerRegistry.SHIELD_BLOCK);
             blockContext.damage = damageAmount;
             fireTrigger(blockContext);
@@ -304,7 +304,7 @@ public final class ClientHooks {
         boolean deadNow = currentHealth <= 0.0F || !player.isAlive() || currentDeathTime > 0;
         if (deadNow && lastObservedDeathTime <= 0 && lastObservedHealth > 0.0F) {
             fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.PLAYER_DEATH));
-            if (lastDamageSource != null && lastDamageSource.getEntity() != null && !player.getUUID().equals(lastDamageSource.getEntity().getUUID())) {
+            if (lastDamageSource != null && lastDamageSource.getTrueSource() != null && !player.getUniqueID().equals(lastDamageSource.getTrueSource().getUniqueID())) {
                 fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.PLAYER_KILLED_BY_OTHER));
             }
         } else if (!deadNow && healAmount > 0.01F && lastObservedHealth > 0.0F) {
@@ -319,7 +319,7 @@ public final class ClientHooks {
     }
 
     private static boolean isFallDamageSource(DamageSource source) {
-        return source != null && (source == DamageSource.FALL || "fall".equals(source.msgId));
+        return source != null && (source == DamageSource.FALL || "fall".equals(source.getDamageType()));
     }
 
     private static void fireAttackDamageTriggers(PlayerEntity player, LivingEntity target, float damage) {
@@ -349,14 +349,14 @@ public final class ClientHooks {
     }
 
     private static boolean isClientSideEntity(Entity entity) {
-        return entity != null && entity.level != null && entity.level.isClientSide;
+        return entity != null && entity.world != null && entity.world.isRemote;
     }
 
     private static void trackOutgoingAttack(LivingEntity target, boolean critical) {
-        PendingAttack pending = PENDING_ATTACKS.get(Integer.valueOf(target.getId()));
+        PendingAttack pending = PENDING_ATTACKS.get(Integer.valueOf(target.getEntityId()));
         if (pending == null) {
-            pending = new PendingAttack(target.getId());
-            PENDING_ATTACKS.put(Integer.valueOf(target.getId()), pending);
+            pending = new PendingAttack(target.getEntityId());
+            PENDING_ATTACKS.put(Integer.valueOf(target.getEntityId()), pending);
         }
         pending.playerTarget = target instanceof PlayerEntity;
         pending.lastObservedHealth = Math.max(0.0F, target.getHealth());
@@ -368,13 +368,13 @@ public final class ClientHooks {
     }
 
     private static void processPendingAttacks(ClientPlayerEntity player) {
-        if (MINECRAFT.level == null || PENDING_ATTACKS.isEmpty()) {
+        if (MINECRAFT.world == null || PENDING_ATTACKS.isEmpty()) {
             return;
         }
         Iterator<Map.Entry<Integer, PendingAttack>> iterator = PENDING_ATTACKS.entrySet().iterator();
         while (iterator.hasNext()) {
             PendingAttack pending = iterator.next().getValue();
-            Entity entity = MINECRAFT.level.getEntity(pending.entityId);
+            Entity entity = MINECRAFT.world.getEntityByID(pending.entityId);
             if (!(entity instanceof LivingEntity)) {
                 if (pending.damageTriggered && !pending.killTriggered && pending.lastDamageTick >= 0L && (clientTickCounter - pending.lastDamageTick) <= 8L) {
                     fireAttackKillTriggers(player, pending.playerTarget);
@@ -435,19 +435,19 @@ public final class ClientHooks {
 
     private static int countEquippedTotems(ClientPlayerEntity player) {
         int count = 0;
-        if (player.getMainHandItem().getItem() == Items.TOTEM_OF_UNDYING) {
-            count += player.getMainHandItem().getCount();
+        if (player.getHeldItemMainhand().getItem() == Items.TOTEM_OF_UNDYING) {
+            count += player.getHeldItemMainhand().getCount();
         }
-        if (player.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING) {
-            count += player.getOffhandItem().getCount();
+        if (player.getHeldItemOffhand().getItem() == Items.TOTEM_OF_UNDYING) {
+            count += player.getHeldItemOffhand().getCount();
         }
         return count;
     }
 
     private static boolean hasTotemActivationState(ClientPlayerEntity player) {
         return player.getHealth() <= 2.0F
-            && player.hasEffect(Effects.REGENERATION)
-            && player.hasEffect(Effects.ABSORPTION)
-            && player.hasEffect(Effects.FIRE_RESISTANCE);
+            && player.isPotionActive(Effects.REGENERATION)
+            && player.isPotionActive(Effects.ABSORPTION)
+            && player.isPotionActive(Effects.FIRE_RESISTANCE);
     }
 }

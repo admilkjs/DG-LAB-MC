@@ -72,13 +72,14 @@ public class ChannelProfileScreen extends Screen {
             addButton(new StyledButton(rightLeft, innerTop + 112, columnWidth, 20, new StringTextComponent("说明"), StyledButton.Variant.SECONDARY, button -> openGuide()));
         }
 
-        addButton(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        addButton(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(this.parent)));
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         int panelWidth = Math.min(560, this.width - 24);
         boolean compact = panelWidth < 520;
         int panelHeight = Math.min(compact ? 340 : 278, this.height - 24);
@@ -92,14 +93,14 @@ public class ChannelProfileScreen extends Screen {
         int infoX = left + 18;
         int infoY = compact ? top + panelHeight - 86 : top + 182;
         UiRender.drawPanel(matrixStack, infoX, infoY, panelWidth - 36, 48, 0x44172233, UiPalette.BORDER_STRONG);
-        this.font.draw(matrixStack, "当前: " + currentStrength() + " | 上限: " + effectiveMaxText(), (float) (infoX + 10), (float) (infoY + 10), UiPalette.TEXT_PRIMARY);
-        this.font.draw(matrixStack, "普通 " + profile.eventStrength + "  伤害 " + formatDouble(profile.damageScale) + "  死亡 +" + profile.deathStrength, (float) (infoX + 10), (float) (infoY + 24), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "等待 " + profile.delayMs + "  下降 " + profile.decayIntervalMs + "/" + profile.decayValue + "  最低 " + profile.minStrength, (float) (infoX + 10), (float) (infoY + 36), UiPalette.TEXT_MUTED);
+        this.font.drawString("当前: " + currentStrength() + " | 上限: " + effectiveMaxText(), (float) (infoX + 10), (float) (infoY + 10), UiPalette.TEXT_PRIMARY);
+        this.font.drawString("普通 " + profile.eventStrength + "  伤害 " + formatDouble(profile.damageScale) + "  死亡 +" + profile.deathStrength, (float) (infoX + 10), (float) (infoY + 24), UiPalette.TEXT_MUTED);
+        this.font.drawString("等待 " + profile.delayMs + "  下降 " + profile.decayIntervalMs + "/" + profile.decayValue + "  最低 " + profile.minStrength, (float) (infoX + 10), (float) (infoY + 36), UiPalette.TEXT_MUTED);
         if (!this.statusMessage.isEmpty()) {
             UiRender.drawWrappedText(matrixStack, this.font, this.statusMessage, left + 18, top + panelHeight - 106, panelWidth - 36, UiPalette.WARNING, 2);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 
     private StyledButton actionButton(int x, int y, int width, String label, StyledButton.IPressable onPress) {
@@ -115,11 +116,11 @@ public class ChannelProfileScreen extends Screen {
         lines.add("死亡增加 / 死亡等待：死亡单独覆盖。");
         lines.add("最低强度：按缺血比例抬高下限。");
         lines.add("全局上限：本地配置上限，连接后会再受设备上限限制。");
-        this.minecraft.setScreen(new InfoScreen(this, title(), "字段说明", lines));
+        this.minecraft.displayGuiScreen(new InfoScreen(this, title(), "字段说明", lines));
     }
 
     private void openIntPrompt(String heading, String description, int initialValue, Consumer<Integer> consumer) {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             heading,
             description,
@@ -129,7 +130,7 @@ public class ChannelProfileScreen extends Screen {
             value -> {
                 try {
                     consumer.accept(Integer.valueOf(Integer.parseInt(value.trim())));
-                    this.minecraft.setScreen(this);
+                    this.minecraft.displayGuiScreen(this);
                     this.statusMessage = "已更新。";
                     init();
                 } catch (NumberFormatException exception) {
@@ -140,7 +141,7 @@ public class ChannelProfileScreen extends Screen {
     }
 
     private void openDoublePrompt(String heading, String description, double initialValue, Consumer<Double> consumer) {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             heading,
             description,
@@ -150,7 +151,7 @@ public class ChannelProfileScreen extends Screen {
             value -> {
                 try {
                     consumer.accept(Double.valueOf(Double.parseDouble(value.trim())));
-                    this.minecraft.setScreen(this);
+                    this.minecraft.displayGuiScreen(this);
                     this.statusMessage = "已更新。";
                     init();
                 } catch (NumberFormatException exception) {
