@@ -10,6 +10,15 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.TextComponent;
 
 public class PasswordGateScreen extends Screen {
+    private static final TextComponent TITLE = new TextComponent("输入密码");
+    private static final TextComponent TODAY_PASSWORD = new TextComponent("今日密码");
+    private static final TextComponent UNLOCK = new TextComponent("解锁");
+    private static final TextComponent PASTE = new TextComponent("粘贴");
+    private static final String PASSWORD_ERROR = "密码不对";
+    private static final String PASSWORD_LABEL = "密码";
+    private static final String SCREEN_TITLE = "输入今日密码";
+    private static final String SCREEN_SUBTITLE = "解锁后可用界面和指令";
+
     private final Screen nextScreen;
 
     private EditBox passwordField;
@@ -17,7 +26,7 @@ public class PasswordGateScreen extends Screen {
     private boolean suppressInitialChar;
 
     public PasswordGateScreen(Screen nextScreen) {
-        super(new TextComponent("杈撳叆瀵嗙爜"));
+        super(TITLE);
         this.nextScreen = nextScreen;
     }
 
@@ -31,15 +40,15 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.passwordField = new EditBox(this.font, left + 18, top + 54, panelWidth - 36, 20, new TextComponent("浠婃棩瀵嗙爜"));
+        this.passwordField = new EditBox(this.font, left + 18, top + 54, panelWidth - 36, 20, TODAY_PASSWORD);
         this.passwordField.setMaxLength(64);
         this.passwordField.setValue("");
         this.addRenderableWidget(this.passwordField);
         this.setInitialFocus(this.passwordField);
 
         int buttonWidth = (panelWidth - 44) / 2;
-        this.addRenderableWidget(new StyledButton(left + 18, top + 90, buttonWidth, 20, new TextComponent("瑙ｉ攣"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new TextComponent("绮樿创"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
+        this.addRenderableWidget(new StyledButton(left + 18, top + 90, buttonWidth, 20, UNLOCK, StyledButton.Variant.PRIMARY, button -> submitPassword()));
+        this.addRenderableWidget(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, PASTE, StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
     }
 
     @Override
@@ -79,7 +88,7 @@ public class PasswordGateScreen extends Screen {
             }
             return;
         }
-        this.status = "瀵嗙爜涓嶅";
+        this.status = PASSWORD_ERROR;
     }
 
     @Override
@@ -91,8 +100,8 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "输入今日密码", "解锁后可用界面和指令", left + 18, top + 14);
-        this.font.draw(matrixStack, "瀵嗙爜", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+        UiRender.drawSectionTitle(matrixStack, this.font, SCREEN_TITLE, SCREEN_SUBTITLE, left + 18, top + 14);
+        this.font.draw(matrixStack, PASSWORD_LABEL, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
             this.passwordField.render(matrixStack, mouseX, mouseY, partialTicks);
         }
