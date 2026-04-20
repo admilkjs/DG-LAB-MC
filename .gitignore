@@ -1,4 +1,4 @@
-# eclipse
+﻿# eclipse
 bin
 *.launch
 .settings
@@ -26,8 +26,10 @@ logs
 .tmp_mdk
 compile-*.log
 .tmp_*
+.tmp-mdk
 .tools
 *.log
+閿欒鎶ュ憡-*.zip
 
 # other
 eclipse
@@ -37,3 +39,6 @@ forge-1.16.5-36.2.42-mdk.zip
 
 # Files from Forge MDK
 forge*changelog.txt
+
+.tmp-mdk
+错误报告-*.zip
