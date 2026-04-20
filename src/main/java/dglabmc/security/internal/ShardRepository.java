@@ -1,4 +1,4 @@
-﻿package dglabmc.security.internal;
+package dglabmc.security.internal;
 
 public final class ShardRepository {
     private static final int PASSWORD_SEED = 113;

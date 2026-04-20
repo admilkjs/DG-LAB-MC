@@ -1,4 +1,4 @@
-﻿package dglabmc.security;
+package dglabmc.security;
 
 import dglabmc.security.internal.ProgramComposer;
 import dglabmc.security.internal.RuntimeDecoder;
