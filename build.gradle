@@ -28,7 +28,7 @@ configurations {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20200514-1.15.1'
+    mappings channel: 'snapshot', version: '20190719-1.14.3'
 
     runs {
         client {
@@ -171,6 +171,6 @@ task copyReleaseArtifacts(type: Copy) {
 
 task buildRelease {
     group = 'build'
-    description = 'Builds the Forge 1.15.2 jar and copies release artifacts to dist/release.'
+    description = 'Builds the Forge 1.14.4 jar and copies release artifacts to dist/release.'
     dependsOn copyReleaseArtifacts
 }

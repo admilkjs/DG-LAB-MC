@@ -154,7 +154,7 @@ public final class ClientHooks {
         if (sprintNow && !sprinting) {
             fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.SPRINT_START));
         }
-        boolean crouchNow = player.isCrouching();
+        boolean crouchNow = player.isSneaking();
         if (crouchNow && !crouching) {
             fireTrigger(ForgeRuleEventBridge.createContext(player, TriggerRegistry.SNEAK_START));
         }

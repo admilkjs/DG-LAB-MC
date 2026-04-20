@@ -4,7 +4,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
 
 public class StyledButton extends Button {
@@ -31,16 +30,14 @@ public class StyledButton extends Button {
     @Override
     public void renderButton(int mouseX, int mouseY, float partialTicks) {
         Minecraft minecraft = Minecraft.getInstance();
-        MatrixStack matrixStack = new MatrixStack();
-        Matrix4f matrix = matrixStack.getLast().getMatrix();
         int background = backgroundColor();
         int border = borderColor();
         int textColor = this.active ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_DIM;
-        AbstractGui.fill(matrix, this.x, this.y, this.x + this.width, this.y + this.height, background);
-        AbstractGui.fill(matrix, this.x, this.y, this.x + this.width, this.y + 1, border);
-        AbstractGui.fill(matrix, this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, border);
-        AbstractGui.fill(matrix, this.x, this.y, this.x + 1, this.y + this.height, border);
-        AbstractGui.fill(matrix, this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, border);
+        AbstractGui.fill(this.x, this.y, this.x + this.width, this.y + this.height, background);
+        AbstractGui.fill(this.x, this.y, this.x + this.width, this.y + 1, border);
+        AbstractGui.fill(this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, border);
+        AbstractGui.fill(this.x, this.y, this.x + 1, this.y + this.height, border);
+        AbstractGui.fill(this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, border);
         String label = fitLabel(minecraft, this.getMessage(), this.width - 10);
         drawCenteredString(minecraft.fontRenderer, label, this.x + this.width / 2, this.y + (this.height - 8) / 2, textColor);
     }

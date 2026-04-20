@@ -7,7 +7,6 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.renderer.Matrix4f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,18 +61,17 @@ public final class QrCodeHelper extends AbstractGui {
         if (matrix == null || size <= 0) {
             return;
         }
-        Matrix4f renderMatrix = matrixStack.getLast().getMatrix();
         int matrixSize = matrix.getSize();
         int cell = Math.max(1, size / matrixSize);
         int actualSize = cell * matrixSize;
         int startX = x + ((size - actualSize) / 2);
         int startY = y + ((size - actualSize) / 2);
 
-        fill(renderMatrix, x, y, x + size, y + size, 0xFFF8FAFC);
-        fill(renderMatrix, x, y, x + size, y + 1, 0xFFCBD5E1);
-        fill(renderMatrix, x, y + size - 1, x + size, y + size, 0xFFCBD5E1);
-        fill(renderMatrix, x, y, x + 1, y + size, 0xFFCBD5E1);
-        fill(renderMatrix, x + size - 1, y, x + size, y + size, 0xFFCBD5E1);
+        fill(x, y, x + size, y + size, 0xFFF8FAFC);
+        fill(x, y, x + size, y + 1, 0xFFCBD5E1);
+        fill(x, y + size - 1, x + size, y + size, 0xFFCBD5E1);
+        fill(x, y, x + 1, y + size, 0xFFCBD5E1);
+        fill(x + size - 1, y, x + size, y + size, 0xFFCBD5E1);
 
         for (int row = 0; row < matrixSize; row++) {
             for (int col = 0; col < matrixSize; col++) {
@@ -82,7 +80,7 @@ public final class QrCodeHelper extends AbstractGui {
                 }
                 int left = startX + (col * cell);
                 int top = startY + (row * cell);
-                fill(renderMatrix, left, top, left + cell, top + cell, 0xFF020617);
+                fill(left, top, left + cell, top + cell, 0xFF020617);
             }
         }
     }

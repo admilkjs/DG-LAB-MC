@@ -233,7 +233,7 @@ public class RuleOrderScreen extends Screen {
         int border = targetRow ? UiPalette.ACCENT : UiPalette.BORDER;
         int accent = targetRow ? UiPalette.ACCENT : UiPalette.INFO;
         UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, 0x66172233, border);
-        fill(matrixStack.getLast().getMatrix(), row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
+        fill(row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
         this.font.drawString("第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
     }
 
@@ -244,14 +244,14 @@ public class RuleOrderScreen extends Screen {
             background = 0xD9243041;
         }
         UiRender.drawPanel(matrixStack, x, y, width, height, background, border);
-        fill(matrixStack.getLast().getMatrix(), x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
+        fill(x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
         String label = trimToWidth(displayRuleName(rule), width - 22);
         this.font.drawString(label, (float) (x + 16), (float) (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
     }
 
     private void drawDropTarget(MatrixStack matrixStack, List<RowLayout> layouts, DropTarget target) {
         if (target.mode == DropMode.EMPTY) {
-            fill(matrixStack.getLast().getMatrix(), listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
+            fill(listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
             return;
         }
         if (target.mode == DropMode.IN_ROW) {
@@ -260,7 +260,7 @@ public class RuleOrderScreen extends Screen {
                 return;
             }
             int x = dropMarkerX(row, target.slotIndex);
-            fill(matrixStack.getLast().getMatrix(), x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
+            fill(x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
             return;
         }
 
@@ -272,7 +272,7 @@ public class RuleOrderScreen extends Screen {
             RowLayout row = findRowLayout(layouts, target.rowIndex);
             y = row == null ? listTop() + ROW_HEIGHT + 2 : row.y + row.height + 1;
         }
-        fill(matrixStack.getLast().getMatrix(), listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
+        fill(listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
     }
 
     private int dropMarkerX(RowLayout row, int slotIndex) {

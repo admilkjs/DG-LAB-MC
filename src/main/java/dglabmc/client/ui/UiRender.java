@@ -3,19 +3,17 @@ package dglabmc.client.ui;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.Matrix4f;
 
 public final class UiRender extends AbstractGui {
     private UiRender() {
     }
 
     public static void drawPanel(MatrixStack matrixStack, int x, int y, int width, int height, int backgroundColor, int accentColor) {
-        Matrix4f matrix = matrixStack.getLast().getMatrix();
-        fill(matrix, x, y, x + width, y + height, backgroundColor);
-        fill(matrix, x, y, x + width, y + 2, accentColor);
-        fill(matrix, x, y, x + 1, y + height, UiPalette.BORDER);
-        fill(matrix, x + width - 1, y, x + width, y + height, UiPalette.BORDER);
-        fill(matrix, x, y + height - 1, x + width, y + height, UiPalette.BORDER);
+        fill(x, y, x + width, y + height, backgroundColor);
+        fill(x, y, x + width, y + 2, accentColor);
+        fill(x, y, x + 1, y + height, UiPalette.BORDER);
+        fill(x + width - 1, y, x + width, y + height, UiPalette.BORDER);
+        fill(x, y + height - 1, x + width, y + height, UiPalette.BORDER);
     }
 
     public static void drawSectionTitle(MatrixStack matrixStack, FontRenderer font, String title, String subtitle, int x, int y) {
@@ -28,17 +26,16 @@ public final class UiRender extends AbstractGui {
     public static void drawStatusBadge(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int backgroundColor, int borderColor) {
         int textWidth = font.getStringWidth(text);
         int width = textWidth + 12;
-        Matrix4f matrix = matrixStack.getLast().getMatrix();
-        fill(matrix, x, y, x + width, y + 14, backgroundColor);
-        fill(matrix, x, y, x + width, y + 1, borderColor);
-        fill(matrix, x, y + 13, x + width, y + 14, borderColor);
-        fill(matrix, x, y, x + 1, y + 14, borderColor);
-        fill(matrix, x + width - 1, y, x + width, y + 14, borderColor);
+        fill(x, y, x + width, y + 14, backgroundColor);
+        fill(x, y, x + width, y + 1, borderColor);
+        fill(x, y + 13, x + width, y + 14, borderColor);
+        fill(x, y, x + 1, y + 14, borderColor);
+        fill(x + width - 1, y, x + width, y + 14, borderColor);
         font.drawString(text, (float) (x + 6), (float) (y + 3), UiPalette.TEXT_PRIMARY);
     }
 
     public static void drawDivider(MatrixStack matrixStack, int x, int y, int width) {
-        fill(matrixStack.getLast().getMatrix(), x, y, x + width, y + 1, UiPalette.BORDER);
+        fill(x, y, x + width, y + 1, UiPalette.BORDER);
     }
 
     public static int drawWrappedText(MatrixStack matrixStack, FontRenderer font, String text, int x, int y, int width, int color, int maxLines) {
