@@ -64,7 +64,7 @@ public final class ForgeRuleEventBridge {
     public static double lowestArmorRatio(Player player) {
         double lowest = 1.0D;
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() != EquipmentSlot.Type.ARMOR) {
+            if (!slot.isArmor()) {
                 continue;
             }
             ItemStack stack = player.getItemBySlot(slot);

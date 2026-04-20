@@ -30,7 +30,7 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(() -> {
             if (minecraft.player != null) {
-                minecraft.player.sendSystemMessage(Component.literal(message));
+                minecraft.player.displayClientMessage(Component.literal(message), false);
             }
         });
     }
