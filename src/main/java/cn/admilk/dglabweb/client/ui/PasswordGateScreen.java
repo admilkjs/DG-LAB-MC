@@ -1,7 +1,8 @@
 package cn.admilk.dglabweb.client.ui;
 
-import cn.admilk.dglabweb.security.DailyPasswordLock;
+import cn.admilk.dglabweb.client.ClientHooks;
 import cn.admilk.dglabweb.platform.PlatformServices;
+import cn.admilk.dglabweb.security.DailyPasswordLock;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -12,6 +13,7 @@ public class PasswordGateScreen extends Screen {
 
     private TextFieldWidget passwordField;
     private String status = "";
+    private boolean suppressInitialChar;
 
     public PasswordGateScreen(Screen nextScreen) {
         super(new StringTextComponent("输入密码"));
@@ -22,6 +24,7 @@ public class PasswordGateScreen extends Screen {
     protected void init() {
         this.buttons.clear();
         this.children.clear();
+        this.suppressInitialChar = ClientHooks.consumePendingScreenCharSuppression();
 
         int panelWidth = Math.min(360, this.width - 24);
         int panelHeight = 148;
@@ -60,6 +63,11 @@ public class PasswordGateScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (this.suppressInitialChar && this.passwordField != null && this.passwordField.getValue().isEmpty()) {
+            this.suppressInitialChar = false;
+            return true;
+        }
+        this.suppressInitialChar = false;
         return this.passwordField != null && (this.passwordField.charTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers));
     }
 

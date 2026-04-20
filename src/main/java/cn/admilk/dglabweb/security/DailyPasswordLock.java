@@ -1,15 +1,10 @@
 package cn.admilk.dglabweb.security;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 public final class DailyPasswordLock {
-    private static final String SALT = "admilk-dglab-lock-v1";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
 
     private static String unlockedDateToken = "";
@@ -52,20 +47,6 @@ public final class DailyPasswordLock {
         if (dateToken == null || dateToken.trim().isEmpty()) {
             throw new IllegalArgumentException("日期不能为空");
         }
-        return sha256Hex(SALT + ":" + dateToken.trim()).substring(0, 10).toUpperCase(Locale.ROOT);
-    }
-
-    private static String sha256Hex(String value) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encoded = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-            StringBuilder builder = new StringBuilder(encoded.length * 2);
-            for (byte current : encoded) {
-                builder.append(String.format(Locale.ROOT, "%02x", current & 0xFF));
-            }
-            return builder.toString();
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("缺少 SHA-256 算法", exception);
-        }
+        return (String) SecurityVm.v(0, dateToken);
     }
 }

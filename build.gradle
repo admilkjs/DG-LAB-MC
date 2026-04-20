@@ -219,7 +219,7 @@ tasks.register('obfuscateShadowJar', ProGuardTask) {
 
 tasks.register('obfuscatedJar', Jar) {
     dependsOn tasks.named('obfuscateShadowJar')
-    archiveClassifier = 'obf-dev'
+    archiveClassifier = 'secured-dev'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from({
         zipTree(obfuscatedDevJar.get().asFile)
@@ -242,28 +242,18 @@ reobf {
 }
 
 tasks.register('copyReleaseArtifacts', Copy) {
-    dependsOn tasks.named('reobfObfuscatedJar')
+    dependsOn tasks.named('reobfShadowJar')
     into(releaseOutputDir)
 
-    from(layout.buildDirectory.file('reobfObfuscatedJar/output.jar')) {
+    from(layout.buildDirectory.file('reobfShadowJar/output.jar')) {
         rename { String ignored ->
-            "${mod_id}-${mod_version}-release-obf.jar"
-        }
-    }
-    from(proguardMappingFile) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-release-obf.mapping.txt"
-        }
-    }
-    from(proguardSeedsFile) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-release-obf.seeds.txt"
+            "${mod_id}-${mod_version}-release.jar"
         }
     }
 }
 
 tasks.register('buildRelease') {
     group = 'build'
-    description = 'Builds the shaded Forge jar, obfuscates it, reobfuscates Minecraft mappings, and copies release artifacts to dist/release.'
+    description = 'Builds the shaded mod jar, reobfuscates Minecraft mappings, and copies release artifacts to dist/release.'
     dependsOn tasks.named('copyReleaseArtifacts')
 }

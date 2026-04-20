@@ -24,8 +24,10 @@ run-data
 logs
 .tmp_err_*
 .tmp_*
+.tmp-mdk
 .tools
 *.log
+错误报告-*.zip
 
 # other
 eclipse
