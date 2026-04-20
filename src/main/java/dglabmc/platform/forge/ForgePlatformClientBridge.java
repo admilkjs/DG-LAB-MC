@@ -20,7 +20,7 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
     @Override
     public void openControlCenter() {
         Minecraft minecraft = Minecraft.getInstance();
-        minecraft.execute(() -> {
+        minecraft.addScheduledTask(() -> {
             if (minecraft.player != null) {
                 DailyPasswordLock.clearExpiredLock();
                 minecraft.displayGuiScreen(DailyPasswordLock.isUnlocked() ? new ControlCenterScreen() : new PasswordGateScreen(new ControlCenterScreen()));
@@ -31,7 +31,7 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
     @Override
     public void showPlayerMessage(String message) {
         Minecraft minecraft = Minecraft.getInstance();
-        minecraft.execute(() -> {
+        minecraft.addScheduledTask(() -> {
             if (minecraft.player != null) {
                 minecraft.player.sendMessage(new StringTextComponent(message));
             }

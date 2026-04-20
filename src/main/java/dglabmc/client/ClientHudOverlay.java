@@ -31,7 +31,7 @@ public final class ClientHudOverlay {
         String lineB = line("B", runtime.channelB.currentStrength, runtime.channelB.effectiveMaxStrength);
         int panelWidth = Math.max(92, Math.max(font.getStringWidth(lineA), font.getStringWidth(lineB)) + 26);
         int panelHeight = 34;
-        int left = event.getWindow().getScaledWidth() - panelWidth - 8;
+        int left = minecraft.mainWindow.getScaledWidth() - panelWidth - 8;
         int top = 8;
 
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, 0xAA101721, UiPalette.ACCENT);

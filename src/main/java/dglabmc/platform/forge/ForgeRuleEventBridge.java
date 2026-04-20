@@ -3,21 +3,21 @@ package dglabmc.platform.forge;
 import dglabmc.rule.RuleEventContext;
 import dglabmc.rule.TriggerRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 
 public final class ForgeRuleEventBridge {
     private ForgeRuleEventBridge() {
     }
 
-    public static boolean isLocalPlayer(LivingEntity entity) {
-        PlayerEntity player = Minecraft.getInstance().player;
+    public static boolean isLocalPlayer(EntityLivingBase entity) {
+        EntityPlayer player = Minecraft.getInstance().player;
         return player != null && entity != null && entity.getUniqueID().equals(player.getUniqueID());
     }
 
-    public static RuleEventContext createContext(PlayerEntity player, String triggerId) {
+    public static RuleEventContext createContext(EntityPlayer player, String triggerId) {
         RuleEventContext context = new RuleEventContext();
         context.triggerId = triggerId;
         context.currentHealth = player.getHealth();
@@ -27,7 +27,7 @@ public final class ForgeRuleEventBridge {
         return context;
     }
 
-    public static RuleEventContext createSignalContext(PlayerEntity player, String triggerId) {
+    public static RuleEventContext createSignalContext(EntityPlayer player, String triggerId) {
         RuleEventContext context = createContext(player, triggerId);
         if (TriggerRegistry.PLAYER_HURT.equals(triggerId)
             || TriggerRegistry.FALL_DAMAGE.equals(triggerId)
@@ -61,10 +61,10 @@ public final class ForgeRuleEventBridge {
         return context;
     }
 
-    public static double lowestArmorRatio(PlayerEntity player) {
+    public static double lowestArmorRatio(EntityPlayer player) {
         double lowest = 1.0D;
-        for (EquipmentSlotType slot : EquipmentSlotType.values()) {
-            if (slot.getSlotType() != EquipmentSlotType.Group.ARMOR) {
+        for (EntityEquipmentSlot slot : EntityEquipmentSlot.values()) {
+            if (slot.getSlotType() != EntityEquipmentSlot.Type.ARMOR) {
                 continue;
             }
             ItemStack stack = player.getItemStackFromSlot(slot);
