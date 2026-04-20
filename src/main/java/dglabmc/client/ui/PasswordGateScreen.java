@@ -1,4 +1,4 @@
-﻿package dglabmc.client.ui;
+package dglabmc.client.ui;
 
 import dglabmc.client.ClientHooks;
 
@@ -13,7 +13,8 @@ public class PasswordGateScreen extends Screen {
     private final Screen nextScreen;
 
     private TextFieldWidget passwordField;
-    private String status = "";`r`n    private boolean suppressInitialChar;
+    private String status = "";
+    private boolean suppressInitialChar;
 
     public PasswordGateScreen(Screen nextScreen) {
         super(new StringTextComponent("杈撳叆瀵嗙爜"));
@@ -24,7 +25,8 @@ public class PasswordGateScreen extends Screen {
     protected void init() {
         this.buttons.clear();
         this.children.clear();
-        this.suppressInitialChar = ClientHooks.consumePendingScreenCharSuppression();`r`n
+        this.suppressInitialChar = ClientHooks.consumePendingScreenCharSuppression();
+
         int panelWidth = Math.min(360, this.width - 24);
         int panelHeight = 148;
         int left = (this.width - panelWidth) / 2;
@@ -60,7 +62,15 @@ public class PasswordGateScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    @Override`r`n    public boolean charTyped(char codePoint, int modifiers) {`r`n        if (this.suppressInitialChar && this.passwordField != null && this.passwordField.getValue().isEmpty()) {`r`n            this.suppressInitialChar = false;`r`n            return true;`r`n        }`r`n        this.suppressInitialChar = false;`r`n        return this.passwordField != null && (this.passwordField.charTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers));`r`n    }
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.suppressInitialChar && this.passwordField != null && this.passwordField.getValue().isEmpty()) {
+            this.suppressInitialChar = false;
+            return true;
+        }
+        this.suppressInitialChar = false;
+        return this.passwordField != null && (this.passwordField.charTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers));
+    }
 
     private void submitPassword() {
         if (DailyPasswordLock.unlock(this.passwordField == null ? "" : this.passwordField.getValue().trim())) {
