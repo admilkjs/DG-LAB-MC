@@ -37,6 +37,12 @@ Minecraft 客户端 DG-LAB 控制模组，多版本分支仓库。
 - 模组发布包：`dist/release/`
 - 规则配置 ZIP：`dist/dglabmc-pvp-punish.zip`
 
+## 发布
+
+- 统一使用主分支 tag：`v*`
+- 单个 Release 会聚合同一 `mod_version` 的全部游戏版本产物
+- CI 从各版本分支分别构建，再合并到一个 GitHub Release
+
 ## 仓库约定
 
 - 包名：`dglabmc`

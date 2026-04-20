@@ -34,3 +34,8 @@
 
 - `dist/release/*`：发布用 Jar、混淆 Jar、mapping、seeds
 - `dist/dglabmc-pvp-punish.zip`：示例规则配置
+
+## 发布方式
+
+- GitHub Release 按 `v*` tag 聚合全部版本
+- 每条版本线仍然独立构建，只是不再拆成多个 Release 页面

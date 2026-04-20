@@ -3,59 +3,69 @@ name: Release
 on:
   push:
     tags:
-      - 'forge-*-v*'
-      - 'neoforge-*-v*'
+      - 'v*'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target_ref: forge/1.12.2
+            java_version: '8'
+            artifact_name: forge-1.12.2
+          - target_ref: forge/1.13.2
+            java_version: '11'
+            artifact_name: forge-1.13.2
+          - target_ref: forge/1.14.4
+            java_version: '11'
+            artifact_name: forge-1.14.4
+          - target_ref: forge/1.15.2
+            java_version: '11'
+            artifact_name: forge-1.15.2
+          - target_ref: forge/1.16.5
+            java_version: '8'
+            artifact_name: forge-1.16.5
+          - target_ref: forge/1.18.2
+            java_version: '17'
+            artifact_name: forge-1.18.2
+          - target_ref: forge/1.19.2
+            java_version: '17'
+            artifact_name: forge-1.19.2
+          - target_ref: forge/1.20.1
+            java_version: '17'
+            artifact_name: forge-1.20.1
+          - target_ref: neoforge/1.20.2
+            java_version: '17'
+            artifact_name: neoforge-1.20.2
+          - target_ref: neoforge/1.20.4
+            java_version: '17'
+            artifact_name: neoforge-1.20.4
+          - target_ref: neoforge/1.20.6
+            java_version: '21'
+            artifact_name: neoforge-1.20.6
+          - target_ref: neoforge/1.21.4
+            java_version: '21'
+            artifact_name: neoforge-1.21.4
 
     steps:
-      - name: Checkout
+      - name: Checkout Target Branch
         uses: actions/checkout@v4
         with:
+          ref: ${{ matrix.target_ref }}
           fetch-depth: 0
-
-      - name: Resolve Tag Toolchain
-        id: toolchain
-        shell: pwsh
-        run: |
-          $refName = "${{ github.ref_name }}"
-
-          switch -Regex ($refName) {
-            '^forge-1\.12\.2-v.+$' { $targetRef = 'forge/1.12.2'; $javaVersion = '8' }
-            '^forge-1\.13\.2-v.+$' { $targetRef = 'forge/1.13.2'; $javaVersion = '11' }
-            '^forge-1\.14\.4-v.+$' { $targetRef = 'forge/1.14.4'; $javaVersion = '11' }
-            '^forge-1\.15\.2-v.+$' { $targetRef = 'forge/1.15.2'; $javaVersion = '11' }
-            '^forge-1\.16\.5-v.+$' { $targetRef = 'forge/1.16.5'; $javaVersion = '8' }
-            '^forge-1\.18\.2-v.+$' { $targetRef = 'forge/1.18.2'; $javaVersion = '17' }
-            '^forge-1\.19\.2-v.+$' { $targetRef = 'forge/1.19.2'; $javaVersion = '17' }
-            '^forge-1\.20\.1-v.+$' { $targetRef = 'forge/1.20.1'; $javaVersion = '17' }
-            '^neoforge-1\.20\.2-v.+$' { $targetRef = 'neoforge/1.20.2'; $javaVersion = '17' }
-            '^neoforge-1\.20\.4-v.+$' { $targetRef = 'neoforge/1.20.4'; $javaVersion = '17' }
-            '^neoforge-1\.20\.6-v.+$' { $targetRef = 'neoforge/1.20.6'; $javaVersion = '21' }
-            '^neoforge-1\.21\.4-v.+$' { $targetRef = 'neoforge/1.21.4'; $javaVersion = '21' }
-            default { throw "Unsupported tag for release workflow: $refName" }
-          }
-
-          "target_ref=$targetRef" >> $env:GITHUB_OUTPUT
-          "java_version=$javaVersion" >> $env:GITHUB_OUTPUT
-          "gradle_args=clean build generatePvpPunishConfig buildRelease --no-daemon" >> $env:GITHUB_OUTPUT
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ steps.toolchain.outputs.java_version }}
-
-      - name: Checkout Target Branch
-        shell: pwsh
-        run: git checkout ${{ steps.toolchain.outputs.target_ref }}
+          java-version: ${{ matrix.java_version }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -70,7 +80,35 @@ jobs:
 
       - name: Build Release Artifacts
         shell: pwsh
-        run: .\gradlew.bat ${{ steps.toolchain.outputs.gradle_args }}
+        run: .\gradlew.bat clean build generatePvpPunishConfig buildRelease --no-daemon
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          if-no-files-found: error
+          path: |
+            dist/release/*
+            dist/*.zip
+
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    needs: build
+
+    steps:
+      - name: Download Built Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/all-release
+
+      - name: Flatten Artifact Paths
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/final | Out-Null
+          Get-ChildItem dist/all-release -Recurse -File | ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path 'dist/final' $_.Name) -Force
+          }
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -80,5 +118,4 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            dist/release/*
-            dist/*.zip
+            dist/final/*

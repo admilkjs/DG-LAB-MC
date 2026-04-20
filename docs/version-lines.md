@@ -22,20 +22,11 @@
 - `neoforge/1.20.6`
 - `neoforge/1.21.4`
 
-## Tag 规则
+## Release 规则
 
-- `forge-1.12.2-v*`
-- `forge-1.13.2-v*`
-- `forge-1.14.4-v*`
-- `forge-1.15.2-v*`
-- `forge-1.16.5-v*`
-- `forge-1.18.2-v*`
-- `forge-1.19.2-v*`
-- `forge-1.20.1-v*`
-- `neoforge-1.20.2-v*`
-- `neoforge-1.20.4-v*`
-- `neoforge-1.20.6-v*`
-- `neoforge-1.21.4-v*`
+- 主分支使用 `v*` tag 触发聚合发布
+- 一个 Release 对应一个 `mod_version`
+- 同一次发布会打包全部版本分支产物
 
 ## 官方依据
 
