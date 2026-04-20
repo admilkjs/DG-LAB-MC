@@ -1,23 +1,30 @@
 package dglabmc.client.ui;
 
-import dglabmc.client.ClientHooks;
-
-import dglabmc.security.DailyPasswordLock;
-import dglabmc.platform.PlatformServices;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import dglabmc.client.ClientHooks;
+import dglabmc.platform.PlatformServices;
+import dglabmc.security.DailyPasswordLock;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.util.text.StringTextComponent;
 
 public class PasswordGateScreen extends Screen {
-    private final Screen nextScreen;
+    private static final StringTextComponent TITLE = new StringTextComponent("输入密码");
+    private static final StringTextComponent TODAY_PASSWORD = new StringTextComponent("今日密码");
+    private static final StringTextComponent UNLOCK = new StringTextComponent("解锁");
+    private static final StringTextComponent PASTE = new StringTextComponent("粘贴");
+    private static final String SCREEN_TITLE = "输入今日密码";
+    private static final String SCREEN_SUBTITLE = "解锁后可用界面和指令";
+    private static final String PASSWORD_LABEL = "密码";
+    private static final String PASSWORD_ERROR = "密码不对";
 
+    private final Screen nextScreen;
     private TextFieldWidget passwordField;
     private String status = "";
     private boolean suppressInitialChar;
 
     public PasswordGateScreen(Screen nextScreen) {
-        super(new StringTextComponent("\u8f93\u5165\u5bc6\u7801"));
+        super(TITLE);
         this.nextScreen = nextScreen;
     }
 
@@ -32,15 +39,15 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, "\u4eca\u65e5\u5bc6\u7801");
+        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, TODAY_PASSWORD.getString());
         this.passwordField.setMaxStringLength(64);
         this.passwordField.setText("");
         this.children.add(this.passwordField);
         this.passwordField.setFocused2(true);
 
         int buttonWidth = (panelWidth - 44) / 2;
-        this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, new StringTextComponent("\u89e3\u9501"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new StringTextComponent("\u7c98\u8d34"), StyledButton.Variant.GHOST, button -> this.passwordField.setText(PlatformServices.client().readClipboard())));
+        this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, UNLOCK, StyledButton.Variant.PRIMARY, button -> submitPassword()));
+        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, PASTE, StyledButton.Variant.GHOST, button -> this.passwordField.setText(PlatformServices.client().readClipboard())));
     }
 
     @Override
@@ -74,13 +81,13 @@ public class PasswordGateScreen extends Screen {
 
     private void submitPassword() {
         if (DailyPasswordLock.unlock(this.passwordField == null ? "" : this.passwordField.getText().trim())) {
-            this.status = "\u5bc6\u7801\u4e0d\u5bf9";
+            this.status = "";
             if (this.minecraft != null) {
                 this.minecraft.displayGuiScreen(this.nextScreen);
             }
             return;
         }
-        this.status = "閻庨潧妫涢悥婊勭▔瀹ュ拋鍤?;
+        this.status = PASSWORD_ERROR;
     }
 
     @Override
@@ -88,13 +95,15 @@ public class PasswordGateScreen extends Screen {
         MatrixStack matrixStack = new MatrixStack();
         this.renderBackground();
         fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+
         int panelWidth = Math.min(360, this.width - 24);
         int panelHeight = 148;
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
+
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "鏉堟挸鍙嗘禒濠冩）鐎靛棛鐖?, "鐟欙綁鏀ｉ崥搴″讲閻劎鏅棃銏犳嫲閹稿洣鎶?, left + 18, top + 14);
-        this.font.drawString("閻庨潧妫涢悥?, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+        UiRender.drawSectionTitle(matrixStack, this.font, SCREEN_TITLE, SCREEN_SUBTITLE, left + 18, top + 14);
+        this.font.drawString(PASSWORD_LABEL, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
             this.passwordField.render(mouseX, mouseY, partialTicks);
         }
@@ -104,4 +113,3 @@ public class PasswordGateScreen extends Screen {
         super.render(mouseX, mouseY, partialTicks);
     }
 }
-
