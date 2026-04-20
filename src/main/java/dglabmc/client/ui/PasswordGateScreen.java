@@ -17,7 +17,7 @@ public class PasswordGateScreen extends Screen {
     private boolean suppressInitialChar;
 
     public PasswordGateScreen(Screen nextScreen) {
-        super(new StringTextComponent("杈撳叆瀵嗙爜"));
+        super(new StringTextComponent("鏉堟挸鍙嗙€靛棛鐖?));
         this.nextScreen = nextScreen;
     }
 
@@ -32,15 +32,15 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
 
-        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, "浠婃棩瀵嗙爜");
+        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, "娴犲﹥妫╃€靛棛鐖?);
         this.passwordField.setMaxStringLength(64);
         this.passwordField.setText("");
         this.children.add(this.passwordField);
         this.passwordField.setFocused2(true);
 
         int buttonWidth = (panelWidth - 44) / 2;
-        this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, new StringTextComponent("瑙ｉ攣"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new StringTextComponent("绮樿创"), StyledButton.Variant.GHOST, button -> this.passwordField.setText(PlatformServices.client().readClipboard())));
+        this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, new StringTextComponent("鐟欙綁鏀?), StyledButton.Variant.PRIMARY, button -> submitPassword()));
+        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, new StringTextComponent("缁鍒?), StyledButton.Variant.GHOST, button -> this.passwordField.setText(PlatformServices.client().readClipboard())));
     }
 
     @Override
@@ -64,7 +64,7 @@ public class PasswordGateScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.suppressInitialChar && this.passwordField != null && this.passwordField.getValue().isEmpty()) {
+        if (this.suppressInitialChar && this.passwordField != null && this.passwordField.getText().isEmpty()) {
             this.suppressInitialChar = false;
             return true;
         }
@@ -80,7 +80,7 @@ public class PasswordGateScreen extends Screen {
             }
             return;
         }
-        this.status = "瀵嗙爜涓嶅";
+        this.status = "鐎靛棛鐖滄稉宥咁嚠";
     }
 
     @Override
@@ -93,8 +93,8 @@ public class PasswordGateScreen extends Screen {
         int left = (this.width - panelWidth) / 2;
         int top = (this.height - panelHeight) / 2;
         UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "输入今日密码", "解锁后可用界面和指令", left + 18, top + 14);
-        this.font.drawString("瀵嗙爜", (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+        UiRender.drawSectionTitle(matrixStack, this.font, "杈撳叆浠婃棩瀵嗙爜", "瑙ｉ攣鍚庡彲鐢ㄧ晫闈㈠拰鎸囦护", left + 18, top + 14);
+        this.font.drawString("鐎靛棛鐖?, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
             this.passwordField.render(mouseX, mouseY, partialTicks);
         }
