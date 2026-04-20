@@ -43,6 +43,7 @@ public final class ClientHooks {
     private static final Minecraft MINECRAFT = Minecraft.getInstance();
     private static KeyBinding openMenuKey;
     private static boolean menuKeyLatch;
+    private static boolean suppressNextScreenChar;
     private static boolean sprinting;
     private static boolean crouching;
     private static boolean lowHealthLatched;
@@ -79,9 +80,16 @@ public final class ClientHooks {
         }
         boolean down = openMenuKey.isKeyDown();
         if (down && !menuKeyLatch) {
+            suppressNextScreenChar = true;
             PlatformServices.client().openControlCenter();
         }
         menuKeyLatch = down;
+    }
+
+    public static boolean consumePendingScreenCharSuppression() {
+        boolean pending = suppressNextScreenChar;
+        suppressNextScreenChar = false;
+        return pending;
     }
 
     @SubscribeEvent
