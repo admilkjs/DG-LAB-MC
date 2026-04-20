@@ -34,3 +34,8 @@
 -keep class dglabmc.tool.PvpPunishConfigGenerator {
     public static void main(java.lang.String[]);
 }
+
+# QR generation depends on relocated ZXing enums and writer classes.
+# Obfuscating them breaks enum lookups at runtime.
+-keep class **.shadow.zxing.** { *; }
+-keep enum **.shadow.zxing.** { *; }
