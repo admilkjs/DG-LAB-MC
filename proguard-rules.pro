@@ -7,6 +7,9 @@
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,*Annotation*,EnclosingMethod
 -renamesourcefileattribute Source
 
+# Keep all non-security mod classes readable. Only the password/signal chain stays obfuscated.
+-keep class !cn.admilk.dglabweb.security.**, cn.admilk.dglabweb.** { *; }
+
 # Forge / Mod entrypoints
 -keep class dglabmc.DgLabMcMod { *; }
 -keep @net.minecraftforge.fml.common.Mod class * { *; }
