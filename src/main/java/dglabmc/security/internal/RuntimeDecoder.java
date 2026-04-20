@@ -1,4 +1,4 @@
-﻿package dglabmc.security.internal;
+package dglabmc.security.internal;
 
 public final class RuntimeDecoder {
     private RuntimeDecoder() {
