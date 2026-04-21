@@ -3,6 +3,7 @@ package dglabmc;
 import dglabmc.config.AppConfig;
 import dglabmc.config.ConfigArchiveService;
 import dglabmc.config.ConfigRepository;
+import dglabmc.config.StartupConfig;
 import dglabmc.device.DeviceSessionManager;
 import dglabmc.device.DeviceWebSocketServer;
 import dglabmc.device.DeviceChannel;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.UUID;
 
 public final class AppServices {
@@ -42,6 +44,7 @@ public final class AppServices {
 
     public synchronized void initialize() {
         if (initialized) {
+            ensureSocketServerStarted();
             return;
         }
         try {
@@ -56,9 +59,9 @@ public final class AppServices {
                 this.configRepository.save(config);
             }
             this.deviceWebSocketServer = new DeviceWebSocketServer(this.deviceSessionManager, config.connection.deviceClientId);
-            this.deviceWebSocketServer.start(dglabmc.config.StartupConfig.resolveDevicePort());
             this.ruleEngine = new RuleEngine(this.configRepository, this.deviceSessionManager);
             this.initialized = true;
+            ensureSocketServerStarted();
         } catch (IOException exception) {
             throw new RuntimeException("初始化 DG-LAB 控制服务失败。", exception);
         }
@@ -183,10 +186,12 @@ public final class AppServices {
     }
 
     public synchronized String getPairingLink() {
+        ensureSocketServerStarted();
         return resolvePairingLink(false);
     }
 
     public synchronized String refreshPairingLink() {
+        ensureSocketServerStarted();
         return resolvePairingLink(true);
     }
 
@@ -213,6 +218,7 @@ public final class AppServices {
     }
 
     public synchronized int getDevicePort() {
+        ensureSocketServerStarted();
         return deviceWebSocketServer.getBoundPort();
     }
 
@@ -255,6 +261,22 @@ public final class AppServices {
         if (!isDeviceBound()) {
             throw new IllegalStateException("设备未绑定，无法发送测试。");
         }
+    }
+
+    private void ensureSocketServerStarted() {
+        if (deviceWebSocketServer == null) {
+            throw new IllegalStateException("设备 WebSocket 服务未初始化。");
+        }
+        if (deviceWebSocketServer.getBoundPort() > 0) {
+            return;
+        }
+        AppConfig config = getConfig();
+        String bindHost = config.connection.localBindAddress == null ? "" : config.connection.localBindAddress.trim();
+        String normalizedHost = bindHost.toLowerCase(Locale.ROOT);
+        if (normalizedHost.isEmpty() || "127.0.0.1".equals(normalizedHost) || "localhost".equals(normalizedHost)) {
+            bindHost = "0.0.0.0";
+        }
+        deviceWebSocketServer.start(bindHost, StartupConfig.resolveDevicePort());
     }
 
     private void backupCurrentConfig(String reason) {
