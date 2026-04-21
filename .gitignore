@@ -34,6 +34,7 @@ eclipse
 refs
 mdk
 forge-1.16.5-36.2.42-mdk.zip
+.claude/
 
 # Files from Forge MDK
 forge*changelog.txt
