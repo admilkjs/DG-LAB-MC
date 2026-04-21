@@ -11,12 +11,11 @@ import net.minecraft.util.text.StringTextComponent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RuleOrderScreen extends Screen {
+public class RuleOrderScreen extends BaseScreen {
     private static final int ROW_HEIGHT = 44;
     private static final int ROW_GAP = 10;
     private static final int CARD_HEIGHT = 28;
 
-    private final Screen parent;
     private int selectedIndex = -1;
     private int page;
     private String statusMessage = "";
@@ -41,8 +40,11 @@ public class RuleOrderScreen extends Screen {
     private StyledButton nextPageButton;
 
     public RuleOrderScreen(Screen parent) {
-        super(new StringTextComponent("规则顺序"));
-        this.parent = parent;
+        super(new StringTextComponent("规则顺序"), parent);
+    }
+
+    @Override
+    protected void buildWidgets() {
     }
 
     @Override
@@ -105,10 +107,6 @@ public class RuleOrderScreen extends Screen {
         updateButtonState();
     }
 
-    @Override
-    public void onClose() {
-        this.minecraft.displayGuiScreen(this.parent);
-    }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -165,10 +163,7 @@ public class RuleOrderScreen extends Screen {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        MatrixStack matrixStack = new MatrixStack();
-        this.renderBackground();
-        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 
         int left = panelLeft();
         int top = panelTop();
@@ -180,33 +175,31 @@ public class RuleOrderScreen extends Screen {
 
         UiRender.drawPanel(matrixStack, left, top, panelWidth(), panelHeight(), UiPalette.PANEL, UiPalette.ACCENT);
         UiRender.drawSectionTitle(matrixStack, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, top + 16);
-        this.font.drawString(pageLabel, (float) (left + panelWidth() - 18 - this.font.getStringWidth(pageLabel)), (float) (top + 28), UiPalette.TEXT_MUTED);
+        this.font.draw(matrixStack, pageLabel, (float) (left + panelWidth() - 18 - this.font.width(pageLabel)), (float) (top + 28), UiPalette.TEXT_MUTED);
 
         renderRows(matrixStack, mouseX, mouseY);
 
         if (rows.isEmpty()) {
-            this.font.drawString("当前没有规则", (float) innerLeft, (float) (listTop() + 12), UiPalette.TEXT_MUTED);
+            this.font.draw(matrixStack, "当前没有规则", (float) innerLeft, (float) (listTop() + 12), UiPalette.TEXT_MUTED);
         } else {
             RulePosition selectedPosition = findPosition(rows, selectedRuleId());
             if (selectedPosition != null) {
                 RuleDefinition selected = rules().get(this.selectedIndex);
-                this.font.drawString("已选：第 " + (selectedPosition.rowIndex + 1) + " 行 / " + displayRuleName(selected), (float) innerLeft, (float) infoTop(), UiPalette.TEXT_MUTED);
+                this.font.draw(matrixStack, "已选：第 " + (selectedPosition.rowIndex + 1) + " 行 / " + displayRuleName(selected), (float) innerLeft, (float) infoTop(), UiPalette.TEXT_MUTED);
             }
         }
 
         if (!this.statusMessage.isEmpty()) {
-            this.font.drawString(this.statusMessage, (float) innerLeft, (float) (infoTop() + 14), UiPalette.WARNING);
+            this.font.draw(matrixStack, this.statusMessage, (float) innerLeft, (float) (infoTop() + 14), UiPalette.WARNING);
         }
-
-        super.render(mouseX, mouseY, partialTicks);
     }
 
     private void renderRows(MatrixStack matrixStack, int mouseX, int mouseY) {
         List<RowLayout> layouts = buildVisibleRowLayouts(this.dragMoved);
         CardLayout hoveredCard = this.dragMoved ? null : findCardAt(mouseX, mouseY, false);
         if (this.dragMoved && layouts.isEmpty()) {
-            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, 0x66172233, UiPalette.ACCENT);
-            this.font.drawString("松开后建立第一行", (float) (listLeft() + 16), (float) (listTop() + 17), UiPalette.TEXT_PRIMARY);
+            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, UiPalette.CARD_BG, UiPalette.ACCENT);
+            this.font.draw(matrixStack, "松开后建立第一行", (float) (listLeft() + 16), (float) (listTop() + 17), UiPalette.TEXT_PRIMARY);
         }
 
         for (RowLayout row : layouts) {
@@ -232,26 +225,26 @@ public class RuleOrderScreen extends Screen {
     private void drawRowBackground(MatrixStack matrixStack, RowLayout row, boolean targetRow) {
         int border = targetRow ? UiPalette.ACCENT : UiPalette.BORDER;
         int accent = targetRow ? UiPalette.ACCENT : UiPalette.INFO;
-        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, 0x66172233, border);
-        fill(matrixStack.getLast().getMatrix(), row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
-        this.font.drawString("第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, UiPalette.CARD_BG, border);
+        fill(matrixStack, row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
+        this.font.draw(matrixStack, "第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
     }
 
     private void drawCard(MatrixStack matrixStack, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
-        int background = selected ? 0xCC243041 : hovered ? 0xB3233043 : rule.enabled ? 0x99172233 : 0x77202A38;
+        int background = selected ? UiPalette.CARD_HOVER : hovered ? UiPalette.CARD_SELECTED : rule.enabled ? UiPalette.CARD_IDLE : UiPalette.CARD_MUTED;
         int border = selected ? UiPalette.ACCENT : hovered ? UiPalette.BORDER_STRONG : UiPalette.BORDER;
         if (floating) {
-            background = 0xD9243041;
+            background = UiPalette.CARD_FLOATING;
         }
         UiRender.drawPanel(matrixStack, x, y, width, height, background, border);
-        fill(matrixStack.getLast().getMatrix(), x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
+        fill(matrixStack, x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
         String label = trimToWidth(displayRuleName(rule), width - 22);
-        this.font.drawString(label, (float) (x + 16), (float) (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
+        this.font.draw(matrixStack, label, (float) (x + 16), (float) (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
     }
 
     private void drawDropTarget(MatrixStack matrixStack, List<RowLayout> layouts, DropTarget target) {
         if (target.mode == DropMode.EMPTY) {
-            fill(matrixStack.getLast().getMatrix(), listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
+            fill(matrixStack, listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
             return;
         }
         if (target.mode == DropMode.IN_ROW) {
@@ -260,7 +253,7 @@ public class RuleOrderScreen extends Screen {
                 return;
             }
             int x = dropMarkerX(row, target.slotIndex);
-            fill(matrixStack.getLast().getMatrix(), x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
+            fill(matrixStack, x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
             return;
         }
 
@@ -272,7 +265,7 @@ public class RuleOrderScreen extends Screen {
             RowLayout row = findRowLayout(layouts, target.rowIndex);
             y = row == null ? listTop() + ROW_HEIGHT + 2 : row.y + row.height + 1;
         }
-        fill(matrixStack.getLast().getMatrix(), listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
+        fill(matrixStack, listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
     }
 
     private int dropMarkerX(RowLayout row, int slotIndex) {
@@ -750,11 +743,11 @@ public class RuleOrderScreen extends Screen {
         if (text == null || text.isEmpty() || maxWidth <= 0) {
             return "";
         }
-        if (this.font.getStringWidth(text) <= maxWidth) {
+        if (this.font.width(text) <= maxWidth) {
             return text;
         }
         String suffix = "...";
-        String clipped = this.font.trimStringToWidth(text, Math.max(0, maxWidth - this.font.getStringWidth(suffix)));
+        String clipped = this.font.plainSubstrByWidth(text, Math.max(0, maxWidth - this.font.width(suffix)));
         return clipped == null || clipped.isEmpty() ? "" : clipped + suffix;
     }
 
