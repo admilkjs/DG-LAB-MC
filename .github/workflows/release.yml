@@ -32,6 +32,9 @@ jobs:
 
           case "$REF_NAME" in
             forge-1.12.2-v*)    TARGET_REF="forge/1.12.2";    JAVA_VERSION=8  ;;
+            forge-1.13.2-v*)    TARGET_REF="forge/1.13.2";    JAVA_VERSION=11 ;;
+            forge-1.14.4-v*)    TARGET_REF="forge/1.14.4";    JAVA_VERSION=11 ;;
+            forge-1.15.2-v*)    TARGET_REF="forge/1.15.2";    JAVA_VERSION=11 ;;
             forge-1.16.5-v*)    TARGET_REF="forge/1.16.5";    JAVA_VERSION=8  ;;
             forge-1.18.2-v*)    TARGET_REF="forge/1.18.2";    JAVA_VERSION=17 ;;
             forge-1.19.2-v*)    TARGET_REF="forge/1.19.2";    JAVA_VERSION=17 ;;
@@ -39,6 +42,7 @@ jobs:
             neoforge-1.20.2-v*) TARGET_REF="neoforge/1.20.2"; JAVA_VERSION=17 ;;
             neoforge-1.20.4-v*) TARGET_REF="neoforge/1.20.4"; JAVA_VERSION=17 ;;
             neoforge-1.20.6-v*) TARGET_REF="neoforge/1.20.6"; JAVA_VERSION=21 ;;
+            neoforge-1.21.4-v*) TARGET_REF="neoforge/1.21.4"; JAVA_VERSION=21 ;;
             *) echo "::error::Unsupported tag: $REF_NAME"; exit 1 ;;
           esac
 
@@ -52,6 +56,9 @@ jobs:
           distribution: temurin
           java-version: ${{ steps.toolchain.outputs.java_version }}
 
+      - name: Checkout Target Branch
+        run: git checkout ${{ steps.toolchain.outputs.target_ref }}
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -60,7 +67,7 @@ jobs:
           sed -i '/^systemProp\.\(http\|https\)\.proxy\(Host\|Port\)=/d' gradle.properties
 
       - name: Build Release Artifacts
-        run: ./gradlew ${{ steps.toolchain.outputs.gradle_args }}
+        run: chmod +x gradlew && ./gradlew ${{ steps.toolchain.outputs.gradle_args }}
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
