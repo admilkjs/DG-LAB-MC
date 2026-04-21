@@ -17,6 +17,7 @@ public class StyledButton extends Button {
     }
 
     private final Variant variant;
+    private float hoverProgress;
 
     public StyledButton(int x, int y, int width, int height, ITextComponent title, IPressable onPress) {
         this(x, y, width, height, title, Variant.SECONDARY, onPress);
@@ -30,36 +31,46 @@ public class StyledButton extends Button {
     @Override
     public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         Minecraft minecraft = Minecraft.getInstance();
+
+        float target = this.isHovered() && this.active ? 1.0F : 0.0F;
+        float speed = 0.15F;
+        this.hoverProgress += (target - this.hoverProgress) * speed;
+        if (Math.abs(this.hoverProgress - target) < 0.01F) {
+            this.hoverProgress = target;
+        }
+
         int background = backgroundColor();
         int border = borderColor();
         int textColor = this.active ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_DIM;
+
         AbstractGui.fill(matrixStack, this.x, this.y, this.x + this.width, this.y + this.height, background);
         AbstractGui.fill(matrixStack, this.x, this.y, this.x + this.width, this.y + 1, border);
         AbstractGui.fill(matrixStack, this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, border);
         AbstractGui.fill(matrixStack, this.x, this.y, this.x + 1, this.y + this.height, border);
         AbstractGui.fill(matrixStack, this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, border);
+
         String label = fitLabel(minecraft, this.getMessage().getString(), this.width - 10);
         drawCenteredString(matrixStack, minecraft.font, label, this.x + this.width / 2, this.y + (this.height - 8) / 2, textColor);
     }
 
     private int backgroundColor() {
         if (!this.active) {
-            return 0x99202838;
+            return UiPalette.BTN_DISABLED_BG;
         }
         switch (this.variant) {
             case PRIMARY:
-                return this.isHovered() ? 0xFFF97316 : 0xFFE85D04;
+                return UiUtil.lerpColor(UiPalette.BTN_PRIMARY_IDLE, UiPalette.BTN_PRIMARY_HOVER, this.hoverProgress);
             case DANGER:
-                return this.isHovered() ? 0xFFDC2626 : 0xFF991B1B;
+                return UiUtil.lerpColor(UiPalette.BTN_DANGER_IDLE, UiPalette.BTN_DANGER_HOVER, this.hoverProgress);
             case GHOST:
-                return this.isHovered() ? 0xCC1E293B : 0x88202B39;
+                return UiUtil.lerpColor(UiPalette.BTN_GHOST_IDLE, UiPalette.BTN_GHOST_HOVER, this.hoverProgress);
             case TAB_ACTIVE:
-                return this.isHovered() ? 0xFF2A374B : 0xFF1E293B;
+                return UiUtil.lerpColor(UiPalette.BTN_TAB_ACTIVE_IDLE, UiPalette.BTN_TAB_ACTIVE_HOVER, this.hoverProgress);
             case TAB_IDLE:
-                return this.isHovered() ? 0xD9233043 : 0x99172233;
+                return UiUtil.lerpColor(UiPalette.BTN_TAB_IDLE_IDLE, UiPalette.BTN_TAB_IDLE_HOVER, this.hoverProgress);
             case SECONDARY:
             default:
-                return this.isHovered() ? 0xCC243041 : 0xB31B2635;
+                return UiUtil.lerpColor(UiPalette.BTN_SECONDARY_IDLE, UiPalette.BTN_SECONDARY_HOVER, this.hoverProgress);
         }
     }
 
@@ -69,16 +80,16 @@ public class StyledButton extends Button {
         }
         switch (this.variant) {
             case PRIMARY:
-                return 0xFFFFEDD5;
+                return UiPalette.BTN_PRIMARY_BORDER;
             case DANGER:
-                return 0xFFFCA5A5;
+                return UiPalette.BTN_DANGER_BORDER;
             case TAB_ACTIVE:
                 return UiPalette.ACCENT;
             case TAB_IDLE:
             case GHOST:
             case SECONDARY:
             default:
-                return this.isHovered() ? UiPalette.BORDER_STRONG : UiPalette.BORDER;
+                return UiUtil.lerpColor(UiPalette.BORDER, UiPalette.BORDER_STRONG, this.hoverProgress);
         }
     }
 

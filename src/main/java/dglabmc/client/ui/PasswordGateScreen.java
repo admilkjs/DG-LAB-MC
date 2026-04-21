@@ -1,55 +1,49 @@
 package dglabmc.client.ui;
 
 import dglabmc.client.ClientHooks;
-
-import dglabmc.security.DailyPasswordLock;
 import dglabmc.platform.PlatformServices;
+import dglabmc.security.DailyPasswordLock;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.util.text.StringTextComponent;
 
-public class PasswordGateScreen extends Screen {
-    private static final StringTextComponent TITLE = new StringTextComponent("输入密码");
-    private static final StringTextComponent TODAY_PASSWORD = new StringTextComponent("今日密码");
-    private static final StringTextComponent UNLOCK = new StringTextComponent("解锁");
-    private static final StringTextComponent PASTE = new StringTextComponent("粘贴");
-    private static final String PASSWORD_ERROR = "密码不对";
-    private static final String PASSWORD_LABEL = "密码";
-    private static final String SCREEN_TITLE = "输入今日密码";
-    private static final String SCREEN_SUBTITLE = "解锁后可用界面和指令";
-
-    private final Screen nextScreen;
+public class PasswordGateScreen extends BaseScreen {
+    private final net.minecraft.client.gui.screen.Screen nextScreen;
 
     private TextFieldWidget passwordField;
-    private String status = "";
     private boolean suppressInitialChar;
 
-    public PasswordGateScreen(Screen nextScreen) {
-        super(TITLE);
+    public PasswordGateScreen(net.minecraft.client.gui.screen.Screen nextScreen) {
+        super(new StringTextComponent("输入密码"), null);
         this.nextScreen = nextScreen;
     }
 
+    @Override protected int maxPanelWidth() { return 360; }
+    @Override protected int compactThreshold() { return 0; }
+    @Override protected int panelHeightNormal() { return 148; }
+
     @Override
-    protected void init() {
-        this.buttons.clear();
-        this.children.clear();
+    protected void buildWidgets() {
         this.suppressInitialChar = ClientHooks.consumePendingScreenCharSuppression();
 
-        int panelWidth = Math.min(360, this.width - 24);
-        int panelHeight = 148;
-        int left = (this.width - panelWidth) / 2;
-        int top = (this.height - panelHeight) / 2;
-
-        this.passwordField = new TextFieldWidget(this.font, left + 18, top + 54, panelWidth - 36, 20, TODAY_PASSWORD);
+        int il = innerLeft();
+        int iw = innerWidth();
+        this.passwordField = new TextFieldWidget(this.font, il, this.panelTop + 54, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("今日密码"));
         this.passwordField.setMaxLength(64);
         this.passwordField.setValue("");
+        this.passwordField.setFormatter((text, pos) -> {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < text.length(); i++) {
+                sb.append('*');
+            }
+            return new StringTextComponent(sb.toString()).getVisualOrderText();
+        });
         this.children.add(this.passwordField);
         this.setInitialFocus(this.passwordField);
 
-        int buttonWidth = (panelWidth - 44) / 2;
-        this.addButton(new StyledButton(left + 18, top + 90, buttonWidth, 20, UNLOCK, StyledButton.Variant.PRIMARY, button -> submitPassword()));
-        this.addButton(new StyledButton(left + 26 + buttonWidth, top + 90, buttonWidth, 20, PASTE, StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
+        int buttonWidth = (iw - UiConstants.PAD_SM) / 2;
+        this.addButton(new StyledButton(il, this.panelTop + 90, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("解锁"), StyledButton.Variant.PRIMARY, button -> submitPassword()));
+        this.addButton(new StyledButton(il + buttonWidth + UiConstants.PAD_SM, this.panelTop + 90, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.passwordField.setValue(PlatformServices.client().readClipboard())));
     }
 
     @Override
@@ -83,33 +77,26 @@ public class PasswordGateScreen extends Screen {
 
     private void submitPassword() {
         if (DailyPasswordLock.unlock(this.passwordField == null ? "" : this.passwordField.getValue().trim())) {
-            this.status = "";
+            setStatus("");
             if (this.minecraft != null) {
                 this.minecraft.setScreen(this.nextScreen);
             }
             return;
         }
-        this.status = PASSWORD_ERROR;
+        setStatus("密码不对");
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
-        int panelWidth = Math.min(360, this.width - 24);
-        int panelHeight = 148;
-        int left = (this.width - panelWidth) / 2;
-        int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(matrixStack, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, SCREEN_TITLE, SCREEN_SUBTITLE, left + 18, top + 14);
-        this.font.draw(matrixStack, PASSWORD_LABEL, (float) (left + 18), (float) (top + 42), UiPalette.TEXT_MUTED);
+    public void onClose() {
+    }
+
+    @Override
+    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        int il = innerLeft();
+        UiRender.drawSectionTitle(matrixStack, this.font, "输入今日密码", "未解锁前不能使用界面和指令", il, this.panelTop + 14);
+        this.font.draw(matrixStack, "密码", (float) il, (float) (this.panelTop + 42), UiPalette.TEXT_MUTED);
         if (this.passwordField != null) {
             this.passwordField.render(matrixStack, mouseX, mouseY, partialTicks);
         }
-        if (!this.status.isEmpty()) {
-            this.font.draw(matrixStack, this.status, (float) (left + 18), (float) (top + panelHeight - 22), UiPalette.WARNING);
-        }
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 }
-

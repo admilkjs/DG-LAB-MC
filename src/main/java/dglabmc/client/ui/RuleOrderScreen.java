@@ -11,12 +11,11 @@ import net.minecraft.util.text.StringTextComponent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RuleOrderScreen extends Screen {
+public class RuleOrderScreen extends BaseScreen {
     private static final int ROW_HEIGHT = 44;
     private static final int ROW_GAP = 10;
     private static final int CARD_HEIGHT = 28;
 
-    private final Screen parent;
     private int selectedIndex = -1;
     private int page;
     private String statusMessage = "";
@@ -41,8 +40,11 @@ public class RuleOrderScreen extends Screen {
     private StyledButton nextPageButton;
 
     public RuleOrderScreen(Screen parent) {
-        super(new StringTextComponent("规则顺序"));
-        this.parent = parent;
+        super(new StringTextComponent("规则顺序"), parent);
+    }
+
+    @Override
+    protected void buildWidgets() {
     }
 
     @Override
@@ -105,10 +107,6 @@ public class RuleOrderScreen extends Screen {
         updateButtonState();
     }
 
-    @Override
-    public void onClose() {
-        this.minecraft.setScreen(this.parent);
-    }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -165,9 +163,7 @@ public class RuleOrderScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 
         int left = panelLeft();
         int top = panelTop();
@@ -196,15 +192,13 @@ public class RuleOrderScreen extends Screen {
         if (!this.statusMessage.isEmpty()) {
             this.font.draw(matrixStack, this.statusMessage, (float) innerLeft, (float) (infoTop() + 14), UiPalette.WARNING);
         }
-
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     private void renderRows(MatrixStack matrixStack, int mouseX, int mouseY) {
         List<RowLayout> layouts = buildVisibleRowLayouts(this.dragMoved);
         CardLayout hoveredCard = this.dragMoved ? null : findCardAt(mouseX, mouseY, false);
         if (this.dragMoved && layouts.isEmpty()) {
-            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, 0x66172233, UiPalette.ACCENT);
+            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, UiPalette.CARD_BG, UiPalette.ACCENT);
             this.font.draw(matrixStack, "松开后建立第一行", (float) (listLeft() + 16), (float) (listTop() + 17), UiPalette.TEXT_PRIMARY);
         }
 
@@ -231,16 +225,16 @@ public class RuleOrderScreen extends Screen {
     private void drawRowBackground(MatrixStack matrixStack, RowLayout row, boolean targetRow) {
         int border = targetRow ? UiPalette.ACCENT : UiPalette.BORDER;
         int accent = targetRow ? UiPalette.ACCENT : UiPalette.INFO;
-        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, 0x66172233, border);
+        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, UiPalette.CARD_BG, border);
         fill(matrixStack, row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
         this.font.draw(matrixStack, "第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
     }
 
     private void drawCard(MatrixStack matrixStack, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
-        int background = selected ? 0xCC243041 : hovered ? 0xB3233043 : rule.enabled ? 0x99172233 : 0x77202A38;
+        int background = selected ? UiPalette.CARD_HOVER : hovered ? UiPalette.CARD_SELECTED : rule.enabled ? UiPalette.CARD_IDLE : UiPalette.CARD_MUTED;
         int border = selected ? UiPalette.ACCENT : hovered ? UiPalette.BORDER_STRONG : UiPalette.BORDER;
         if (floating) {
-            background = 0xD9243041;
+            background = UiPalette.CARD_FLOATING;
         }
         UiRender.drawPanel(matrixStack, x, y, width, height, background, border);
         fill(matrixStack, x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
