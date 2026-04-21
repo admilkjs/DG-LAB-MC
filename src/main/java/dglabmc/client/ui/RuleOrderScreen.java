@@ -11,15 +11,13 @@ import net.minecraft.util.text.StringTextComponent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RuleOrderScreen extends Screen {
+public class RuleOrderScreen extends BaseScreen {
     private static final int ROW_HEIGHT = 44;
     private static final int ROW_GAP = 10;
     private static final int CARD_HEIGHT = 28;
 
-    private final Screen parent;
     private int selectedIndex = -1;
     private int page;
-    private String statusMessage = "";
 
     private int draggingIndex = -1;
     private int draggingCardWidth;
@@ -41,14 +39,23 @@ public class RuleOrderScreen extends Screen {
     private StyledButton nextPageButton;
 
     public RuleOrderScreen(Screen parent) {
-        super(new StringTextComponent("规则顺序"));
-        this.parent = parent;
+        super(new StringTextComponent("规则顺序"), parent);
+    }
+
+    @Override protected int maxPanelWidth() { return 760; }
+    @Override protected int compactThreshold() { return 680; }
+    @Override protected int panelHeightNormal() { return 408; }
+    @Override protected int panelHeightCompact() { return 432; }
+
+    @Override
+    protected void buildWidgets() {
     }
 
     @Override
     protected void init() {
         this.buttons.clear();
         this.children.clear();
+        computeLayout();
         clearDragState();
 
         List<RowData> rows = buildRows(false);
@@ -68,46 +75,41 @@ public class RuleOrderScreen extends Screen {
             }
         }
 
-        int innerLeft = panelLeft() + 18;
-        int innerWidth = panelWidth() - 36;
+        int innerLeft = panelLeft + UiConstants.PANEL_INNER_PAD;
+        int innerWidth = panelWidth - UiConstants.PANEL_INNER_PAD * 2;
         int blockTop = buttonBlockTop();
-        if (compact()) {
+        if (compact) {
             int halfWidth = (innerWidth - 8) / 2;
-            this.movePreviousButton = this.addButton(new StyledButton(innerLeft, blockTop, halfWidth, 20, new StringTextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
-            this.moveNextButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop, halfWidth, 20, new StringTextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
-            this.mergeButton = this.addButton(new StyledButton(innerLeft, blockTop + 24, halfWidth, 20, new StringTextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
-            this.splitButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop + 24, halfWidth, 20, new StringTextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
-            this.previousPageButton = this.addButton(new StyledButton(innerLeft, blockTop + 48, halfWidth, 20, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
+            this.movePreviousButton = this.addButton(new StyledButton(innerLeft, blockTop, halfWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
+            this.moveNextButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop, halfWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
+            this.mergeButton = this.addButton(new StyledButton(innerLeft, blockTop + UiConstants.BTN_STRIDE, halfWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
+            this.splitButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop + UiConstants.BTN_STRIDE, halfWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
+            this.previousPageButton = this.addButton(new StyledButton(innerLeft, blockTop + UiConstants.BTN_STRIDE * 2, halfWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.max(0, this.page - 1);
                 init();
             }));
-            this.nextPageButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop + 48, halfWidth, 20, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
+            this.nextPageButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop + UiConstants.BTN_STRIDE * 2, halfWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.min(maxPageForRowCount(buildRows(false).size()), this.page + 1);
                 init();
             }));
         } else {
             int buttonWidth = (innerWidth - 40) / 6;
-            this.movePreviousButton = this.addButton(new StyledButton(innerLeft, blockTop, buttonWidth, 20, new StringTextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
-            this.moveNextButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8), blockTop, buttonWidth, 20, new StringTextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
-            this.mergeButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 2, blockTop, buttonWidth, 20, new StringTextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
-            this.splitButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 3, blockTop, buttonWidth, 20, new StringTextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
-            this.previousPageButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 4, blockTop, buttonWidth, 20, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
+            this.movePreviousButton = this.addButton(new StyledButton(innerLeft, blockTop, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
+            this.moveNextButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8), blockTop, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
+            this.mergeButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 2, blockTop, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
+            this.splitButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 3, blockTop, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
+            this.previousPageButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 4, blockTop, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.max(0, this.page - 1);
                 init();
             }));
-            this.nextPageButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 5, blockTop, buttonWidth, 20, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
+            this.nextPageButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 5, blockTop, buttonWidth, UiConstants.BTN_HEIGHT, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.min(maxPageForRowCount(buildRows(false).size()), this.page + 1);
                 init();
             }));
         }
-        this.addButton(new StyledButton(panelLeft() + panelWidth() - 116, panelTop() + 16, 98, 20, new StringTextComponent("返回"), StyledButton.Variant.PRIMARY, button -> onClose()));
+        this.addButton(new StyledButton(panelLeft + panelWidth - 116, panelTop + 16, 98, UiConstants.BTN_HEIGHT, new StringTextComponent("返回"), StyledButton.Variant.PRIMARY, button -> onClose()));
 
         updateButtonState();
-    }
-
-    @Override
-    public void onClose() {
-        this.minecraft.displayGuiScreen(this.parent);
     }
 
     @Override
@@ -165,22 +167,15 @@ public class RuleOrderScreen extends Screen {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        MatrixStack matrixStack = new MatrixStack();
-        this.renderBackground();
-        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
-
-        int left = panelLeft();
-        int top = panelTop();
-        int innerLeft = left + 18;
+    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        int innerLeft = panelLeft + UiConstants.PANEL_INNER_PAD;
         List<RowData> rows = buildRows(false);
         int totalPages = Math.max(1, maxPageForRowCount(rows.size()) + 1);
         int currentPage = Math.min(this.page, totalPages - 1) + 1;
         String pageLabel = "第 " + currentPage + " / " + totalPages + " 页";
 
-        UiRender.drawPanel(matrixStack, left, top, panelWidth(), panelHeight(), UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(matrixStack, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, top + 16);
-        this.font.drawString(pageLabel, (float) (left + panelWidth() - 18 - this.font.getStringWidth(pageLabel)), (float) (top + 28), UiPalette.TEXT_MUTED);
+        UiRender.drawSectionTitle(matrixStack, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, panelTop + 16);
+        this.font.drawString(pageLabel, (float) (panelLeft + panelWidth - UiConstants.PANEL_INNER_PAD - this.font.getStringWidth(pageLabel)), (float) (panelTop + 28), UiPalette.TEXT_MUTED);
 
         renderRows(matrixStack, mouseX, mouseY);
 
@@ -194,18 +189,16 @@ public class RuleOrderScreen extends Screen {
             }
         }
 
-        if (!this.statusMessage.isEmpty()) {
+        if (this.statusMessage != null && !this.statusMessage.isEmpty()) {
             this.font.drawString(this.statusMessage, (float) innerLeft, (float) (infoTop() + 14), UiPalette.WARNING);
         }
-
-        super.render(mouseX, mouseY, partialTicks);
     }
 
     private void renderRows(MatrixStack matrixStack, int mouseX, int mouseY) {
         List<RowLayout> layouts = buildVisibleRowLayouts(this.dragMoved);
         CardLayout hoveredCard = this.dragMoved ? null : findCardAt(mouseX, mouseY, false);
         if (this.dragMoved && layouts.isEmpty()) {
-            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, 0x66172233, UiPalette.ACCENT);
+            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, UiPalette.CARD_BG, UiPalette.ACCENT);
             this.font.drawString("松开后建立第一行", (float) (listLeft() + 16), (float) (listTop() + 17), UiPalette.TEXT_PRIMARY);
         }
 
@@ -232,16 +225,16 @@ public class RuleOrderScreen extends Screen {
     private void drawRowBackground(MatrixStack matrixStack, RowLayout row, boolean targetRow) {
         int border = targetRow ? UiPalette.ACCENT : UiPalette.BORDER;
         int accent = targetRow ? UiPalette.ACCENT : UiPalette.INFO;
-        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, 0x66172233, border);
+        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, UiPalette.CARD_BG, border);
         fill(row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
         this.font.drawString("第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
     }
 
     private void drawCard(MatrixStack matrixStack, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
-        int background = selected ? 0xCC243041 : hovered ? 0xB3233043 : rule.enabled ? 0x99172233 : 0x77202A38;
+        int background = selected ? UiPalette.CARD_SELECTED : hovered ? UiPalette.CARD_HOVER : rule.enabled ? UiPalette.CARD_IDLE : UiPalette.CARD_MUTED;
         int border = selected ? UiPalette.ACCENT : hovered ? UiPalette.BORDER_STRONG : UiPalette.BORDER;
         if (floating) {
-            background = 0xD9243041;
+            background = UiPalette.CARD_FLOATING;
         }
         UiRender.drawPanel(matrixStack, x, y, width, height, background, border);
         fill(x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
@@ -659,26 +652,6 @@ public class RuleOrderScreen extends Screen {
         return AppServices.get().getConfig().rules;
     }
 
-    private int panelWidth() {
-        return Math.min(760, this.width - 24);
-    }
-
-    private int panelHeight() {
-        return Math.min(compact() ? 432 : 408, this.height - 24);
-    }
-
-    private int panelLeft() {
-        return (this.width - panelWidth()) / 2;
-    }
-
-    private int panelTop() {
-        return (this.height - panelHeight()) / 2;
-    }
-
-    private boolean compact() {
-        return panelWidth() < 680;
-    }
-
     private int rowsPerPage() {
         return Math.max(1, listHeight() / (ROW_HEIGHT + ROW_GAP));
     }
@@ -688,23 +661,19 @@ public class RuleOrderScreen extends Screen {
     }
 
     private int listLeft() {
-        return panelLeft() + 18;
+        return panelLeft + UiConstants.PANEL_INNER_PAD;
     }
 
     private int listWidth() {
-        return panelWidth() - 36;
+        return panelWidth - UiConstants.PANEL_INNER_PAD * 2;
     }
 
     private int listTop() {
-        return panelTop() + 58;
+        return panelTop + 58;
     }
 
     private int buttonBlockTop() {
-        return panelTop() + panelHeight() - (compact() ? 84 : 36);
-    }
-
-    private int buttonBlockHeight() {
-        return compact() ? 68 : 20;
+        return panelTop + panelHeight - (compact ? 84 : 36);
     }
 
     private int infoTop() {
@@ -740,10 +709,7 @@ public class RuleOrderScreen extends Screen {
         if (rule == null) {
             return "";
         }
-        if (rule.name != null && !rule.name.trim().isEmpty()) {
-            return rule.name;
-        }
-        return rule.id == null ? "" : rule.id;
+        return UiUtil.fallback(rule.name, rule.id == null ? "" : rule.id);
     }
 
     private String trimToWidth(String text, int maxWidth) {
