@@ -3,20 +3,19 @@ package dglabmc.client.ui;
 import dglabmc.AppServices;
 import dglabmc.config.AppConfig;
 import dglabmc.rule.RuleDefinition;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.util.Mth;
-import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RuleOrderScreen extends Screen {
+public class RuleOrderScreen extends BaseScreen {
     private static final int ROW_HEIGHT = 44;
     private static final int ROW_GAP = 10;
     private static final int CARD_HEIGHT = 28;
 
-    private final Screen parent;
     private int selectedIndex = -1;
     private int page;
     private String statusMessage = "";
@@ -41,13 +40,17 @@ public class RuleOrderScreen extends Screen {
     private StyledButton nextPageButton;
 
     public RuleOrderScreen(Screen parent) {
-        super(Component.literal("规则顺序"));
-        this.parent = parent;
+        super(new StringTextComponent("规则顺序"), parent);
+    }
+
+    @Override
+    protected void buildWidgets() {
     }
 
     @Override
     protected void init() {
-        this.clearWidgets();
+        this.buttons.clear();
+        this.children.clear();
         clearDragState();
 
         List<RowData> rows = buildRows(false);
@@ -72,42 +75,38 @@ public class RuleOrderScreen extends Screen {
         int blockTop = buttonBlockTop();
         if (compact()) {
             int halfWidth = (innerWidth - 8) / 2;
-            this.movePreviousButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop, halfWidth, 20, Component.literal("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
-            this.moveNextButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop, halfWidth, 20, Component.literal("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
-            this.mergeButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop + 24, halfWidth, 20, Component.literal("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
-            this.splitButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop + 24, halfWidth, 20, Component.literal("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
-            this.previousPageButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop + 48, halfWidth, 20, Component.literal("上一页"), StyledButton.Variant.GHOST, button -> {
+            this.movePreviousButton = this.addButton(new StyledButton(innerLeft, blockTop, halfWidth, 20, new StringTextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
+            this.moveNextButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop, halfWidth, 20, new StringTextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
+            this.mergeButton = this.addButton(new StyledButton(innerLeft, blockTop + 24, halfWidth, 20, new StringTextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
+            this.splitButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop + 24, halfWidth, 20, new StringTextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
+            this.previousPageButton = this.addButton(new StyledButton(innerLeft, blockTop + 48, halfWidth, 20, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.max(0, this.page - 1);
                 init();
             }));
-            this.nextPageButton = this.addRenderableWidget(new StyledButton(innerLeft + halfWidth + 8, blockTop + 48, halfWidth, 20, Component.literal("下一页"), StyledButton.Variant.GHOST, button -> {
+            this.nextPageButton = this.addButton(new StyledButton(innerLeft + halfWidth + 8, blockTop + 48, halfWidth, 20, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.min(maxPageForRowCount(buildRows(false).size()), this.page + 1);
                 init();
             }));
         } else {
             int buttonWidth = (innerWidth - 40) / 6;
-            this.movePreviousButton = this.addRenderableWidget(new StyledButton(innerLeft, blockTop, buttonWidth, 20, Component.literal("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
-            this.moveNextButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8), blockTop, buttonWidth, 20, Component.literal("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
-            this.mergeButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 2, blockTop, buttonWidth, 20, Component.literal("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
-            this.splitButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 3, blockTop, buttonWidth, 20, Component.literal("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
-            this.previousPageButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 4, blockTop, buttonWidth, 20, Component.literal("上一页"), StyledButton.Variant.GHOST, button -> {
+            this.movePreviousButton = this.addButton(new StyledButton(innerLeft, blockTop, buttonWidth, 20, new StringTextComponent("前移"), StyledButton.Variant.GHOST, button -> moveSelected(-1)));
+            this.moveNextButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8), blockTop, buttonWidth, 20, new StringTextComponent("后移"), StyledButton.Variant.GHOST, button -> moveSelected(1)));
+            this.mergeButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 2, blockTop, buttonWidth, 20, new StringTextComponent("并到上一行"), StyledButton.Variant.SECONDARY, button -> mergeIntoPreviousRow()));
+            this.splitButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 3, blockTop, buttonWidth, 20, new StringTextComponent("单独一行"), StyledButton.Variant.SECONDARY, button -> splitToNextRow()));
+            this.previousPageButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 4, blockTop, buttonWidth, 20, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.max(0, this.page - 1);
                 init();
             }));
-            this.nextPageButton = this.addRenderableWidget(new StyledButton(innerLeft + (buttonWidth + 8) * 5, blockTop, buttonWidth, 20, Component.literal("下一页"), StyledButton.Variant.GHOST, button -> {
+            this.nextPageButton = this.addButton(new StyledButton(innerLeft + (buttonWidth + 8) * 5, blockTop, buttonWidth, 20, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
                 this.page = Math.min(maxPageForRowCount(buildRows(false).size()), this.page + 1);
                 init();
             }));
         }
-        this.addRenderableWidget(new StyledButton(panelLeft() + panelWidth() - 116, panelTop() + 16, 98, 20, Component.literal("返回"), StyledButton.Variant.PRIMARY, button -> onClose()));
+        this.addButton(new StyledButton(panelLeft() + panelWidth() - 116, panelTop() + 16, 98, 20, new StringTextComponent("返回"), StyledButton.Variant.PRIMARY, button -> onClose()));
 
         updateButtonState();
     }
 
-    @Override
-    public void onClose() {
-        this.minecraft.setScreen(this.parent);
-    }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -164,9 +163,7 @@ public class RuleOrderScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
-        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 
         int left = panelLeft();
         int top = panelTop();
@@ -176,80 +173,78 @@ public class RuleOrderScreen extends Screen {
         int currentPage = Math.min(this.page, totalPages - 1) + 1;
         String pageLabel = "第 " + currentPage + " / " + totalPages + " 页";
 
-        UiRender.drawPanel(guiGraphics, left, top, panelWidth(), panelHeight(), UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(guiGraphics, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, top + 16);
-        guiGraphics.drawString(this.font, pageLabel, (left + panelWidth() - 18 - this.font.width(pageLabel)), (top + 28), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(matrixStack, left, top, panelWidth(), panelHeight(), UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(matrixStack, this.font, "规则顺序", "拖到目标行，空隙单独成行", innerLeft, top + 16);
+        this.font.draw(matrixStack, pageLabel, (float) (left + panelWidth() - 18 - this.font.width(pageLabel)), (float) (top + 28), UiPalette.TEXT_MUTED);
 
-        renderRows(guiGraphics, mouseX, mouseY);
+        renderRows(matrixStack, mouseX, mouseY);
 
         if (rows.isEmpty()) {
-            guiGraphics.drawString(this.font, "当前没有规则", innerLeft, (listTop() + 12), UiPalette.TEXT_MUTED);
+            this.font.draw(matrixStack, "当前没有规则", (float) innerLeft, (float) (listTop() + 12), UiPalette.TEXT_MUTED);
         } else {
             RulePosition selectedPosition = findPosition(rows, selectedRuleId());
             if (selectedPosition != null) {
                 RuleDefinition selected = rules().get(this.selectedIndex);
-                guiGraphics.drawString(this.font, "已选：第 " + (selectedPosition.rowIndex + 1) + " 行 / " + displayRuleName(selected), innerLeft, infoTop(), UiPalette.TEXT_MUTED);
+                this.font.draw(matrixStack, "已选：第 " + (selectedPosition.rowIndex + 1) + " 行 / " + displayRuleName(selected), (float) innerLeft, (float) infoTop(), UiPalette.TEXT_MUTED);
             }
         }
 
         if (!this.statusMessage.isEmpty()) {
-            guiGraphics.drawString(this.font, this.statusMessage, innerLeft, (infoTop() + 14), UiPalette.WARNING);
+            this.font.draw(matrixStack, this.statusMessage, (float) innerLeft, (float) (infoTop() + 14), UiPalette.WARNING);
         }
-
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
-    private void renderRows(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderRows(MatrixStack matrixStack, int mouseX, int mouseY) {
         List<RowLayout> layouts = buildVisibleRowLayouts(this.dragMoved);
         CardLayout hoveredCard = this.dragMoved ? null : findCardAt(mouseX, mouseY, false);
         if (this.dragMoved && layouts.isEmpty()) {
-            UiRender.drawPanel(guiGraphics, listLeft(), listTop(), listWidth(), ROW_HEIGHT, 0x66172233, UiPalette.ACCENT);
-            guiGraphics.drawString(this.font, "松开后建立第一行", (listLeft() + 16), (listTop() + 17), UiPalette.TEXT_PRIMARY);
+            UiRender.drawPanel(matrixStack, listLeft(), listTop(), listWidth(), ROW_HEIGHT, UiPalette.CARD_BG, UiPalette.ACCENT);
+            this.font.draw(matrixStack, "松开后建立第一行", (float) (listLeft() + 16), (float) (listTop() + 17), UiPalette.TEXT_PRIMARY);
         }
 
         for (RowLayout row : layouts) {
             boolean rowTarget = this.dragMoved && this.dropTarget != null && this.dropTarget.mode == DropMode.IN_ROW && this.dropTarget.rowIndex == row.rowIndex;
-            drawRowBackground(guiGraphics, row, rowTarget);
+            drawRowBackground(matrixStack, row, rowTarget);
             for (CardLayout card : row.cards) {
                 boolean selected = card.absoluteIndex == this.selectedIndex;
                 boolean hovered = hoveredCard != null && hoveredCard.absoluteIndex == card.absoluteIndex;
-                drawCard(guiGraphics, card.x, card.y, card.width, card.height, card.rule, selected, hovered, false);
+                drawCard(matrixStack, card.x, card.y, card.width, card.height, card.rule, selected, hovered, false);
             }
         }
 
         if (this.dragMoved && this.dropTarget != null) {
-            drawDropTarget(guiGraphics, layouts, this.dropTarget);
+            drawDropTarget(matrixStack, layouts, this.dropTarget);
         }
         if (this.dragMoved && this.draggingIndex >= 0 && this.draggingIndex < rules().size()) {
-            int drawX = Mth.floor(this.draggingMouseX - this.draggingOffsetX);
-            int drawY = Mth.floor(this.draggingMouseY - this.draggingOffsetY);
-            drawCard(guiGraphics, drawX, drawY, Math.max(72, this.draggingCardWidth), Math.max(CARD_HEIGHT, this.draggingCardHeight), rules().get(this.draggingIndex), true, true, true);
+            int drawX = MathHelper.floor(this.draggingMouseX - this.draggingOffsetX);
+            int drawY = MathHelper.floor(this.draggingMouseY - this.draggingOffsetY);
+            drawCard(matrixStack, drawX, drawY, Math.max(72, this.draggingCardWidth), Math.max(CARD_HEIGHT, this.draggingCardHeight), rules().get(this.draggingIndex), true, true, true);
         }
     }
 
-    private void drawRowBackground(GuiGraphics guiGraphics, RowLayout row, boolean targetRow) {
+    private void drawRowBackground(MatrixStack matrixStack, RowLayout row, boolean targetRow) {
         int border = targetRow ? UiPalette.ACCENT : UiPalette.BORDER;
         int accent = targetRow ? UiPalette.ACCENT : UiPalette.INFO;
-        UiRender.drawPanel(guiGraphics, row.x, row.y, row.width, row.height, 0x66172233, border);
-        guiGraphics.fill( row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
-        guiGraphics.drawString(this.font, "第" + (row.rowIndex + 1) + "行", (row.x + 18), (row.y + 16), UiPalette.TEXT_MUTED);
+        UiRender.drawPanel(matrixStack, row.x, row.y, row.width, row.height, UiPalette.CARD_BG, border);
+        fill(matrixStack, row.x + 8, row.y + 7, row.x + 12, row.y + row.height - 7, accent);
+        this.font.draw(matrixStack, "第" + (row.rowIndex + 1) + "行", (float) (row.x + 18), (float) (row.y + 16), UiPalette.TEXT_MUTED);
     }
 
-    private void drawCard(GuiGraphics guiGraphics, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
-        int background = selected ? 0xCC243041 : hovered ? 0xB3233043 : rule.enabled ? 0x99172233 : 0x77202A38;
+    private void drawCard(MatrixStack matrixStack, int x, int y, int width, int height, RuleDefinition rule, boolean selected, boolean hovered, boolean floating) {
+        int background = selected ? UiPalette.CARD_HOVER : hovered ? UiPalette.CARD_SELECTED : rule.enabled ? UiPalette.CARD_IDLE : UiPalette.CARD_MUTED;
         int border = selected ? UiPalette.ACCENT : hovered ? UiPalette.BORDER_STRONG : UiPalette.BORDER;
         if (floating) {
-            background = 0xD9243041;
+            background = UiPalette.CARD_FLOATING;
         }
-        UiRender.drawPanel(guiGraphics, x, y, width, height, background, border);
-        guiGraphics.fill( x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
+        UiRender.drawPanel(matrixStack, x, y, width, height, background, border);
+        fill(matrixStack, x + 6, y + 6, x + 10, y + height - 6, rule.enabled ? UiPalette.SUCCESS : UiPalette.TEXT_DIM);
         String label = trimToWidth(displayRuleName(rule), width - 22);
-        guiGraphics.drawString(this.font, label, (x + 16), (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
+        this.font.draw(matrixStack, label, (float) (x + 16), (float) (y + 10), rule.enabled ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_MUTED);
     }
 
-    private void drawDropTarget(GuiGraphics guiGraphics, List<RowLayout> layouts, DropTarget target) {
+    private void drawDropTarget(MatrixStack matrixStack, List<RowLayout> layouts, DropTarget target) {
         if (target.mode == DropMode.EMPTY) {
-            guiGraphics.fill( listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
+            fill(matrixStack, listLeft(), listTop() + ROW_HEIGHT / 2, listLeft() + listWidth(), listTop() + ROW_HEIGHT / 2 + 2, UiPalette.ACCENT);
             return;
         }
         if (target.mode == DropMode.IN_ROW) {
@@ -258,7 +253,7 @@ public class RuleOrderScreen extends Screen {
                 return;
             }
             int x = dropMarkerX(row, target.slotIndex);
-            guiGraphics.fill( x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
+            fill(matrixStack, x, row.y + 6, x + 3, row.y + row.height - 6, UiPalette.ACCENT);
             return;
         }
 
@@ -270,7 +265,7 @@ public class RuleOrderScreen extends Screen {
             RowLayout row = findRowLayout(layouts, target.rowIndex);
             y = row == null ? listTop() + ROW_HEIGHT + 2 : row.y + row.height + 1;
         }
-        guiGraphics.fill( listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
+        fill(matrixStack, listLeft(), y, listLeft() + listWidth(), y + 2, UiPalette.ACCENT);
     }
 
     private int dropMarkerX(RowLayout row, int slotIndex) {
@@ -861,5 +856,3 @@ public class RuleOrderScreen extends Screen {
         }
     }
 }
-
-
