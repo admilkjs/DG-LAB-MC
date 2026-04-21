@@ -1030,7 +1030,7 @@ public class ControlCenterScreen extends Screen {
         UiRender.drawSectionTitle(matrixStack, this.font, "DG-LAB", "Forge 1.16.5", sidebarLeft() + 12, sidebarTop() + 12);
         UiRender.drawSectionTitle(matrixStack, this.font, "控制中心", "设备 / 规则 / 波形", contentLeft() + 14, contentTop() + 12);
         int badgeWidth = this.font.width(tabLabel(this.activeTab)) + 12;
-        UiRender.drawStatusBadge(matrixStack, this.font, tabLabel(this.activeTab), contentRight() - badgeWidth - 14, contentTop() + 12, UiPalette.BADGE_BG, UiPalette.ACCENT);
+        UiRender.drawStatusBadge(matrixStack, this.font, tabLabel(this.activeTab), contentRight() - badgeWidth - 14, contentTop() + 12, 0x77202838, UiPalette.ACCENT);
 
         if (!this.statusMessage.isEmpty()) {
             UiRender.drawWrappedText(matrixStack, this.font, this.statusMessage, contentLeft() + 14, contentBottom() - 22, contentWidth() - 28, UiPalette.WARNING, 2);
@@ -1106,7 +1106,7 @@ public class ControlCenterScreen extends Screen {
         }
 
         UiRender.drawSectionTitle(matrixStack, this.font, "通道状态", "A / B", rightX + 14, rightY + 14);
-        UiRender.drawStatusBadge(matrixStack, this.font, snapshot.bound ? "已绑定" : snapshot.connected ? "待绑定" : "未连接", rightX + 14, rightY + 42, snapshot.bound ? UiPalette.BADGE_SUCCESS_BG : UiPalette.BADGE_DANGER_BG, snapshot.bound ? UiPalette.SUCCESS : UiPalette.DANGER);
+        UiRender.drawStatusBadge(matrixStack, this.font, snapshot.bound ? "已绑定" : snapshot.connected ? "待绑定" : "未连接", rightX + 14, rightY + 42, snapshot.bound ? 0x6630522A : 0x66402222, snapshot.bound ? UiPalette.SUCCESS : UiPalette.DANGER);
         this.font.draw(matrixStack, "A  " + runtime.channelA.currentStrength + " | " + runtime.channelA.effectiveMaxStrength + " | " + (runtime.channelA.outputActive ? "输出中" : "未输出"), (float) (rightX + 14), (float) (rightY + 74), UiPalette.TEXT_PRIMARY);
         this.font.draw(matrixStack, "B  " + runtime.channelB.currentStrength + " | " + runtime.channelB.effectiveMaxStrength + " | " + (runtime.channelB.outputActive ? "输出中" : "未输出"), (float) (rightX + 14), (float) (rightY + 90), UiPalette.TEXT_PRIMARY);
         this.font.draw(matrixStack, "A 普通/伤害： " + runtime.channelA.eventStrength + " / " + formatDouble(runtime.channelA.damageScale), (float) (rightX + 14), (float) (rightY + 106), UiPalette.TEXT_MUTED);
@@ -1194,11 +1194,11 @@ public class ControlCenterScreen extends Screen {
         UiRender.drawPanel(matrixStack, panelLeft, panelTop, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
         UiRender.drawSectionTitle(matrixStack, this.font, "配置迁移", "ZIP 导入导出", innerLeft, panelTop + 14);
 
-        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 76, innerWidth, 84, UiPalette.PANEL_INFO, UiPalette.INFO);
+        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 76, innerWidth, 84, 0x66172233, UiPalette.INFO);
         UiRender.drawWrappedText(matrixStack, this.font, "把配置文件ZIP拖到这里导入", innerLeft + 16, panelTop + 100, innerWidth - 32, UiPalette.TEXT_PRIMARY, 2);
         this.font.draw(matrixStack, "导入前会自动备份旧配置", (float) (innerLeft + 16), (float) (panelTop + 124), UiPalette.TEXT_MUTED);
 
-        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 176, innerWidth, 94, UiPalette.PANEL_INFO_DIM, UiPalette.BORDER_STRONG);
+        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 176, innerWidth, 94, 0x44172233, UiPalette.BORDER_STRONG);
         this.font.draw(matrixStack, "最近导出", (float) (innerLeft + 16), (float) (panelTop + 192), UiPalette.TEXT_PRIMARY);
         if (this.lastExportPath.isEmpty()) {
             this.font.draw(matrixStack, "还没有导出记录。", (float) (innerLeft + 16), (float) (panelTop + 212), UiPalette.TEXT_MUTED);
@@ -1491,7 +1491,11 @@ public class ControlCenterScreen extends Screen {
     }
 
     private String formatDouble(double value) {
-        return UiUtil.formatDouble(value);
+        String text = String.format(Locale.ROOT, "%.2f", value);
+        while (text.contains(".") && (text.endsWith("0") || text.endsWith("."))) {
+            text = text.substring(0, text.length() - 1);
+        }
+        return text;
     }
 
     private String explainThrowable(Throwable throwable) {
@@ -1502,15 +1506,18 @@ public class ControlCenterScreen extends Screen {
         if (message == null || message.trim().isEmpty()) {
             return throwable.getClass().getSimpleName();
         }
-        return UiUtil.trimChars(throwable.getClass().getSimpleName() + ": " + message, 56);
+        return trim(throwable.getClass().getSimpleName() + ": " + message, 56);
     }
 
     private int clamp(int value, int min, int max) {
-        return UiUtil.clamp(value, min, max);
+        return Math.max(min, Math.min(max, value));
     }
 
     private String trim(String text, int maxChars) {
-        return UiUtil.trimChars(text, maxChars);
+        if (text == null) {
+            return "";
+        }
+        return text.length() <= maxChars ? text : text.substring(0, Math.max(0, maxChars - 3)) + "...";
     }
 
 }
