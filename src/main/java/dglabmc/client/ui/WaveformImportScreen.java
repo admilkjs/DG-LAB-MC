@@ -2,55 +2,55 @@ package dglabmc.client.ui;
 
 import dglabmc.AppServices;
 import dglabmc.platform.PlatformServices;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 
-public class WaveformImportScreen extends BaseScreen {
+public class WaveformImportScreen extends Screen {
+    private final Screen parent;
     private final String importMode;
-    private TextFieldWidget nameField;
-    private TextFieldWidget descriptionField;
-    private TextFieldWidget rawInputField;
+    private EditBox nameField;
+    private EditBox descriptionField;
+    private EditBox rawInputField;
+    private String status = "";
 
     public WaveformImportScreen(Screen parent, String importMode) {
-        super(new StringTextComponent("导入波形"), parent);
+        super(Component.literal("导入波形"));
+        this.parent = parent;
         this.importMode = importMode;
     }
 
-    @Override protected int maxPanelWidth() { return 420; }
-    @Override protected int compactThreshold() { return 400; }
-    @Override protected int panelHeightNormal() { return 220; }
-    @Override protected int panelHeightCompact() { return 268; }
-
     @Override
-    protected void buildWidgets() {
-        int il = innerLeft();
-        int iw = innerWidth();
+    protected void init() {
+        int panelWidth = Math.min(420, this.width - 24);
+        boolean compact = panelWidth < 400;
+        int panelHeight = Math.min(compact ? 268 : 220, this.height - 24);
+        int left = (this.width - panelWidth) / 2;
+        int top = (this.height - panelHeight) / 2;
 
-        this.nameField = new TextFieldWidget(this.font, il, this.panelTop + 52, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("名称"));
+        this.nameField = new EditBox(this.font, left + 18, top + 52, panelWidth - 36, 20, Component.literal("名称"));
         this.nameField.setMaxLength(80);
         this.nameField.setValue("pulse".equals(this.importMode) ? "导入的 pulse 波形" : "导入的 HEX 波形");
-        this.children.add(this.nameField);
+        this.addRenderableWidget(this.nameField);
 
-        this.descriptionField = new TextFieldWidget(this.font, il, this.panelTop + 86, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("说明"));
+        this.descriptionField = new EditBox(this.font, left + 18, top + 86, panelWidth - 36, 20, Component.literal("说明"));
         this.descriptionField.setMaxLength(120);
-        this.children.add(this.descriptionField);
+        this.addRenderableWidget(this.descriptionField);
 
-        this.rawInputField = new TextFieldWidget(this.font, il, this.panelTop + 120, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("原始输入"));
+        this.rawInputField = new EditBox(this.font, left + 18, top + 120, panelWidth - 36, 20, Component.literal("原始输入"));
         this.rawInputField.setMaxLength(16000);
-        this.children.add(this.rawInputField);
+        this.addRenderableWidget(this.rawInputField);
         this.setInitialFocus(this.rawInputField);
 
-        int btnY = this.panelTop + 164;
         if (compact) {
-            this.addButton(new StyledButton(il, btnY, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
-            this.addButton(new StyledButton(il, btnY + UiConstants.BTN_STRIDE, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
-            this.addButton(new StyledButton(il, btnY + UiConstants.BTN_STRIDE * 2, iw, UiConstants.BTN_HEIGHT, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 164, panelWidth - 36, 20, Component.literal("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 188, panelWidth - 36, 20, Component.literal("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 212, panelWidth - 36, 20, Component.literal("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         } else {
-            this.addButton(new StyledButton(il, btnY, 108, UiConstants.BTN_HEIGHT, new StringTextComponent("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
-            this.addButton(new StyledButton(this.panelLeft + 134, btnY, 108, UiConstants.BTN_HEIGHT, new StringTextComponent("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
-            this.addButton(new StyledButton(this.panelLeft + 250, btnY, 152, UiConstants.BTN_HEIGHT, new StringTextComponent("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+            this.addRenderableWidget(new StyledButton(left + 18, top + 164, 108, 20, Component.literal("导入"), StyledButton.Variant.PRIMARY, button -> doImport()));
+            this.addRenderableWidget(new StyledButton(left + 134, top + 164, 108, 20, Component.literal("粘贴"), StyledButton.Variant.GHOST, button -> this.rawInputField.setValue(PlatformServices.client().readClipboard())));
+            this.addRenderableWidget(new StyledButton(left + 250, top + 164, 152, 20, Component.literal("取消"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
         }
     }
 
@@ -63,15 +63,12 @@ public class WaveformImportScreen extends BaseScreen {
             }
             this.minecraft.setScreen(new ControlCenterScreen(ControlCenterScreen.Tab.WAVEFORMS, "波形已导入。"));
         } catch (RuntimeException exception) {
-            setStatus(exception.getMessage() == null ? "导入失败。" : exception.getMessage());
+            this.status = exception.getMessage() == null ? "导入失败。" : exception.getMessage();
         }
     }
 
     @Override
     public void tick() {
-        this.nameField.tick();
-        this.descriptionField.tick();
-        this.rawInputField.tick();
     }
 
     @Override
@@ -100,22 +97,34 @@ public class WaveformImportScreen extends BaseScreen {
     }
 
     @Override
-    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        int il = innerLeft();
-        int iw = innerWidth();
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+        int panelWidth = Math.min(420, this.width - 24);
+        boolean compact = panelWidth < 400;
+        int panelHeight = Math.min(compact ? 268 : 220, this.height - 24);
+        int left = (this.width - panelWidth) / 2;
+        int top = (this.height - panelHeight) / 2;
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL_ELEVATED, UiPalette.ACCENT);
         UiRender.drawSectionTitle(
-            matrixStack,
+            guiGraphics,
             this.font,
             "导入 " + ("pulse".equals(this.importMode) ? "Dungeonlab+pulse" : "HEX 帧"),
             "粘贴 pulse 文本或 HEX 帧。",
-            il,
-            this.panelTop + 16
+            left + 18,
+            top + 16
         );
-        this.font.draw(matrixStack, "名称", (float) il, (float) (this.panelTop + 42), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "说明", (float) il, (float) (this.panelTop + 76), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "原始输入", (float) il, (float) (this.panelTop + 110), UiPalette.TEXT_MUTED);
-        this.nameField.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.descriptionField.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.rawInputField.render(matrixStack, mouseX, mouseY, partialTicks);
+        guiGraphics.drawString(this.font, "名称", (left + 18), (top + 42), UiPalette.TEXT_MUTED);
+        guiGraphics.drawString(this.font, "说明", (left + 18), (top + 76), UiPalette.TEXT_MUTED);
+        guiGraphics.drawString(this.font, "原始输入", (left + 18), (top + 110), UiPalette.TEXT_MUTED);
+        this.nameField.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.descriptionField.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.rawInputField.render(guiGraphics, mouseX, mouseY, partialTicks);
+        if (!this.status.isEmpty()) {
+            guiGraphics.drawString(this.font, this.status, (left + 18), (top + panelHeight - 22), UiPalette.WARNING);
+        }
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 }
+
+
