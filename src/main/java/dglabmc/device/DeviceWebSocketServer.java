@@ -31,6 +31,10 @@ public class DeviceWebSocketServer {
     }
 
     public synchronized void start(int port) {
+        start("0.0.0.0", port);
+    }
+
+    public synchronized void start(String host, int port) {
         if (serverChannel != null) {
             return;
         }
@@ -50,9 +54,9 @@ public class DeviceWebSocketServer {
                         pipeline.addLast(new SessionHandler());
                     }
                 });
-            serverChannel = bootstrap.bind(port).syncUninterruptibly().channel();
+            serverChannel = bootstrap.bind(host, port).syncUninterruptibly().channel();
             boundPort = port;
-            DgLabMcMod.LOGGER.info("DG-LAB WebSocket server started on port {}", Integer.valueOf(port));
+            DgLabMcMod.LOGGER.info("DG-LAB WebSocket server started on {}:{}", host, Integer.valueOf(port));
         } catch (RuntimeException exception) {
             shutdownGroups();
             throw exception;

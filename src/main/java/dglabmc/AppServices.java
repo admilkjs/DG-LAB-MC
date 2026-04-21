@@ -42,6 +42,7 @@ public final class AppServices {
 
     public synchronized void initialize() {
         if (initialized) {
+            ensureSocketServerStarted();
             return;
         }
         try {
@@ -56,7 +57,7 @@ public final class AppServices {
                 this.configRepository.save(config);
             }
             this.deviceWebSocketServer = new DeviceWebSocketServer(this.deviceSessionManager, config.connection.deviceClientId);
-            this.deviceWebSocketServer.start(dglabmc.config.StartupConfig.resolveDevicePort());
+            ensureSocketServerStarted();
             this.ruleEngine = new RuleEngine(this.configRepository, this.deviceSessionManager);
             this.initialized = true;
         } catch (IOException exception) {
@@ -183,10 +184,12 @@ public final class AppServices {
     }
 
     public synchronized String getPairingLink() {
+        ensureSocketServerStarted();
         return resolvePairingLink(false);
     }
 
     public synchronized String refreshPairingLink() {
+        ensureSocketServerStarted();
         return resolvePairingLink(true);
     }
 
@@ -213,6 +216,7 @@ public final class AppServices {
     }
 
     public synchronized int getDevicePort() {
+        ensureSocketServerStarted();
         return deviceWebSocketServer.getBoundPort();
     }
 
@@ -255,6 +259,21 @@ public final class AppServices {
         if (!isDeviceBound()) {
             throw new IllegalStateException("设备未绑定，无法发送测试。");
         }
+    }
+
+    private void ensureSocketServerStarted() {
+        if (deviceWebSocketServer == null) {
+            throw new IllegalStateException("设备服务未初始化。");
+        }
+        if (deviceWebSocketServer.getBoundPort() > 0) {
+            return;
+        }
+        AppConfig config = getConfig();
+        String bindAddress = config.connection.localBindAddress == null ? "" : config.connection.localBindAddress.trim();
+        if (bindAddress.isEmpty() || "127.0.0.1".equals(bindAddress) || "localhost".equalsIgnoreCase(bindAddress)) {
+            bindAddress = "0.0.0.0";
+        }
+        deviceWebSocketServer.start(bindAddress, dglabmc.config.StartupConfig.resolveDevicePort());
     }
 
     private void backupCurrentConfig(String reason) {
