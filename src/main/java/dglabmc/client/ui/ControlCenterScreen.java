@@ -68,13 +68,12 @@ public class ControlCenterScreen extends Screen {
     protected void init() {
         DailyPasswordLock.clearExpiredLock();
         if (!DailyPasswordLock.isUnlocked()) {
-            this.minecraft.setScreen(new PasswordGateScreen(new ControlCenterScreen(this.activeTab, this.statusMessage)));
+            this.minecraft.displayGuiScreen(new PasswordGateScreen(new ControlCenterScreen(this.activeTab, this.statusMessage)));
             return;
         }
         rebuildWidgets();
     }
 
-    @Override
     public void onFilesDrop(List<Path> paths) {
         if (this.activeTab != Tab.TRANSFER || paths == null || paths.isEmpty()) {
             return;
@@ -482,8 +481,8 @@ public class ControlCenterScreen extends Screen {
         int actionWidth = compact ? contentWidth() - 48 : contentRight() - detailPanelLeft - 10 - 28;
         int halfWidth = (actionWidth - 8) / 2;
         boolean stackedTests = compact || actionWidth < 320;
-        addButton(new StyledButton(actionLeft, actionTop, actionWidth, 20, new StringTextComponent("导入 pulse 文本"), StyledButton.Variant.PRIMARY, button -> this.minecraft.setScreen(new WaveformImportScreen(this, "pulse"))));
-        addButton(new StyledButton(actionLeft, actionTop + 24, actionWidth, 20, new StringTextComponent("导入 HEX 帧"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(new WaveformImportScreen(this, "hex"))));
+        addButton(new StyledButton(actionLeft, actionTop, actionWidth, 20, new StringTextComponent("导入 pulse 文本"), StyledButton.Variant.PRIMARY, button -> this.minecraft.displayGuiScreen(new WaveformImportScreen(this, "pulse"))));
+        addButton(new StyledButton(actionLeft, actionTop + 24, actionWidth, 20, new StringTextComponent("导入 HEX 帧"), StyledButton.Variant.SECONDARY, button -> this.minecraft.displayGuiScreen(new WaveformImportScreen(this, "hex"))));
 
         if (!config.waveforms.isEmpty()) {
             WaveformDefinition selected = config.waveforms.get(this.selectedWaveformIndex);
@@ -554,7 +553,7 @@ public class ControlCenterScreen extends Screen {
     }
 
     private void openImportPrompt() {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             "导入 ZIP 配置",
             "输入 ZIP 路径，导入前会自动备份当前配置。",
@@ -571,7 +570,7 @@ public class ControlCenterScreen extends Screen {
     }
 
     private void openImportConfirm(final Path path) {
-        this.minecraft.setScreen(new ConfirmDialogScreen(
+        this.minecraft.displayGuiScreen(new ConfirmDialogScreen(
             this,
             "确认导入",
             "将导入 " + path.getFileName() + "，当前配置会被覆盖，导入前会自动备份。是否继续？",
@@ -581,14 +580,14 @@ public class ControlCenterScreen extends Screen {
     }
 
     private void openRestoreDefaultsPrompt() {
-        this.minecraft.setScreen(new ConfirmDialogScreen(
+        this.minecraft.displayGuiScreen(new ConfirmDialogScreen(
             this,
             "恢复默认配置",
             "恢复默认前会自动备份当前配置。该操作会重置规则和波形，但保留连接信息。是否继续？",
             "确认恢复",
             () -> {
                 AppServices.get().restoreDefaultConfig();
-                this.minecraft.setScreen(new ControlCenterScreen(Tab.TRANSFER, "已恢复默认配置。"));
+                this.minecraft.displayGuiScreen(new ControlCenterScreen(Tab.TRANSFER, "已恢复默认配置。"));
             }
         ));
     }
@@ -612,11 +611,11 @@ public class ControlCenterScreen extends Screen {
         } catch (IOException exception) {
             throw new RuntimeException(safeMessage(exception, "读取 ZIP 文件失败。"), exception);
         }
-        this.minecraft.setScreen(new ControlCenterScreen(Tab.TRANSFER, "配置已导入。"));
+        this.minecraft.displayGuiScreen(new ControlCenterScreen(Tab.TRANSFER, "配置已导入。"));
     }
 
     private void openRuleNamePrompt() {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             "修改规则名称",
             "留空时会按触发时机自动命名。",
@@ -626,13 +625,13 @@ public class ControlCenterScreen extends Screen {
             value -> {
                 this.editingRule.name = value;
                 rebuildWidgets();
-                this.minecraft.setScreen(this);
+                this.minecraft.displayGuiScreen(this);
             }
         ));
     }
 
     private void openWaveformRenamePrompt(final WaveformDefinition selected) {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             "重命名波形",
             "修改当前选中的波形名称。",
@@ -648,7 +647,7 @@ public class ControlCenterScreen extends Screen {
                 updated.name = trimmedValue;
                 AppServices.get().saveWaveform(updated);
                 this.statusMessage = "波形名称已更新。";
-                this.minecraft.setScreen(this);
+                this.minecraft.displayGuiScreen(this);
                 rebuildWidgets();
             }
         ));
@@ -656,7 +655,7 @@ public class ControlCenterScreen extends Screen {
 
     private void openTriggerPicker() {
         final List<TriggerDefinition> triggers = AppServices.get().getTriggers();
-        this.minecraft.setScreen(new OptionPickerScreen<TriggerDefinition>(
+        this.minecraft.displayGuiScreen(new OptionPickerScreen<TriggerDefinition>(
             this,
             "选择触发时机",
             "点左侧条目直接切换",
@@ -670,7 +669,7 @@ public class ControlCenterScreen extends Screen {
                 }
                 syncConditionDefaults(this.editingRule);
                 rebuildWidgets();
-                this.minecraft.setScreen(this);
+                this.minecraft.displayGuiScreen(this);
             }
         ));
     }
@@ -682,7 +681,7 @@ public class ControlCenterScreen extends Screen {
             rebuildWidgets();
             return;
         }
-        this.minecraft.setScreen(new OptionPickerScreen<WaveformDefinition>(
+        this.minecraft.displayGuiScreen(new OptionPickerScreen<WaveformDefinition>(
             this,
             "选择波形",
             "点左侧条目直接切换",
@@ -692,21 +691,21 @@ public class ControlCenterScreen extends Screen {
             waveform -> {
                 this.editingRule.waveformId = waveform.id;
                 rebuildWidgets();
-                this.minecraft.setScreen(this);
+                this.minecraft.displayGuiScreen(this);
             }
         ));
     }
 
     private void openChannelProfileScreen(ChannelTarget channel) {
-        this.minecraft.setScreen(new ChannelProfileScreen(this, channel));
+        this.minecraft.displayGuiScreen(new ChannelProfileScreen(this, channel));
     }
 
     private void openPairingQrScreen() {
-        this.minecraft.setScreen(new PairingQrScreen(this));
+        this.minecraft.displayGuiScreen(new PairingQrScreen(this));
     }
 
     private void openRuleOrderScreen() {
-        this.minecraft.setScreen(new RuleOrderScreen(this));
+        this.minecraft.displayGuiScreen(new RuleOrderScreen(this));
     }
 
     private void openRuleGuideScreen() {
@@ -719,7 +718,7 @@ public class ControlCenterScreen extends Screen {
         lines.add("冷却：两次触发的最短间隔。");
         lines.add("清空队列：发送前先清旧波形。");
         lines.add("强度走 A/B 通道设置。");
-        this.minecraft.setScreen(new InfoScreen(this, "新建规则说明", "规则字段简表", lines));
+        this.minecraft.displayGuiScreen(new InfoScreen(this, "新建规则说明", "规则字段简表", lines));
     }
 
     private void openRuleConditionPrompt() {
@@ -829,7 +828,7 @@ public class ControlCenterScreen extends Screen {
     }
 
     private void openIntegerPrompt(String heading, String description, String inputLabel, String initialValue, IntConsumer consumer) {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             heading,
             description,
@@ -842,13 +841,13 @@ public class ControlCenterScreen extends Screen {
                 } catch (NumberFormatException exception) {
                     throw new IllegalArgumentException("请输入有效数字。");
                 }
-                this.minecraft.setScreen(this);
+                this.minecraft.displayGuiScreen(this);
             }
         ));
     }
 
     private void openLongPrompt(String heading, String description, String inputLabel, String initialValue, LongConsumer consumer) {
-        this.minecraft.setScreen(new TextPromptScreen(
+        this.minecraft.displayGuiScreen(new TextPromptScreen(
             this,
             heading,
             description,
@@ -861,7 +860,7 @@ public class ControlCenterScreen extends Screen {
                 } catch (NumberFormatException exception) {
                     throw new IllegalArgumentException("请输入有效数字。");
                 }
-                this.minecraft.setScreen(this);
+                this.minecraft.displayGuiScreen(this);
             }
         ));
     }
@@ -1021,16 +1020,17 @@ public class ControlCenterScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        fillGradient(matrixStack, 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        MatrixStack matrixStack = new MatrixStack();
+        this.renderBackground();
+        fillGradient(0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
         UiRender.drawPanel(matrixStack, sidebarLeft(), sidebarTop(), sidebarWidth(), contentHeight(), UiPalette.SIDEBAR, UiPalette.ACCENT);
         UiRender.drawPanel(matrixStack, contentLeft(), contentTop(), contentWidth(), contentHeight(), UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
 
         UiRender.drawSectionTitle(matrixStack, this.font, "DG-LAB", "Forge 1.16.5", sidebarLeft() + 12, sidebarTop() + 12);
         UiRender.drawSectionTitle(matrixStack, this.font, "控制中心", "设备 / 规则 / 波形", contentLeft() + 14, contentTop() + 12);
-        int badgeWidth = this.font.width(tabLabel(this.activeTab)) + 12;
-        UiRender.drawStatusBadge(matrixStack, this.font, tabLabel(this.activeTab), contentRight() - badgeWidth - 14, contentTop() + 12, UiPalette.BADGE_BG, UiPalette.ACCENT);
+        int badgeWidth = this.font.getStringWidth(tabLabel(this.activeTab)) + 12;
+        UiRender.drawStatusBadge(matrixStack, this.font, tabLabel(this.activeTab), contentRight() - badgeWidth - 14, contentTop() + 12, 0x77202838, UiPalette.ACCENT);
 
         if (!this.statusMessage.isEmpty()) {
             UiRender.drawWrappedText(matrixStack, this.font, this.statusMessage, contentLeft() + 14, contentBottom() - 22, contentWidth() - 28, UiPalette.WARNING, 2);
@@ -1046,7 +1046,7 @@ public class ControlCenterScreen extends Screen {
             renderTransfer(matrixStack);
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        super.render(mouseX, mouseY, partialTicks);
     }
 
     private void renderDashboard(MatrixStack matrixStack) {
@@ -1096,29 +1096,29 @@ public class ControlCenterScreen extends Screen {
         UiRender.drawPanel(matrixStack, bottomX, bottomY, bottomWidth, bottomHeight, UiPalette.PANEL, UiPalette.ACCENT);
 
         UiRender.drawSectionTitle(matrixStack, this.font, "设备会话", "当前连接", leftX + 14, leftY + 14);
-        this.font.draw(matrixStack, "端口： " + AppServices.get().getDevicePort(), (float) (leftX + 14), (float) (leftY + 42), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "客户端 ID： " + trim(snapshot.clientId, compact ? 28 : 34), (float) (leftX + 14), (float) (leftY + 58), UiPalette.TEXT_MUTED);
-        this.font.draw(matrixStack, "目标 ID： " + trim(snapshot.targetId, compact ? 28 : 34), (float) (leftX + 14), (float) (leftY + 74), UiPalette.TEXT_MUTED);
+        this.font.drawString("端口： " + AppServices.get().getDevicePort(), (float) (leftX + 14), (float) (leftY + 42), UiPalette.TEXT_MUTED);
+        this.font.drawString("客户端 ID： " + trim(snapshot.clientId, compact ? 28 : 34), (float) (leftX + 14), (float) (leftY + 58), UiPalette.TEXT_MUTED);
+        this.font.drawString("目标 ID： " + trim(snapshot.targetId, compact ? 28 : 34), (float) (leftX + 14), (float) (leftY + 74), UiPalette.TEXT_MUTED);
         if (!compact) {
-            this.font.draw(matrixStack, "设备强度 A/B： " + snapshot.currentStrengthA + " / " + snapshot.currentStrengthB, (float) (leftX + 14), (float) (leftY + 90), UiPalette.TEXT_MUTED);
-            this.font.draw(matrixStack, "设备上限 A/B： " + displayStrength(snapshot.maxStrengthA) + " / " + displayStrength(snapshot.maxStrengthB), (float) (leftX + 14), (float) (leftY + 106), UiPalette.TEXT_MUTED);
-            this.font.draw(matrixStack, "输出状态： " + (runtime.channelA.outputActive || runtime.channelB.outputActive ? "运行中" : "空闲"), (float) (leftX + 14), (float) (leftY + 122), UiPalette.TEXT_MUTED);
+            this.font.drawString("设备强度 A/B： " + snapshot.currentStrengthA + " / " + snapshot.currentStrengthB, (float) (leftX + 14), (float) (leftY + 90), UiPalette.TEXT_MUTED);
+            this.font.drawString("设备上限 A/B： " + displayStrength(snapshot.maxStrengthA) + " / " + displayStrength(snapshot.maxStrengthB), (float) (leftX + 14), (float) (leftY + 106), UiPalette.TEXT_MUTED);
+            this.font.drawString("输出状态： " + (runtime.channelA.outputActive || runtime.channelB.outputActive ? "运行中" : "空闲"), (float) (leftX + 14), (float) (leftY + 122), UiPalette.TEXT_MUTED);
         }
 
         UiRender.drawSectionTitle(matrixStack, this.font, "通道状态", "A / B", rightX + 14, rightY + 14);
-        UiRender.drawStatusBadge(matrixStack, this.font, snapshot.bound ? "已绑定" : snapshot.connected ? "待绑定" : "未连接", rightX + 14, rightY + 42, snapshot.bound ? UiPalette.BADGE_SUCCESS_BG : UiPalette.BADGE_DANGER_BG, snapshot.bound ? UiPalette.SUCCESS : UiPalette.DANGER);
-        this.font.draw(matrixStack, "A  " + runtime.channelA.currentStrength + " | " + runtime.channelA.effectiveMaxStrength + " | " + (runtime.channelA.outputActive ? "输出中" : "未输出"), (float) (rightX + 14), (float) (rightY + 74), UiPalette.TEXT_PRIMARY);
-        this.font.draw(matrixStack, "B  " + runtime.channelB.currentStrength + " | " + runtime.channelB.effectiveMaxStrength + " | " + (runtime.channelB.outputActive ? "输出中" : "未输出"), (float) (rightX + 14), (float) (rightY + 90), UiPalette.TEXT_PRIMARY);
-        this.font.draw(matrixStack, "A 普通/伤害： " + runtime.channelA.eventStrength + " / " + formatDouble(runtime.channelA.damageScale), (float) (rightX + 14), (float) (rightY + 106), UiPalette.TEXT_MUTED);
+        UiRender.drawStatusBadge(matrixStack, this.font, snapshot.bound ? "已绑定" : snapshot.connected ? "待绑定" : "未连接", rightX + 14, rightY + 42, snapshot.bound ? 0x6630522A : 0x66402222, snapshot.bound ? UiPalette.SUCCESS : UiPalette.DANGER);
+        this.font.drawString("A  " + runtime.channelA.currentStrength + " | " + runtime.channelA.effectiveMaxStrength + " | " + (runtime.channelA.outputActive ? "输出中" : "未输出"), (float) (rightX + 14), (float) (rightY + 74), UiPalette.TEXT_PRIMARY);
+        this.font.drawString("B  " + runtime.channelB.currentStrength + " | " + runtime.channelB.effectiveMaxStrength + " | " + (runtime.channelB.outputActive ? "输出中" : "未输出"), (float) (rightX + 14), (float) (rightY + 90), UiPalette.TEXT_PRIMARY);
+        this.font.drawString("A 普通/伤害： " + runtime.channelA.eventStrength + " / " + formatDouble(runtime.channelA.damageScale), (float) (rightX + 14), (float) (rightY + 106), UiPalette.TEXT_MUTED);
 
         UiRender.drawSectionTitle(matrixStack, this.font, "配对链接", snapshot.bound ? "已绑定" : "点按钮显示二维码", bottomX + 16, bottomY + 14);
         if (compact) {
-            this.font.draw(matrixStack, "A/B 上限： " + runtime.channelA.effectiveMaxStrength + " / " + runtime.channelB.effectiveMaxStrength, (float) (bottomX + 16), (float) (bottomY + 42), UiPalette.TEXT_PRIMARY);
+            this.font.drawString("A/B 上限： " + runtime.channelA.effectiveMaxStrength + " / " + runtime.channelB.effectiveMaxStrength, (float) (bottomX + 16), (float) (bottomY + 42), UiPalette.TEXT_PRIMARY);
             UiRender.drawWrappedText(matrixStack, this.font, "链接： " + this.pairingLink, bottomX + 16, bottomY + 58, bottomWidth - 32, UiPalette.TEXT_MUTED, 2);
         } else {
-            this.font.draw(matrixStack, "规则顺序： " + ruleOrderSummary(), (float) (bottomX + 16), (float) (bottomY + 42), UiPalette.TEXT_PRIMARY);
-            this.font.draw(matrixStack, "A 上限： " + runtime.channelA.configuredMaxStrength + " / 本次 " + runtime.channelA.effectiveMaxStrength, (float) (bottomX + 16), (float) (bottomY + 58), UiPalette.TEXT_PRIMARY);
-            this.font.draw(matrixStack, "B 上限： " + runtime.channelB.configuredMaxStrength + " / 本次 " + runtime.channelB.effectiveMaxStrength, (float) (bottomX + 16), (float) (bottomY + 74), UiPalette.TEXT_PRIMARY);
+            this.font.drawString("规则顺序： " + ruleOrderSummary(), (float) (bottomX + 16), (float) (bottomY + 42), UiPalette.TEXT_PRIMARY);
+            this.font.drawString("A 上限： " + runtime.channelA.configuredMaxStrength + " / 本次 " + runtime.channelA.effectiveMaxStrength, (float) (bottomX + 16), (float) (bottomY + 58), UiPalette.TEXT_PRIMARY);
+            this.font.drawString("B 上限： " + runtime.channelB.configuredMaxStrength + " / 本次 " + runtime.channelB.effectiveMaxStrength, (float) (bottomX + 16), (float) (bottomY + 74), UiPalette.TEXT_PRIMARY);
             UiRender.drawWrappedText(matrixStack, this.font, "链接： " + this.pairingLink, bottomX + 16, bottomY + 96, bottomWidth - 32, UiPalette.TEXT_MUTED, 4);
         }
     }
@@ -1140,10 +1140,10 @@ public class ControlCenterScreen extends Screen {
         UiRender.drawSectionTitle(matrixStack, this.font, "规则列表", ruleOrderSummary(), listLeft + 14, panelTop + 14);
         UiRender.drawSectionTitle(matrixStack, this.font, ruleDisplayName(this.editingRule), this.creatingRule ? rowLabel(this.editingRule) : rowLabel(this.editingRule) + " / " + triggerLabel(this.editingRule.trigger), editorLeft + 14, editorTop + 14);
         if (AppServices.get().getConfig().rules.isEmpty()) {
-            this.font.draw(matrixStack, "当前没有规则，先新建一条。", (float) (listLeft + 14), (float) (panelTop + 56), UiPalette.TEXT_MUTED);
+            this.font.drawString("当前没有规则，先新建一条。", (float) (listLeft + 14), (float) (panelTop + 56), UiPalette.TEXT_MUTED);
         } else if (AppServices.get().getConfig().rules.size() > visibleRuleSlots()) {
             String rangeLabel = "显示 " + (this.ruleListScroll + 1) + " - " + Math.min(AppServices.get().getConfig().rules.size(), this.ruleListScroll + visibleRuleSlots()) + " / " + AppServices.get().getConfig().rules.size();
-            this.font.draw(matrixStack, rangeLabel, (float) (listLeft + 14), (float) (panelTop + listHeight - 44), UiPalette.TEXT_MUTED);
+            this.font.drawString(rangeLabel, (float) (listLeft + 14), (float) (panelTop + listHeight - 44), UiPalette.TEXT_MUTED);
         }
     }
 
@@ -1172,8 +1172,8 @@ public class ControlCenterScreen extends Screen {
             int descriptionHeight = UiRender.measureWrappedTextHeight(this.font, fallbackText(selected.description, "未填写说明"), detailTextWidth, maxDescriptionLines);
             UiRender.drawWrappedText(matrixStack, this.font, fallbackText(selected.description, "未填写说明"), detailLeft + 14, detailTextY, detailTextWidth, UiPalette.TEXT_MUTED, maxDescriptionLines);
             int metaY = detailTextY + Math.max(16, descriptionHeight + 8);
-            this.font.draw(matrixStack, "帧数： " + selected.frames.size(), (float) (detailLeft + 14), (float) metaY, UiPalette.TEXT_PRIMARY);
-            this.font.draw(matrixStack, "预览", (float) (detailLeft + 14), (float) (metaY + 18), UiPalette.TEXT_PRIMARY);
+            this.font.drawString("帧数： " + selected.frames.size(), (float) (detailLeft + 14), (float) metaY, UiPalette.TEXT_PRIMARY);
+            this.font.drawString("预览", (float) (detailLeft + 14), (float) (metaY + 18), UiPalette.TEXT_PRIMARY);
             int previewY = metaY + 34;
             for (int i = 0; i < Math.min(previewLines, selected.frames.size()); i++) {
                 UiRender.drawWrappedText(matrixStack, this.font, selected.frames.get(i), detailLeft + 14, previewY, detailWidth - 28, UiPalette.TEXT_MUTED, 1);
@@ -1194,18 +1194,18 @@ public class ControlCenterScreen extends Screen {
         UiRender.drawPanel(matrixStack, panelLeft, panelTop, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
         UiRender.drawSectionTitle(matrixStack, this.font, "配置迁移", "ZIP 导入导出", innerLeft, panelTop + 14);
 
-        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 76, innerWidth, 84, UiPalette.PANEL_INFO, UiPalette.INFO);
+        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 76, innerWidth, 84, 0x66172233, UiPalette.INFO);
         UiRender.drawWrappedText(matrixStack, this.font, "把配置文件ZIP拖到这里导入", innerLeft + 16, panelTop + 100, innerWidth - 32, UiPalette.TEXT_PRIMARY, 2);
-        this.font.draw(matrixStack, "导入前会自动备份旧配置", (float) (innerLeft + 16), (float) (panelTop + 124), UiPalette.TEXT_MUTED);
+        this.font.drawString("导入前会自动备份旧配置", (float) (innerLeft + 16), (float) (panelTop + 124), UiPalette.TEXT_MUTED);
 
-        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 176, innerWidth, 94, UiPalette.PANEL_INFO_DIM, UiPalette.BORDER_STRONG);
-        this.font.draw(matrixStack, "最近导出", (float) (innerLeft + 16), (float) (panelTop + 192), UiPalette.TEXT_PRIMARY);
+        UiRender.drawPanel(matrixStack, innerLeft, panelTop + 176, innerWidth, 94, 0x44172233, UiPalette.BORDER_STRONG);
+        this.font.drawString("最近导出", (float) (innerLeft + 16), (float) (panelTop + 192), UiPalette.TEXT_PRIMARY);
         if (this.lastExportPath.isEmpty()) {
-            this.font.draw(matrixStack, "还没有导出记录。", (float) (innerLeft + 16), (float) (panelTop + 212), UiPalette.TEXT_MUTED);
+            this.font.drawString("还没有导出记录。", (float) (innerLeft + 16), (float) (panelTop + 212), UiPalette.TEXT_MUTED);
         } else {
             UiRender.drawWrappedText(matrixStack, this.font, this.lastExportPath, innerLeft + 16, panelTop + 212, innerWidth - 32, UiPalette.TEXT_MUTED, 4);
         }
-        this.font.draw(matrixStack, "配置版本： " + AppServices.get().getConfig().schemaVersion + " / 加载器： " + AppServices.get().getConfig().loaderFlavor, (float) innerLeft, (float) (panelTop + panelHeight - 18), UiPalette.TEXT_DIM);
+        this.font.drawString("配置版本： " + AppServices.get().getConfig().schemaVersion + " / 加载器： " + AppServices.get().getConfig().loaderFlavor, (float) innerLeft, (float) (panelTop + panelHeight - 18), UiPalette.TEXT_DIM);
     }
 
     private int sidebarLeft() {
@@ -1436,7 +1436,7 @@ public class ControlCenterScreen extends Screen {
         lines.add("pulse 文本：直接贴导出文本。");
         lines.add("HEX 帧：一行一帧。");
         lines.add("导入后可重命名，也能试发。");
-        this.minecraft.setScreen(new InfoScreen(this, "导入说明", "波形格式", lines));
+        this.minecraft.displayGuiScreen(new InfoScreen(this, "导入说明", "波形格式", lines));
     }
 
     private String fallbackText(String value, String fallback) {
@@ -1491,7 +1491,11 @@ public class ControlCenterScreen extends Screen {
     }
 
     private String formatDouble(double value) {
-        return UiUtil.formatDouble(value);
+        String text = String.format(Locale.ROOT, "%.2f", value);
+        while (text.contains(".") && (text.endsWith("0") || text.endsWith("."))) {
+            text = text.substring(0, text.length() - 1);
+        }
+        return text;
     }
 
     private String explainThrowable(Throwable throwable) {
@@ -1502,15 +1506,18 @@ public class ControlCenterScreen extends Screen {
         if (message == null || message.trim().isEmpty()) {
             return throwable.getClass().getSimpleName();
         }
-        return UiUtil.trimChars(throwable.getClass().getSimpleName() + ": " + message, 56);
+        return trim(throwable.getClass().getSimpleName() + ": " + message, 56);
     }
 
     private int clamp(int value, int min, int max) {
-        return UiUtil.clamp(value, min, max);
+        return Math.max(min, Math.min(max, value));
     }
 
     private String trim(String text, int maxChars) {
-        return UiUtil.trimChars(text, maxChars);
+        if (text == null) {
+            return "";
+        }
+        return text.length() <= maxChars ? text : text.substring(0, Math.max(0, maxChars - 3)) + "...";
     }
 
 }
