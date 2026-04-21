@@ -1,16 +1,15 @@
 package dglabmc.client.ui;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class OptionPickerScreen<T> extends Screen {
-    private final Screen parent;
+public class OptionPickerScreen<T> extends BaseScreen {
     private final String heading;
     private final String subtitle;
     private final List<T> options;
@@ -20,8 +19,7 @@ public class OptionPickerScreen<T> extends Screen {
     private int page;
 
     public OptionPickerScreen(Screen parent, String heading, String subtitle, List<T> options, Function<T, String> labelProvider, Function<T, String> descriptionProvider, Consumer<T> selectHandler) {
-        super(Component.literal(heading));
-        this.parent = parent;
+        super(new StringTextComponent(heading), parent);
         this.heading = heading;
         this.subtitle = subtitle;
         this.options = new ArrayList<T>(options);
@@ -30,77 +28,56 @@ public class OptionPickerScreen<T> extends Screen {
         this.selectHandler = selectHandler;
     }
 
+    @Override protected int maxPanelWidth() { return 560; }
+    @Override protected int compactThreshold() { return 520; }
+
     @Override
-    protected void init() {
-        this.clearWidgets();
-        int panelWidth = Math.min(560, this.width - 24);
-        int panelHeight = Math.min(300, this.height - 24);
-        boolean compact = panelWidth < 520;
-        int left = (this.width - panelWidth) / 2;
-        int top = (this.height - panelHeight) / 2;
+    protected void buildWidgets() {
         int pageSize = compact ? 6 : 8;
         int start = this.page * pageSize;
         int end = Math.min(this.options.size(), start + pageSize);
-        int buttonWidth = compact ? panelWidth - 36 : 250;
+        int buttonWidth = compact ? innerWidth() : 250;
 
         for (int i = start; i < end; i++) {
             final T value = this.options.get(i);
             int offset = i - start;
-            this.addRenderableWidget(new StyledButton(left + 18, top + 52 + offset * 26, buttonWidth, 20, Component.literal(trim(this.labelProvider.apply(value), compact ? 32 : 26)), StyledButton.Variant.TAB_IDLE, button -> {
+            this.addButton(new StyledButton(innerLeft(), innerTop() + offset * 26, buttonWidth, 20, new StringTextComponent(UiUtil.trimChars(this.labelProvider.apply(value), compact ? 32 : 26)), StyledButton.Variant.TAB_IDLE, button -> {
                 this.selectHandler.accept(value);
             }));
         }
 
-        StyledButton prev = new StyledButton(left + 18, top + panelHeight - 34, compact ? 88 : 74, 20, Component.literal("上一页"), StyledButton.Variant.GHOST, button -> {
+        StyledButton prev = new StyledButton(innerLeft(), panelTop + panelHeight - 34, compact ? 88 : 74, 20, new StringTextComponent("上一页"), StyledButton.Variant.GHOST, button -> {
             this.page = Math.max(0, this.page - 1);
             init();
         });
         prev.active = this.page > 0;
-        this.addRenderableWidget(prev);
+        this.addButton(prev);
 
-        StyledButton next = new StyledButton(left + (compact ? 114 : 98), top + panelHeight - 34, compact ? 88 : 74, 20, Component.literal("下一页"), StyledButton.Variant.GHOST, button -> {
+        StyledButton next = new StyledButton(innerLeft() + (compact ? 96 : 80), panelTop + panelHeight - 34, compact ? 88 : 74, 20, new StringTextComponent("下一页"), StyledButton.Variant.GHOST, button -> {
             this.page++;
             init();
         });
         next.active = end < this.options.size();
-        this.addRenderableWidget(next);
+        this.addButton(next);
 
-        this.addRenderableWidget(new StyledButton(left + panelWidth - (compact ? 106 : 128), top + panelHeight - 34, compact ? 88 : 110, 20, Component.literal("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        this.addButton(new StyledButton(panelLeft + panelWidth - (compact ? 106 : 128), panelTop + panelHeight - 34, compact ? 88 : 110, 20, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics);
-        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
-        int panelWidth = Math.min(560, this.width - 24);
-        int panelHeight = Math.min(300, this.height - 24);
-        boolean compact = panelWidth < 520;
-        int left = (this.width - panelWidth) / 2;
-        int top = (this.height - panelHeight) / 2;
-        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
-        UiRender.drawSectionTitle(guiGraphics, this.font, this.heading, this.subtitle, left + 18, top + 16);
+    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        UiRender.drawSectionTitle(matrixStack, this.font, this.heading, this.subtitle, innerLeft(), panelTop + 16);
         int pageSize = compact ? 6 : 8;
         int previewIndex = Math.min(this.options.size() - 1, this.page * pageSize);
         if (!compact) {
-            UiRender.drawPanel(guiGraphics, left + 286, top + 52, 256, 196, UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
+            UiRender.drawPanel(matrixStack, panelLeft + 286, innerTop(), 256, 196, UiPalette.PANEL_MUTED, UiPalette.BORDER_STRONG);
         }
         if (previewIndex >= 0 && !this.options.isEmpty() && !compact) {
             T preview = this.options.get(previewIndex);
-            guiGraphics.drawString(this.font, trim(this.labelProvider.apply(preview), 22), (left + 300), (top + 68), UiPalette.TEXT_PRIMARY);
-            UiRender.drawWrappedText(guiGraphics, this.font, this.descriptionProvider.apply(preview), left + 300, top + 88, 228, UiPalette.TEXT_MUTED, 10);
-            guiGraphics.drawString(this.font, "点击左侧条目立即选择", (left + 300), (top + 228), UiPalette.TEXT_DIM);
+            this.font.draw(matrixStack, UiUtil.trimChars(this.labelProvider.apply(preview), 22), (float) (panelLeft + 300), (float) (innerTop() + 16), UiPalette.TEXT_PRIMARY);
+            UiRender.drawWrappedText(matrixStack, this.font, this.descriptionProvider.apply(preview), panelLeft + 300, innerTop() + 36, 228, UiPalette.TEXT_MUTED, 10);
+            this.font.draw(matrixStack, "点击左侧条目立即选择", (float) (panelLeft + 300), (float) (innerTop() + 176), UiPalette.TEXT_DIM);
         } else if (compact) {
-            guiGraphics.drawString(this.font, "点击条目立即选择", (left + 18), (top + panelHeight - 54), UiPalette.TEXT_DIM);
+            this.font.draw(matrixStack, "点击条目立即选择", (float) innerLeft(), (float) (panelTop + panelHeight - 54), UiPalette.TEXT_DIM);
         }
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-    }
-
-    private String trim(String text, int maxChars) {
-        if (text == null) {
-            return "";
-        }
-        return text.length() <= maxChars ? text : text.substring(0, Math.max(0, maxChars - 3)) + "...";
     }
 }
-
-
