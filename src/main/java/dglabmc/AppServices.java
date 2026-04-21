@@ -42,6 +42,7 @@ public final class AppServices {
 
     public synchronized void initialize() {
         if (initialized) {
+            ensureSocketServerStarted();
             return;
         }
         try {
@@ -56,7 +57,7 @@ public final class AppServices {
                 this.configRepository.save(config);
             }
             this.deviceWebSocketServer = new DeviceWebSocketServer(this.deviceSessionManager, config.connection.deviceClientId);
-            this.deviceWebSocketServer.start(dglabmc.config.StartupConfig.resolveDevicePort());
+            ensureSocketServerStarted();
             this.ruleEngine = new RuleEngine(this.configRepository, this.deviceSessionManager);
             this.initialized = true;
         } catch (IOException exception) {
@@ -183,10 +184,12 @@ public final class AppServices {
     }
 
     public synchronized String getPairingLink() {
+        ensureSocketServerStarted();
         return resolvePairingLink(false);
     }
 
     public synchronized String refreshPairingLink() {
+        ensureSocketServerStarted();
         return resolvePairingLink(true);
     }
 
@@ -213,7 +216,24 @@ public final class AppServices {
     }
 
     public synchronized int getDevicePort() {
+        ensureSocketServerStarted();
         return deviceWebSocketServer.getBoundPort();
+    }
+
+    private void ensureSocketServerStarted() {
+        if (deviceWebSocketServer == null) {
+            throw new IllegalStateException("设备 WebSocket 服务尚未初始化。");
+        }
+        if (deviceWebSocketServer.getBoundPort() > 0) {
+            return;
+        }
+        AppConfig config = getConfig();
+        String host = config.connection.localBindAddress == null ? "" : config.connection.localBindAddress.trim();
+        if (host.isEmpty() || "127.0.0.1".equals(host) || "localhost".equalsIgnoreCase(host)) {
+            host = "0.0.0.0";
+        }
+        int port = dglabmc.config.StartupConfig.resolveDevicePort();
+        deviceWebSocketServer.start(host, port);
     }
 
     public synchronized List<TriggerDefinition> getTriggers() {
