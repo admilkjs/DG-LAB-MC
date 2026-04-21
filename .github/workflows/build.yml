@@ -40,6 +40,9 @@ jobs:
 
           case "$REF_NAME" in
             forge/1.12.2)       JAVA_VERSION=8  ;;
+            forge/1.13.2)       JAVA_VERSION=11 ;;
+            forge/1.14.4)       JAVA_VERSION=11 ;;
+            forge/1.15.2)       JAVA_VERSION=11 ;;
             forge/1.16.5)       JAVA_VERSION=8  ;;
             forge/1.18.2)       JAVA_VERSION=17 ;;
             forge/1.19.2)       JAVA_VERSION=17 ;;
@@ -47,6 +50,7 @@ jobs:
             neoforge/1.20.2)    JAVA_VERSION=17 ;;
             neoforge/1.20.4)    JAVA_VERSION=17 ;;
             neoforge/1.20.6)    JAVA_VERSION=21 ;;
+            neoforge/1.21.4)    JAVA_VERSION=21 ;;
             *) echo "::error::Unsupported branch: $REF_NAME"; exit 1 ;;
           esac
 
@@ -71,7 +75,7 @@ jobs:
           sed -i '/^systemProp\.\(http\|https\)\.proxy\(Host\|Port\)=/d' gradle.properties
 
       - name: Build
-        run: ./gradlew ${{ steps.toolchain.outputs.gradle_args }}
+        run: chmod +x gradlew && ./gradlew ${{ steps.toolchain.outputs.gradle_args }}
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
