@@ -1,55 +1,54 @@
 package dglabmc.client.ui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class InfoScreen extends BaseScreen {
+public class InfoScreen extends Screen {
+    private final Screen parent;
     private final String heading;
     private final String subtitle;
     private final List<String> lines;
-    private int scrollOffset;
 
     public InfoScreen(Screen parent, String heading, String subtitle, List<String> lines) {
-        super(new StringTextComponent(heading), parent);
+        super(Component.literal(heading));
+        this.parent = parent;
         this.heading = heading;
         this.subtitle = subtitle;
-        this.lines = new ArrayList<>(lines);
-    }
-
-    @Override protected int maxPanelWidth() { return 560; }
-    @Override protected int compactThreshold() { return 0; }
-    @Override protected int panelHeightNormal() { return 300; }
-
-    @Override
-    protected void buildWidgets() {
-        this.scrollOffset = 0;
-        this.addButton(new StyledButton(this.panelLeft + this.panelWidth - 128, this.panelTop + this.panelHeight - 34, 110, UiConstants.BTN_HEIGHT, new StringTextComponent("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
+        this.lines = new ArrayList<String>(lines);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        this.scrollOffset = Math.max(0, this.scrollOffset - (int) (delta * UiConstants.LINE_HEIGHT));
-        return true;
+    protected void init() {
+        int panelWidth = Math.min(560, this.width - 24);
+        int panelHeight = Math.min(300, this.height - 24);
+        int left = (this.width - panelWidth) / 2;
+        int top = (this.height - panelHeight) / 2;
+        this.addRenderableWidget(new StyledButton(left + panelWidth - 128, top + panelHeight - 34, 110, 20, Component.literal("返回"), StyledButton.Variant.SECONDARY, button -> this.minecraft.setScreen(this.parent)));
     }
 
     @Override
-    protected void renderContent(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        int il = innerLeft();
-        int iw = innerWidth();
-        UiRender.drawSectionTitle(matrixStack, this.font, this.heading, this.subtitle, il, this.panelTop + 16);
-        int contentTop = this.panelTop + 52;
-        int contentBottom = this.panelTop + this.panelHeight - 56;
-        int drawY = contentTop - this.scrollOffset;
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        guiGraphics.fillGradient( 0, 0, this.width, this.height, UiPalette.BACKGROUND_TOP, UiPalette.BACKGROUND_BOTTOM);
+        int panelWidth = Math.min(560, this.width - 24);
+        int panelHeight = Math.min(300, this.height - 24);
+        int left = (this.width - panelWidth) / 2;
+        int top = (this.height - panelHeight) / 2;
+        UiRender.drawPanel(guiGraphics, left, top, panelWidth, panelHeight, UiPalette.PANEL, UiPalette.ACCENT);
+        UiRender.drawSectionTitle(guiGraphics, this.font, this.heading, this.subtitle, left + 18, top + 16);
+        int drawY = top + 52;
         for (String line : this.lines) {
-            int lineH = UiRender.measureWrappedTextHeight(this.font, line, iw, 100);
-            if (drawY + lineH > contentTop - lineH && drawY < contentBottom) {
-                UiRender.drawWrappedText(matrixStack, this.font, line, il, drawY, iw, UiPalette.TEXT_MUTED, 100);
+            drawY += UiRender.drawWrappedText(guiGraphics, this.font, line, left + 18, drawY, panelWidth - 36, UiPalette.TEXT_MUTED, 3) * 12;
+            drawY += 8;
+            if (drawY > top + panelHeight - 56) {
+                break;
             }
-            drawY += lineH + UiConstants.PAD_SM;
         }
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 }
+
