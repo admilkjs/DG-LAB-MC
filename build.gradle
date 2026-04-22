@@ -75,7 +75,11 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     shadowLib 'com.google.zxing:core:3.5.3'
+    shadowLib('io.netty:netty-codec-http:4.1.82.Final') {
+        transitive = false
+    }
     compileOnly 'io.netty:netty-codec-http:4.1.82.Final'
+    testImplementation 'io.netty:netty-codec-http:4.1.82.Final'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
@@ -117,7 +121,7 @@ tasks.named('jar', Jar).configure {
 }
 
 tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configure {
-    archiveClassifier = ''
+    archiveClassifier = 'dev-shadow'
     configurations = [project.configurations.shadowLib]
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     relocate 'com.google.zxing', "${mod_group_id}.shadow.zxing"
@@ -150,7 +154,7 @@ tasks.named('build').configure {
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact tasks.named('shadowJar')
+            artifact layout.buildDirectory.file('reobfShadowJar/output.jar')
         }
     }
     repositories {
@@ -229,6 +233,9 @@ tasks.register('obfuscateShadowJar', ProGuardTask) {
     printmapping(proguardMappingFile.get().asFile)
     printseeds(proguardSeedsFile.get().asFile)
 }
+tasks.named('obfuscateShadowJar').configure {
+    enabled = false
+}
 
 tasks.register('obfuscatedJar', Jar) {
     dependsOn tasks.named('obfuscateShadowJar')
@@ -249,9 +256,15 @@ tasks.register('obfuscatedJar', Jar) {
         ])
     }
 }
+tasks.named('obfuscatedJar').configure {
+    enabled = false
+}
 
 reobf {
     obfuscatedJar {}
+}
+tasks.named('reobfObfuscatedJar').configure {
+    enabled = false
 }
 
 tasks.register('copyReleaseArtifacts', Copy) {

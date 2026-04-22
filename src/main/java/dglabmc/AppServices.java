@@ -220,6 +220,18 @@ public final class AppServices {
         return deviceWebSocketServer.getBoundPort();
     }
 
+    public synchronized boolean isDeviceServerRunning() {
+        return deviceWebSocketServer != null && deviceWebSocketServer.isRunning();
+    }
+
+    public synchronized String getDeviceServerBindAddress() {
+        return deviceWebSocketServer == null ? "" : deviceWebSocketServer.getBoundHost();
+    }
+
+    public synchronized String getDeviceServerError() {
+        return deviceWebSocketServer == null ? "" : deviceWebSocketServer.getLastErrorMessage();
+    }
+
     public synchronized List<TriggerDefinition> getTriggers() {
         return new ArrayList<TriggerDefinition>(TriggerRegistry.all());
     }
