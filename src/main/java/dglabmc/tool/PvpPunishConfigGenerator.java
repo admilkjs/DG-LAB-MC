@@ -35,7 +35,7 @@ public final class PvpPunishConfigGenerator {
         Files.createDirectories(output.getParent());
         ConfigArchiveService archiveService = new ConfigArchiveService();
         try (OutputStream outputStream = Files.newOutputStream(output)) {
-            archiveService.writeArchive(outputStream, config, "0.1.0", "pvp-punish-pack");
+            archiveService.writeArchive(outputStream, config, "1.0.1", "pvp-punish-pack");
         }
         System.out.println("PVP punish config created: " + output);
     }
