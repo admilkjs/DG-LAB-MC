@@ -9,10 +9,11 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.neoforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.NetworkRegistry;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.PlayNetworkDirection;
+import net.neoforged.neoforge.network.simple.SimpleChannel;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -37,17 +38,17 @@ public final class DgLabNetwork {
             return;
         }
         int index = 0;
-        CHANNEL.messageBuilder(ClientStatePacket.class, index++, NetworkDirection.PLAY_TO_SERVER)
+        CHANNEL.messageBuilder(ClientStatePacket.class, index++, PlayNetworkDirection.PLAY_TO_SERVER)
             .encoder(ClientStatePacket::encode)
             .decoder(ClientStatePacket::decode)
             .consumerMainThread(ClientStatePacket::handle)
             .add();
-        CHANNEL.messageBuilder(ServerStatePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+        CHANNEL.messageBuilder(ServerStatePacket.class, index++, PlayNetworkDirection.PLAY_TO_CLIENT)
             .encoder(ServerStatePacket::encode)
             .decoder(ServerStatePacket::decode)
             .consumerMainThread(ServerStatePacket::handle)
             .add();
-        CHANNEL.messageBuilder(RemoveStatePacket.class, index, NetworkDirection.PLAY_TO_CLIENT)
+        CHANNEL.messageBuilder(RemoveStatePacket.class, index, PlayNetworkDirection.PLAY_TO_CLIENT)
             .encoder(RemoveStatePacket::encode)
             .decoder(RemoveStatePacket::decode)
             .consumerMainThread(RemoveStatePacket::handle)
@@ -75,7 +76,7 @@ public final class DgLabNetwork {
             return;
         }
         for (PlayerChannelState state : states) {
-            CHANNEL.sendTo(new ServerStatePacket(state), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ServerStatePacket(state));
         }
     }
 
@@ -85,7 +86,7 @@ public final class DgLabNetwork {
         }
         for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {
             if (isRemotePresent(target)) {
-                CHANNEL.sendTo(new ServerStatePacket(state), target.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new ServerStatePacket(state));
             }
         }
     }
@@ -96,7 +97,7 @@ public final class DgLabNetwork {
         }
         for (ServerPlayer target : sender.server.getPlayerList().getPlayers()) {
             if (isRemotePresent(target)) {
-                CHANNEL.sendTo(new RemoveStatePacket(playerId), target.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                CHANNEL.send(PacketDistributor.PLAYER.with(() -> target), new RemoveStatePacket(playerId));
             }
         }
     }
@@ -133,8 +134,7 @@ public final class DgLabNetwork {
             return new ClientStatePacket(buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean(), buffer.readBoolean());
         }
 
-        private static void handle(ClientStatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-            NetworkEvent.Context context = contextSupplier.get();
+        private static void handle(ClientStatePacket packet, NetworkEvent.Context context) {
             ServerPlayer sender = context.getSender();
             if (sender != null) {
                 ServerPlayerStateRelay.handleClientState(sender, packet.toState(sender.getUUID()));
@@ -177,7 +177,7 @@ public final class DgLabNetwork {
             return new ServerStatePacket(buffer.readUUID(), buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean(), buffer.readBoolean());
         }
 
-        private static void handle(ServerStatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        private static void handle(ServerStatePacket packet, NetworkEvent.Context context) {
             ClientPlayerStateCache.applySyncedState(packet.toState());
         }
 
@@ -201,7 +201,7 @@ public final class DgLabNetwork {
             return new RemoveStatePacket(buffer.readUUID());
         }
 
-        private static void handle(RemoveStatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        private static void handle(RemoveStatePacket packet, NetworkEvent.Context context) {
             ClientPlayerStateCache.removeSyncedState(packet.playerId);
         }
     }
