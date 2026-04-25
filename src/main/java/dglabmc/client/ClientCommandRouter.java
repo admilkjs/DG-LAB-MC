@@ -178,6 +178,10 @@ public final class ClientCommandRouter {
         return true;
     }
 
+    public static boolean isDebugMode() {
+        return debugMode;
+    }
+
     private static void handlePair(String[] parts) {
         if (parts.length > 1 && "refresh".equals(lower(parts[1]))) {
             String link = AppServices.get().refreshPairingLink();

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AppConfig {
-    public static final int CURRENT_SCHEMA_VERSION = 9;
+    public static final int CURRENT_SCHEMA_VERSION = 12;
 
     public int schemaVersion = CURRENT_SCHEMA_VERSION;
     public String loaderFlavor = "forge-1.16.5";
@@ -30,6 +30,23 @@ public class AppConfig {
     public static class UiPreferences {
         public String lastOpenedTab = "dashboard";
         public String accentPreset = "industrial";
+        public boolean showPlayerStatus = true;
+        public HudOverlayPreferences hudOverlay = new HudOverlayPreferences();
+    }
+
+    public static class HudOverlayPreferences {
+        public boolean enabled = true;
+        @Deprecated
+        public String anchor = "top_right";
+        @Deprecated
+        public int offsetX = 8;
+        @Deprecated
+        public int offsetY = 8;
+        public Double relativeX = Double.valueOf(1.0D);
+        public Double relativeY = Double.valueOf(0.0D);
+        public double scale = 1.0D;
+        public double panelOpacity = 0.85D;
+        public double filterOpacity = 0.18D;
     }
 
     public static class StrengthPreferences {

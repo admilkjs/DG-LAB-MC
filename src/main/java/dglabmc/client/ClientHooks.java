@@ -125,6 +125,11 @@ public final class ClientHooks {
     }
 
     @SubscribeEvent
+    public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        ClientPlayerStateCache.reset();
+    }
+
+    @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) {
             return;
@@ -134,6 +139,7 @@ public final class ClientHooks {
         }
         LocalPlayer player = MINECRAFT.player;
         if (player == null) {
+            ClientPlayerStateCache.reset();
             sprinting = false;
             crouching = false;
             lowHealthLatched = false;
@@ -151,6 +157,7 @@ public final class ClientHooks {
             return;
         }
         clientTickCounter++;
+        ClientPlayerStateCache.tick(player, clientTickCounter);
         pruneRecentSentSignalPayloads();
         drainPendingSignals(player);
         processPendingAttacks(player);

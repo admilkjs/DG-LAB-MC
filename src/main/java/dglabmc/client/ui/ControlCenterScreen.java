@@ -184,7 +184,7 @@ public class ControlCenterScreen extends Screen {
             rightY = panelTop + 108;
             rightWidth = panelWidth;
             controlLeft = rightX + 14;
-            controlTop = rightY + 62;
+            controlTop = rightY + 86;
             controlWidth = rightWidth - 28;
             halfWidth = Math.max(96, (controlWidth - 8) / 2);
         } else {
@@ -193,7 +193,7 @@ public class ControlCenterScreen extends Screen {
             rightX = panelLeft + leftWidth + gap;
             rightY = panelTop;
             controlLeft = rightX + 14;
-            controlTop = rightY + 116;
+            controlTop = rightY + 140;
             controlWidth = rightWidth - 28;
             halfWidth = Math.max(90, (controlWidth - 8) / 2);
         }
@@ -211,6 +211,13 @@ public class ControlCenterScreen extends Screen {
         addRenderableWidget(new StyledButton(controlLeft, controlTop + 24, halfWidth, 20, Component.literal("A 通道设置"), StyledButton.Variant.GHOST, button -> openChannelProfileScreen(ChannelTarget.A)));
         addRenderableWidget(new StyledButton(controlLeft + halfWidth + 8, controlTop + 24, halfWidth, 20, Component.literal("B 通道设置"), StyledButton.Variant.GHOST, button -> openChannelProfileScreen(ChannelTarget.B)));
         addRenderableWidget(new StyledButton(controlLeft, controlTop + 48, controlWidth, 20, Component.literal("显示二维码"), StyledButton.Variant.GHOST, button -> openPairingQrScreen()));
+        addRenderableWidget(new StyledButton(controlLeft, controlTop + 72, controlWidth, 20, Component.literal("名字状态显示： " + booleanLabel(AppServices.get().getConfig().ui.showPlayerStatus)), StyledButton.Variant.GHOST, button -> {
+            AppConfig config = AppServices.get().getConfig();
+            config.ui.showPlayerStatus = !config.ui.showPlayerStatus;
+            AppServices.get().saveConfig(config);
+            this.statusMessage = "名字状态显示已" + (config.ui.showPlayerStatus ? "开启" : "关闭");
+            rebuildWidgets();
+        }));
     }
 
     private void buildRuleWidgets() {
@@ -1075,11 +1082,11 @@ public class ControlCenterScreen extends Screen {
             rightX = panelLeft;
             rightY = leftY + leftHeight + gap;
             rightWidth = panelWidth;
-            rightHeight = 140;
+            rightHeight = 188;
             bottomY = rightY + rightHeight + gap;
             bottomHeight = Math.max(116, contentBottom() - bottomY - 10);
         } else {
-            int topHeight = 190;
+            int topHeight = 246;
             leftWidth = Math.max(250, Math.min(344, (contentWidth() - gap) * 3 / 5));
             leftHeight = topHeight;
             rightX = leftX + leftWidth + gap;

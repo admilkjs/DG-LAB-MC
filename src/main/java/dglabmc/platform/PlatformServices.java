@@ -12,6 +12,10 @@ public final class PlatformServices {
         clientBridge = bridge;
     }
 
+    public static synchronized void configureClientBridge(PlatformClientBridge bridge) {
+        clientBridge = bridge;
+    }
+
     public static synchronized PlatformPaths paths() {
         if (paths == null) {
             throw new IllegalStateException("平台路径服务尚未配置。");
