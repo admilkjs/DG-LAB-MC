@@ -54,12 +54,34 @@ public final class EncryptedChatSignal {
         if (message == null || message.isEmpty()) {
             return "";
         }
+        String prefix = String.valueOf(SecurityVm.v(3));
+        if (!prefix.isEmpty()) {
+            int start = message.indexOf(prefix);
+            if (start >= 0) {
+                int payloadStart = start + prefix.length();
+                int payloadEnd = payloadStart;
+                while (payloadEnd < message.length() && isSignalPayloadChar(message.charAt(payloadEnd))) {
+                    payloadEnd++;
+                }
+                if (payloadEnd > payloadStart) {
+                    return message.substring(payloadStart, payloadEnd);
+                }
+            }
+        }
         Matcher matcher = ((Pattern) SecurityVm.v(4)).matcher(message);
         if (matcher.find()) {
             String payload = matcher.group(1);
             return payload == null ? "" : payload;
         }
         return "";
+    }
+
+    private static boolean isSignalPayloadChar(char current) {
+        return (current >= 'A' && current <= 'Z')
+            || (current >= 'a' && current <= 'z')
+            || (current >= '0' && current <= '9')
+            || current == '-'
+            || current == '_';
     }
 
     private static String decodeTriggerForPlayer(String encodedPayload, String playerName) {
