@@ -2,6 +2,7 @@ package dglabmc.platform.forge;
 
 import dglabmc.AppServices;
 import dglabmc.client.ClientCommandRouter;
+import dglabmc.platform.PlatformServices;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -29,6 +31,9 @@ public final class ForgeCommandRegistrar {
 
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
+        if (FMLEnvironment.dist.isDedicatedServer()) {
+            return;
+        }
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("dglab")
             .executes(ctx -> run(ctx.getSource(), "/dglab"))
             .then(Commands.literal("password")
@@ -147,8 +152,7 @@ public final class ForgeCommandRegistrar {
     }
 
     private static boolean isCurrentLocalPlayer(ServerPlayer sourcePlayer) {
-        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-        return minecraft.player != null && sourcePlayer.getUUID().equals(minecraft.player.getUUID());
+        return PlatformServices.client().isCurrentLocalPlayer(sourcePlayer.getUUID());
     }
 
     private static Iterable<String> collectRuleTokens() {

@@ -104,6 +104,10 @@ public class ConfigRepository {
         if (resolved.ui.lastOpenedTab == null || resolved.ui.lastOpenedTab.trim().isEmpty()) {
             resolved.ui.lastOpenedTab = "dashboard";
         }
+        if (loadedSchemaVersion < 12) {
+            resolved.ui.showPlayerStatus = true;
+        }
+        normalizeHudOverlayPreferences(resolved.ui, loadedSchemaVersion);
         if (resolved.waveforms == null) {
             resolved.waveforms = DefaultConfigFactory.create().waveforms;
         }
@@ -201,6 +205,61 @@ public class ConfigRepository {
         }
         profile.deathDelayMs = clamp(profile.deathDelayMs, 0, 600000);
         profile.minStrength = clamp(profile.minStrength, 0, 200);
+    }
+
+    private void normalizeHudOverlayPreferences(AppConfig.UiPreferences ui, int loadedSchemaVersion) {
+        if (ui.hudOverlay == null) {
+            ui.hudOverlay = new AppConfig.HudOverlayPreferences();
+        }
+        if (loadedSchemaVersion < 12) {
+            ui.hudOverlay.enabled = true;
+        }
+        if (ui.hudOverlay.anchor == null || ui.hudOverlay.anchor.trim().isEmpty()) {
+            ui.hudOverlay.anchor = "top_right";
+        }
+        ui.hudOverlay.anchor = ui.hudOverlay.anchor.trim().toLowerCase();
+        if (!"top_left".equals(ui.hudOverlay.anchor)
+            && !"top_right".equals(ui.hudOverlay.anchor)
+            && !"bottom_left".equals(ui.hudOverlay.anchor)
+            && !"bottom_right".equals(ui.hudOverlay.anchor)) {
+            ui.hudOverlay.anchor = "top_right";
+        }
+        ui.hudOverlay.offsetX = clamp(ui.hudOverlay.offsetX, -4000, 4000);
+        ui.hudOverlay.offsetY = clamp(ui.hudOverlay.offsetY, -4000, 4000);
+        if (loadedSchemaVersion < 11 || ui.hudOverlay.relativeX == null || ui.hudOverlay.relativeY == null) {
+            ui.hudOverlay.relativeX = Double.valueOf(migrateHudRelativeX(ui.hudOverlay.anchor, ui.hudOverlay.offsetX));
+            ui.hudOverlay.relativeY = Double.valueOf(migrateHudRelativeY(ui.hudOverlay.anchor, ui.hudOverlay.offsetY));
+        }
+        ui.hudOverlay.relativeX = Double.valueOf(clamp(safeDouble(ui.hudOverlay.relativeX, 1.0D), 0.0D, 1.0D));
+        ui.hudOverlay.relativeY = Double.valueOf(clamp(safeDouble(ui.hudOverlay.relativeY, 0.0D), 0.0D, 1.0D));
+        ui.hudOverlay.scale = clamp(ui.hudOverlay.scale, 0.5D, 4.0D);
+        ui.hudOverlay.panelOpacity = clamp(ui.hudOverlay.panelOpacity, 0.15D, 1.0D);
+        ui.hudOverlay.filterOpacity = clamp(ui.hudOverlay.filterOpacity, 0.0D, 0.8D);
+    }
+
+    private double migrateHudRelativeX(String anchor, int offsetX) {
+        int margin = clamp(Math.abs(offsetX), 0, 4000);
+        double normalizedMargin = clamp(margin / 1600.0D, 0.0D, 0.95D);
+        if ("top_left".equals(anchor) || "bottom_left".equals(anchor)) {
+            return normalizedMargin;
+        }
+        return 1.0D - normalizedMargin;
+    }
+
+    private double migrateHudRelativeY(String anchor, int offsetY) {
+        int margin = clamp(Math.abs(offsetY), 0, 4000);
+        double normalizedMargin = clamp(margin / 900.0D, 0.0D, 0.95D);
+        if ("bottom_left".equals(anchor) || "bottom_right".equals(anchor)) {
+            return 1.0D - normalizedMargin;
+        }
+        return normalizedMargin;
+    }
+
+    private double safeDouble(Double value, double fallback) {
+        if (value == null || value.isNaN() || value.isInfinite()) {
+            return fallback;
+        }
+        return value.doubleValue();
     }
 
     private void normalizeBuiltinWaveform(WaveformDefinition waveform) {

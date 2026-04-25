@@ -1,20 +1,23 @@
 package dglabmc;
 
-import dglabmc.client.ClientHooks;
-import dglabmc.config.StartupConfig;
-import dglabmc.platform.PlatformServices;
-import dglabmc.platform.forge.ForgePlatformClientBridge;
-import dglabmc.platform.forge.ForgeCommandRegistrar;
-import dglabmc.platform.forge.ForgePlatformPaths;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.neoforged.neoforge.common.NeoForge;
+import dglabmc.client.ClientHooks;
+import dglabmc.multiplayer.ServerPlayerStateRelay;
+import dglabmc.network.DgLabNetwork;
+import dglabmc.config.StartupConfig;
+import dglabmc.platform.NoopPlatformClientBridge;
+import dglabmc.platform.PlatformServices;
+import dglabmc.platform.forge.ForgeCommandRegistrar;
+import dglabmc.platform.forge.ForgePlatformPaths;
+import net.neoforged.fml.IExtensionPoint;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,31 +29,29 @@ public class DgLabMcMod {
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
     public DgLabMcMod() {
-        PlatformServices.configure(new ForgePlatformPaths(), new ForgePlatformClientBridge());
+        PlatformServices.configure(new ForgePlatformPaths(), new NoopPlatformClientBridge());
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, StartupConfig.SPEC);
+        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
+            () -> new IExtensionPoint.DisplayTest(() -> "ANY", (remote, isServer) -> true));
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterKeyMappings);
         NeoForge.EVENT_BUS.register(ClientHooks.class);
         NeoForge.EVENT_BUS.register(ForgeCommandRegistrar.class);
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                AppServices.get().shutdown();
-            }
-        }, "dglabmc-shutdown"));
+        NeoForge.EVENT_BUS.register(ServerPlayerStateRelay.class);
+        if (FMLEnvironment.dist.isClient()) {
+            dglabmc.client.ForgeClientBootstrap.init();
+        }
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(new Runnable() {
             @Override
             public void run() {
-                AppServices.get().initialize();
+                DgLabNetwork.register();
+                if (!FMLEnvironment.dist.isDedicatedServer()) {
+                    AppServices.get().initialize();
+                }
             }
         });
-    }
-
-    private void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
-        ClientHooks.registerKeyBindings(event);
     }
 }

@@ -1,6 +1,7 @@
 package dglabmc.platform;
 
 import java.nio.file.Path;
+import java.util.UUID;
 
 public interface PlatformClientBridge {
     void openControlCenter();
@@ -12,4 +13,6 @@ public interface PlatformClientBridge {
     String readClipboard();
 
     void openInFileManager(Path path);
+
+    boolean isCurrentLocalPlayer(UUID playerId);
 }
