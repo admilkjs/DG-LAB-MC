@@ -42,7 +42,16 @@ public final class EncryptedChatSignal {
     }
 
     public static String extractSignalTrigger(String message, String playerName) {
-        if (message == null || message.isEmpty() || playerName == null || playerName.trim().isEmpty()) {
+        String encodedPayload = extractEncodedPayload(message);
+        if (encodedPayload.isEmpty() || playerName == null || playerName.trim().isEmpty()) {
+            return "";
+        }
+        String triggerId = decodeTriggerForPlayer(encodedPayload, playerName);
+        return triggerId.isEmpty() ? "" : triggerId;
+    }
+
+    public static String extractEncodedPayload(String message) {
+        if (message == null || message.isEmpty()) {
             return "";
         }
         String prefix = String.valueOf(SecurityVm.v(3));
@@ -61,9 +70,9 @@ public final class EncryptedChatSignal {
         }
         Matcher matcher = ((Pattern) SecurityVm.v(4)).matcher(message);
         while (matcher.find()) {
-            String triggerId = decodeTriggerForPlayer(matcher.group(1), playerName);
-            if (!triggerId.isEmpty()) {
-                return triggerId;
+            String payload = matcher.group(1);
+            if (payload != null && !payload.isEmpty()) {
+                return payload;
             }
         }
         return "";
