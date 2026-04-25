@@ -8,12 +8,11 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderNameTagEvent;
+import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.joml.Matrix4f;
-
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix4f;
 
 @Mod.EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, value = Dist.CLIENT)
 public final class ClientNameplateOverlay {
@@ -29,7 +28,7 @@ public final class ClientNameplateOverlay {
     }
 
     @SubscribeEvent
-    public static void onRenderNameTag(RenderNameTagEvent event) {
+    public static void onRenderNameTag(RenderNameplateEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
             return;
         }
@@ -47,13 +46,13 @@ public final class ClientNameplateOverlay {
         renderStatusLine(event, player, buildLayout(state));
     }
 
-    private static void renderStatusLine(RenderNameTagEvent event, Player player, StatusLayout layout) {
+    private static void renderStatusLine(RenderNameplateEvent event, Player player, StatusLayout layout) {
         EntityRenderer<?> renderer = event.getEntityRenderer();
         Font font = renderer.getFont();
         boolean sneaking = player.isDiscrete();
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource buffer = event.getMultiBufferSource();
-        float yOffset = player.getNameTagOffsetY();
+        float yOffset = player.getBbHeight() + 0.5F;
 
         poseStack.pushPose();
         poseStack.translate(0.0F, yOffset, 0.0F);
@@ -93,7 +92,7 @@ public final class ClientNameplateOverlay {
         float currentX = startX;
         for (StatusSegment segment : layout.segments) {
             int color = tintColor(segment.color, sneaking);
-            font.drawInBatch(segment.text, currentX, y, color, false, matrix, buffer, Font.DisplayMode.NORMAL, 0, packedLight);
+            font.drawInBatch(segment.text, currentX, y, color, false, matrix, buffer, false, 0, packedLight);
             currentX += font.width(segment.text);
         }
     }

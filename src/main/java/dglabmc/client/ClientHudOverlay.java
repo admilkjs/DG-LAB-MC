@@ -57,7 +57,6 @@ public final class ClientHudOverlay {
         font.draw(poseStack, line, (float) x, (float) y, UiPalette.TEXT_PRIMARY);
         font.draw(poseStack, "\u25CF", (float) (x + font.width(line) + 6), (float) y, active ? activeColor : inactiveColor);
     }
-    }
 
     private static String line(String channel, int current, int max) {
         return channel + " " + current + " | " + Math.max(0, max);

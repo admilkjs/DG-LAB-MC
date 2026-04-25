@@ -40,17 +40,17 @@ public final class DgLabNetwork {
         CHANNEL.messageBuilder(ClientStatePacket.class, index++, NetworkDirection.PLAY_TO_SERVER)
             .encoder(ClientStatePacket::encode)
             .decoder(ClientStatePacket::decode)
-            .consumerMainThread(ClientStatePacket::handle)
+            .consumer(ClientStatePacket::handle)
             .add();
         CHANNEL.messageBuilder(ServerStatePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
             .encoder(ServerStatePacket::encode)
             .decoder(ServerStatePacket::decode)
-            .consumerMainThread(ServerStatePacket::handle)
+            .consumer(ServerStatePacket::handle)
             .add();
         CHANNEL.messageBuilder(RemoveStatePacket.class, index, NetworkDirection.PLAY_TO_CLIENT)
             .encoder(RemoveStatePacket::encode)
             .decoder(RemoveStatePacket::decode)
-            .consumerMainThread(RemoveStatePacket::handle)
+            .consumer(RemoveStatePacket::handle)
             .add();
         registered = true;
     }
@@ -135,10 +135,16 @@ public final class DgLabNetwork {
 
         private static void handle(ClientStatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
             NetworkEvent.Context context = contextSupplier.get();
-            ServerPlayer sender = context.getSender();
-            if (sender != null) {
-                ServerPlayerStateRelay.handleClientState(sender, packet.toState(sender.getUUID()));
-            }
+            context.enqueueWork(new Runnable() {
+                @Override
+                public void run() {
+                    ServerPlayer sender = context.getSender();
+                    if (sender != null) {
+                        ServerPlayerStateRelay.handleClientState(sender, packet.toState(sender.getUUID()));
+                    }
+                }
+            });
+            context.setPacketHandled(true);
         }
 
         private PlayerChannelState toState(UUID playerId) {
@@ -178,7 +184,14 @@ public final class DgLabNetwork {
         }
 
         private static void handle(ServerStatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-            ClientPlayerStateCache.applySyncedState(packet.toState());
+            NetworkEvent.Context context = contextSupplier.get();
+            context.enqueueWork(new Runnable() {
+                @Override
+                public void run() {
+                    ClientPlayerStateCache.applySyncedState(packet.toState());
+                }
+            });
+            context.setPacketHandled(true);
         }
 
         private PlayerChannelState toState() {
@@ -202,7 +215,14 @@ public final class DgLabNetwork {
         }
 
         private static void handle(RemoveStatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-            ClientPlayerStateCache.removeSyncedState(packet.playerId);
+            NetworkEvent.Context context = contextSupplier.get();
+            context.enqueueWork(new Runnable() {
+                @Override
+                public void run() {
+                    ClientPlayerStateCache.removeSyncedState(packet.playerId);
+                }
+            });
+            context.setPacketHandled(true);
         }
     }
 }

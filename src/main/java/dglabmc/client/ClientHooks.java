@@ -123,7 +123,7 @@ public final class ClientHooks {
     }
 
     @SubscribeEvent
-    public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+    public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggedOutEvent event) {
         ClientPlayerStateCache.reset();
     }
 
