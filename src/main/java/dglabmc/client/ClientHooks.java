@@ -289,18 +289,35 @@ public final class ClientHooks {
     }
 
     private static SignalMatch extractSyntheticSignalMatch(ClientChatReceivedEvent event, LocalPlayer player) {
-        if (event instanceof ClientChatReceivedEvent.Player) {
-            ClientChatReceivedEvent.Player playerEvent = (ClientChatReceivedEvent.Player) event;
-            SignalMatch signedMatch = extractSyntheticSignalMatch(playerEvent.getPlayerChatMessage().signedContent(), player);
+        SignalMatch playerMatch = extractSyntheticSignalMatchFromPlayerChatMessage(event, player);
+        if (playerMatch != null) {
+            return playerMatch;
+        }
+        return extractSyntheticSignalMatch(event.getMessage().getString(), player);
+    }
+
+    private static SignalMatch extractSyntheticSignalMatchFromPlayerChatMessage(ClientChatReceivedEvent event, LocalPlayer player) {
+        Object playerChatMessage = invokeNoArg(event, "getPlayerChatMessage");
+        if (playerChatMessage == null) {
+            return null;
+        }
+
+        Object signedContent = invokeNoArg(playerChatMessage, "signedContent");
+        if (signedContent instanceof String) {
+            SignalMatch signedMatch = extractSyntheticSignalMatch((String) signedContent, player);
             if (signedMatch != null) {
                 return signedMatch;
             }
-            SignalMatch decoratedMatch = extractSyntheticSignalMatch(playerEvent.getPlayerChatMessage().decoratedContent().getString(), player);
+        }
+
+        Object decoratedContent = invokeNoArg(playerChatMessage, "decoratedContent");
+        if (decoratedContent != null) {
+            SignalMatch decoratedMatch = extractSyntheticSignalMatch(decoratedContent.toString(), player);
             if (decoratedMatch != null) {
                 return decoratedMatch;
             }
         }
-        return extractSyntheticSignalMatch(event.getMessage().getString(), player);
+        return null;
     }
 
     private static SignalMatch extractSyntheticSignalMatch(String message, LocalPlayer player) {
@@ -336,6 +353,17 @@ public final class ClientHooks {
             if ((clientTickCounter - entry.getValue().longValue()) > SIGNAL_ECHO_DEDUP_TICKS) {
                 iterator.remove();
             }
+        }
+    }
+
+    private static Object invokeNoArg(Object target, String methodName) {
+        if (target == null) {
+            return null;
+        }
+        try {
+            return target.getClass().getMethod(methodName).invoke(target);
+        } catch (ReflectiveOperationException ignored) {
+            return null;
         }
     }
 
