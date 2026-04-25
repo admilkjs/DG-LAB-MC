@@ -1,8 +1,9 @@
 buildscript {
     repositories {
-        maven { url = 'https://maven.aliyun.com/repository/public' }
         maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://libraries.minecraft.net/' }
         mavenCentral()
+        maven { url = 'https://maven.aliyun.com/repository/public' }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
@@ -73,8 +74,10 @@ minecraft {
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 repositories {
-    maven { url = 'https://maven.aliyun.com/repository/public' }
+    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://libraries.minecraft.net/' }
     mavenCentral()
+    maven { url = 'https://maven.aliyun.com/repository/public' }
 }
 
 dependencies {
