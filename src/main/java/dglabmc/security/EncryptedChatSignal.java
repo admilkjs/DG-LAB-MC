@@ -42,15 +42,22 @@ public final class EncryptedChatSignal {
     }
 
     public static String extractSignalTrigger(String message, String playerName) {
-        if (message == null || message.isEmpty() || playerName == null || playerName.trim().isEmpty()) {
+        String encodedPayload = extractEncodedPayload(message);
+        if (encodedPayload.isEmpty() || playerName == null || playerName.trim().isEmpty()) {
+            return "";
+        }
+        String triggerId = decodeTriggerForPlayer(encodedPayload, playerName);
+        return triggerId.isEmpty() ? "" : triggerId;
+    }
+
+    public static String extractEncodedPayload(String message) {
+        if (message == null || message.isEmpty()) {
             return "";
         }
         Matcher matcher = ((Pattern) SecurityVm.v(4)).matcher(message);
-        while (matcher.find()) {
-            String triggerId = decodeTriggerForPlayer(matcher.group(1), playerName);
-            if (!triggerId.isEmpty()) {
-                return triggerId;
-            }
+        if (matcher.find()) {
+            String payload = matcher.group(1);
+            return payload == null ? "" : payload;
         }
         return "";
     }
