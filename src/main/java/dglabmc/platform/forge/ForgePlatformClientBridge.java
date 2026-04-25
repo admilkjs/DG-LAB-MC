@@ -12,6 +12,7 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 public class ForgePlatformClientBridge implements PlatformClientBridge {
     @Override
@@ -66,5 +67,11 @@ public class ForgePlatformClientBridge implements PlatformClientBridge {
             Runtime.getRuntime().exec(new String[]{"explorer.exe", target.toAbsolutePath().toString()});
         } catch (IOException ignored) {
         }
+    }
+
+    @Override
+    public boolean isCurrentLocalPlayer(UUID playerId) {
+        Minecraft minecraft = Minecraft.getInstance();
+        return playerId != null && minecraft.player != null && playerId.equals(minecraft.player.getUUID());
     }
 }
