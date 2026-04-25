@@ -58,6 +58,8 @@ public final class ClientHooks {
     private static int lastObservedDeathTime;
     private static final Map<Integer, PendingAttack> PENDING_ATTACKS = new LinkedHashMap<Integer, PendingAttack>();
     private static final Queue<String> PENDING_SIGNAL_TRIGGERS = new ConcurrentLinkedQueue<String>();
+    private static final Map<String, Long> RECENT_SENT_SIGNAL_PAYLOADS = new LinkedHashMap<String, Long>();
+    private static final long SIGNAL_ECHO_DEDUP_TICKS = 40L;
 
     private ClientHooks() {
     }
@@ -96,6 +98,7 @@ public final class ClientHooks {
     @SubscribeEvent
     public static void onClientChat(ClientChatEvent event) {
         String message = event.getMessage().trim();
+        queueSyntheticSignalFromSentChat(message);
         if (("dgDebug".equals(message) || message.startsWith("/dglab")) && ClientCommandRouter.tryHandle(message)) {
             if (message.startsWith("/dglab") && MINECRAFT.gui != null && MINECRAFT.gui.getChat() != null) {
                 MINECRAFT.gui.getChat().addRecentChat(message);
@@ -110,14 +113,7 @@ public final class ClientHooks {
         if (player == null || event.getMessage() == null) {
             return;
         }
-        String playerName = player.getGameProfile() == null ? "" : player.getGameProfile().getName();
-        if (playerName.isEmpty()) {
-            return;
-        }
-        String triggerId = EncryptedChatSignal.extractSignalTrigger(event.getMessage().getString(), playerName);
-        if (!triggerId.isEmpty()) {
-            PENDING_SIGNAL_TRIGGERS.offer(triggerId);
-        }
+        queueSyntheticSignalFromReceivedChat(event, player);
     }
 
     @SubscribeEvent
@@ -150,10 +146,12 @@ public final class ClientHooks {
             lastObservedDeathTime = 0;
             PENDING_ATTACKS.clear();
             PENDING_SIGNAL_TRIGGERS.clear();
+            RECENT_SENT_SIGNAL_PAYLOADS.clear();
             AppServices.get().getRuleEngine().reset();
             return;
         }
         clientTickCounter++;
+        pruneRecentSentSignalPayloads();
         drainPendingSignals(player);
         processPendingAttacks(player);
         pollLocalPlayerEvents(player);
@@ -259,6 +257,87 @@ public final class ClientHooks {
         }
         ClientCommandRouter.reportTrigger(context.triggerId);
         AppServices.get().getRuleEngine().fire(context);
+    }
+
+    private static void queueSyntheticSignalFromSentChat(String message) {
+        LocalPlayer player = MINECRAFT.player;
+        if (player == null) {
+            return;
+        }
+        String payload = EncryptedChatSignal.extractEncodedPayload(message);
+        if (payload.isEmpty()) {
+            return;
+        }
+        String triggerId = extractSyntheticSignalTrigger(message, player);
+        if (triggerId.isEmpty()) {
+            return;
+        }
+        RECENT_SENT_SIGNAL_PAYLOADS.put(payload, Long.valueOf(clientTickCounter));
+        PENDING_SIGNAL_TRIGGERS.offer(triggerId);
+    }
+
+    private static void queueSyntheticSignalFromReceivedChat(ClientChatReceivedEvent event, LocalPlayer player) {
+        SignalMatch match = extractSyntheticSignalMatch(event, player);
+        if (match == null) {
+            return;
+        }
+        Long sentTick = RECENT_SENT_SIGNAL_PAYLOADS.get(match.payload);
+        if (sentTick != null && (clientTickCounter - sentTick.longValue()) <= SIGNAL_ECHO_DEDUP_TICKS) {
+            RECENT_SENT_SIGNAL_PAYLOADS.remove(match.payload);
+            return;
+        }
+        PENDING_SIGNAL_TRIGGERS.offer(match.triggerId);
+    }
+
+    private static SignalMatch extractSyntheticSignalMatch(ClientChatReceivedEvent event, LocalPlayer player) {
+        if (event instanceof ClientChatReceivedEvent.Player) {
+            ClientChatReceivedEvent.Player playerEvent = (ClientChatReceivedEvent.Player) event;
+            SignalMatch signedMatch = extractSyntheticSignalMatch(playerEvent.getPlayerChatMessage().signedContent(), player);
+            if (signedMatch != null) {
+                return signedMatch;
+            }
+            SignalMatch decoratedMatch = extractSyntheticSignalMatch(playerEvent.getPlayerChatMessage().decoratedContent().getString(), player);
+            if (decoratedMatch != null) {
+                return decoratedMatch;
+            }
+        }
+        return extractSyntheticSignalMatch(event.getMessage().getString(), player);
+    }
+
+    private static SignalMatch extractSyntheticSignalMatch(String message, LocalPlayer player) {
+        if (player == null || message == null || message.isEmpty()) {
+            return null;
+        }
+        String payload = EncryptedChatSignal.extractEncodedPayload(message);
+        if (payload.isEmpty()) {
+            return null;
+        }
+        String triggerId = extractSyntheticSignalTrigger(message, player);
+        if (triggerId.isEmpty()) {
+            return null;
+        }
+        return new SignalMatch(payload, triggerId);
+    }
+
+    private static String extractSyntheticSignalTrigger(String message, LocalPlayer player) {
+        if (player == null || message == null || message.isEmpty()) {
+            return "";
+        }
+        String playerName = player.getGameProfile() == null ? "" : player.getGameProfile().getName();
+        if (playerName.isEmpty()) {
+            return "";
+        }
+        return EncryptedChatSignal.extractSignalTrigger(message, playerName);
+    }
+
+    private static void pruneRecentSentSignalPayloads() {
+        Iterator<Map.Entry<String, Long>> iterator = RECENT_SENT_SIGNAL_PAYLOADS.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Long> entry = iterator.next();
+            if ((clientTickCounter - entry.getValue().longValue()) > SIGNAL_ECHO_DEDUP_TICKS) {
+                iterator.remove();
+            }
+        }
     }
 
     private static void drainPendingSignals(LocalPlayer player) {
@@ -440,6 +519,16 @@ public final class ClientHooks {
 
         private PendingAttack(int entityId) {
             this.entityId = entityId;
+        }
+    }
+
+    private static final class SignalMatch {
+        final String payload;
+        final String triggerId;
+
+        private SignalMatch(String payload, String triggerId) {
+            this.payload = payload;
+            this.triggerId = triggerId;
         }
     }
 
