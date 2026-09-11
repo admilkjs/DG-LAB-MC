@@ -74,7 +74,9 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation 'dglabmc:dglabmc-core:1.0.1'
+    shadowLib('dglabmc:dglabmc-core:1.0.1') {
+        transitive = false
+    }
     shadowLib 'com.google.zxing:core:3.5.3'
     shadowLib('io.netty:netty-codec-http:4.1.82.Final') {
         transitive = false
@@ -268,13 +270,13 @@ tasks.named('reobfObfuscatedJar').configure {
     enabled = false
 }
 
-tasks.register('copyReleaseArtifacts', Copy) {
+tasks.register('copyReleaseArtifacts', Sync) {
     dependsOn tasks.named('reobfShadowJar')
     into(releaseOutputDir)
 
     from(layout.buildDirectory.file('reobfShadowJar/output.jar')) {
         rename { String ignored ->
-            "${mod_id}-${mod_version}-release.jar"
+            "${mod_id}-${mod_version}-forge-${minecraft_version}-release.jar"
         }
     }
 }
