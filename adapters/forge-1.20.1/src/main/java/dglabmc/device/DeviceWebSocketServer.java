@@ -1,6 +1,7 @@
 package dglabmc.device;
 
 import dglabmc.DgLabMcMod;
+import dglabmc.core.device.DeviceServer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,7 +17,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 
-public class DeviceWebSocketServer {
+public class DeviceWebSocketServer implements DeviceServer {
     private final DeviceSessionManager sessionManager;
     private final String fallbackClientId;
 
