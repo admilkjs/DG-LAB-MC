@@ -1,61 +1,45 @@
 # DG-LAB MC
 
-Minecraft 客户端 DG-LAB 控制模组，多版本分支仓库。
+Minecraft 客户端 DG-LAB 控制模组，采用单主干、纯 Java Core 和按版本编译的 adapter 架构。
 
-## 版本分支
+## 当前结构
 
-| Minecraft | Loader | 构建 JDK | 分支 | 状态 |
-|-----------|--------|----------|------|------|
-| 1.12.2 | Forge | 8 | `forge/1.12.2` | 已验证 |
-| 1.13.2 | Forge | 11 | `forge/1.13.2` | 已验证 |
-| 1.14.4 | Forge | 11 | `forge/1.14.4` | 已验证 |
-| 1.15.2 | Forge | 11 | `forge/1.15.2` | 已验证 |
-| 1.16.5 | Forge | 8 | `forge/1.16.5` | 已验证 |
-| 1.18.2 | Forge | 17 | `forge/1.18.2` | 已验证 |
-| 1.19.2 | Forge | 17 | `forge/1.19.2` | 已验证 |
-| 1.20.1 | Forge | 17 | `forge/1.20.1` | 已验证 |
-| 1.20.2 | NeoForge | 17 | `neoforge/1.20.2` | 已验证 |
-| 1.20.4 | NeoForge | 17 | `neoforge/1.20.4` | 已验证 |
-| 1.20.6 | NeoForge | 21 | `neoforge/1.20.6` | 已验证 |
-| 1.21.4 | NeoForge | 21 | `neoforge/1.21.4` | 已验证 |
+| 目录 | 职责 |
+|---|---|
+| `core/` | 配置、设备协议、规则、安全、波形和纯 Java 测试 |
+| `adapters/forge-1.20.1/` | Forge 1.20.1 入口、事件、UI、命令、网络和资源 |
+| `gradle/targets.properties` | 已启用版本及构建工具链 |
 
-详细说明见：
-
-- [版本线与分支策略](docs/version-lines.md)
-- [版本支持矩阵](docs/version-matrix.md)
+Core 不依赖 Minecraft、Forge 或 NeoForge。新增版本时新增 adapter，不复制业务代码。
 
 ## 本地构建
 
-统一命令：
-
 ```powershell
-.\gradlew.bat clean build generatePvpPunishConfig buildRelease --no-daemon
+.\gradlew.bat :core:test --no-daemon
+.\gradlew.bat buildTarget --project-prop target=forge-1.20.1 --no-daemon
+.\gradlew.bat buildAll --no-daemon
 ```
 
-主要产物：
+单版本发布包位于对应 adapter 的 `dist/release/`。根工程的 `buildAll` 会按 `gradle/targets.properties` 顺序构建全部启用版本。
 
-- 模组发布包：`dist/release/`
-- 规则配置 ZIP：`dist/dglabmc-pvp-punish.zip`
+## 增加版本
+
+1. 在 `adapters/` 下创建独立版本工程。
+2. 固定该版本的 Minecraft、loader、Java 和 Gradle wrapper。
+3. 通过 composite build 依赖 `core`。
+4. 只在 adapter 内处理 Minecraft API 差异。
+5. 在 `gradle/targets.properties` 增加 target。
+6. 先通过 `:core:test`，再通过目标 adapter 的 `buildRelease`。
+
+## 兼容原则
+
+- Core 中禁止 Minecraft 和 loader import。
+- Core 不使用版本号分支或运行时反射处理 API 差异。
+- UI、事件、命令、网络和资源留在 adapter。
+- 修改规则、配置、设备协议、安全或波形逻辑时只修改 Core。
 
 ## 发布
 
-- 统一使用主分支 tag：`v*`
-- 单个 Release 会聚合同一 `mod_version` 的全部游戏版本产物
-- CI 从各版本分支分别构建，再合并到一个 GitHub Release
+每个 Minecraft 版本发布独立 Jar，文件名包含目标版本。所有版本由 `main` 主干和 target 清单构建；旧版本分支在迁移完成后删除，最终版本由 Tag 保留。
 
-## 仓库约定
-
-- 包名：`dglabmc`
-- Mod ID：`dglabmc`
-- 能用 NeoForge 的版本优先 NeoForge
-- 无法稳定使用 NeoForge 的版本使用 Forge
-- 不做单个 Jar 兼容全部版本，按版本线分别维护和发布
-
-## 参考
-
-以下仓库只用于功能方向、交互思路、协议行为和波形格式参考，没有直接照抄实现：
-
-- `refs/Minecraft-DG-LAB`
-- `refs/DG_LAB`
-- `admilkjs/sse-dg-lab` 的波形导入思路
-- Forge / NeoForge 官方文档与官方 Maven 元数据
+详细实施步骤见：[多版本实施计划](superpowers/plans/2026-09-11-dglabmc-multiversion.md)。
