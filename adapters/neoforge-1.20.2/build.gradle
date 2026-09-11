@@ -75,7 +75,11 @@ dependencies {
         transitive = false
     }
     shadowLib 'com.google.zxing:core:3.5.3'
-    compileOnly 'io.netty:netty-codec-http:4.1.82.Final'
+    shadowLib('io.netty:netty-codec-http:4.1.97.Final') {
+        transitive = false
+    }
+    compileOnly 'io.netty:netty-codec-http:4.1.97.Final'
+    testImplementation 'io.netty:netty-codec-http:4.1.97.Final'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
@@ -218,6 +222,9 @@ tasks.register('obfuscateShadowJar', ProGuardTask) {
     }
     configureJavaRuntimeLibraryJars(delegate as ProGuardTask)
 }
+tasks.named('obfuscateShadowJar').configure {
+    enabled = false
+}
 
 tasks.register('obfuscatedJar', Jar) {
     dependsOn tasks.named('obfuscateShadowJar')
@@ -238,9 +245,12 @@ tasks.register('obfuscatedJar', Jar) {
         ])
     }
 }
+tasks.named('obfuscatedJar').configure {
+    enabled = false
+}
 
 tasks.register('copyReleaseArtifacts', Sync) {
-    dependsOn tasks.named('obfuscatedJar')
+    dependsOn tasks.named('shadowJar')
     into(releaseOutputDir)
 
     from(tasks.named('shadowJar')) {
@@ -248,25 +258,10 @@ tasks.register('copyReleaseArtifacts', Sync) {
             "${mod_id}-${mod_version}-neoforge-${minecraft_version}-release.jar"
         }
     }
-    from(tasks.named('obfuscatedJar')) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-neoforge-${minecraft_version}-release-obf.jar"
-        }
-    }
-    from(proguardMappingFile) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-neoforge-${minecraft_version}-release-obf.mapping.txt"
-        }
-    }
-    from(proguardSeedsFile) {
-        rename { String ignored ->
-            "${mod_id}-${mod_version}-neoforge-${minecraft_version}-release-obf.seeds.txt"
-        }
-    }
 }
 
 tasks.register('buildRelease') {
     group = 'build'
-    description = 'Builds the shaded NeoForge jar, obfuscates it, and copies release artifacts to dist/release.'
+    description = 'Builds the shaded NeoForge jar and copies the release artifact to dist/release.'
     dependsOn tasks.named('copyReleaseArtifacts')
 }

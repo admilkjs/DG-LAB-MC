@@ -13,6 +13,7 @@
 | Target | Minecraft | Loader | Java | 状态 |
 |---|---|---|---:|---|
 | `forge-1.20.1` | 1.20.1 | Forge 47.4.18 | 17 | 已迁移并验证 |
+| `neoforge-1.20.2` | 1.20.2 | NeoForge 20.2.93 | 17 | 已迁移并验证 |
 
 目标配置位于 `gradle/targets.properties`。
 

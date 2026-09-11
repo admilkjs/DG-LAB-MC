@@ -8,6 +8,7 @@ Minecraft 客户端 DG-LAB 控制模组，采用单主干、纯 Java Core 和按
 |---|---|
 | `core/` | 配置、设备协议、规则、安全、波形和纯 Java 测试 |
 | `adapters/forge-1.20.1/` | Forge 1.20.1 入口、事件、UI、命令、网络和资源 |
+| `adapters/neoforge-1.20.2/` | NeoForge 1.20.2 入口、事件、UI、命令、网络和资源 |
 | `gradle/targets.properties` | 已启用版本及构建工具链 |
 
 Core 不依赖 Minecraft、Forge 或 NeoForge。新增版本时新增 adapter，不复制业务代码。
