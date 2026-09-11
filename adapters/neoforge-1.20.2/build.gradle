@@ -1,0 +1,267 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.5.0'
+    }
+}
+
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version '7.0.116'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+import proguard.gradle.ProGuardTask
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+println "Java: ${System.getProperty('java.version')}, JVM: ${System.getProperty('java.vm.version')} (${System.getProperty('java.vendor')}), Arch: ${System.getProperty('os.arch')}"
+
+configurations {
+    shadowLib
+    implementation.extendsFrom shadowLib
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+runs {
+    configureEach {
+        workingDirectory project.file('run')
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+        modSource project.sourceSets.main
+    }
+
+    client {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        programArgument '--nogui'
+    }
+
+    gameTestServer {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    data {
+        workingDirectory project.file('run-data')
+        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    shadowLib('dglabmc:dglabmc-core:1.0.1') {
+        transitive = false
+    }
+    shadowLib 'com.google.zxing:core:3.5.3'
+    shadowLib('io.netty:netty-codec-http:4.1.97.Final') {
+        transitive = false
+    }
+    compileOnly 'io.netty:netty-codec-http:4.1.97.Final'
+    testImplementation 'io.netty:netty-codec-http:4.1.97.Final'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+}
+
+tasks.withType(ProcessResources).configureEach {
+    def replaceProperties = [
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version            : neo_version,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description,
+        pack_format_number     : pack_format_number,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    archiveClassifier = 'slim'
+    manifest {
+        attributes([
+            'Specification-Title'     : mod_id,
+            'Specification-Vendor'    : mod_authors,
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.jar.archiveVersion,
+            'Implementation-Vendor'   : mod_authors,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configure {
+    archiveClassifier = ''
+    configurations = [project.configurations.shadowLib]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    relocate 'com.google.zxing', "${mod_group_id}.shadow.zxing"
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
+    manifest {
+        attributes([
+            'Specification-Title'     : mod_id,
+            'Specification-Vendor'    : mod_authors,
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : mod_authors,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+tasks.named('assemble').configure {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('build').configure {
+    dependsOn tasks.named('shadowJar')
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact tasks.named('shadowJar')
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+tasks.register('generatePvpPunishConfig', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'dglabmc.tool.PvpPunishConfigGenerator'
+    workingDir = project.projectDir
+    args "${project.projectDir}/dist/dglabmc-pvp-punish.zip"
+    jvmArgs '-Dfile.encoding=UTF-8'
+}
+
+def releaseOutputDir = layout.projectDirectory.dir('dist/release')
+def proguardTempDir = layout.buildDirectory.dir('tmp/proguard')
+def proguardMappingFile = layout.buildDirectory.file('reports/proguard/mapping.txt')
+def proguardSeedsFile = layout.buildDirectory.file('reports/proguard/seeds.txt')
+def obfuscatedDevJar = layout.buildDirectory.file("tmp/proguard/${mod_id}-${mod_version}-obf-dev.jar")
+
+def configureJavaRuntimeLibraryJars = { ProGuardTask task ->
+    File javaHomeDir = new File(System.getProperty('java.home'))
+    File jmodsDir = new File(javaHomeDir, 'jmods')
+    if (jmodsDir.isDirectory()) {
+        fileTree(jmodsDir).matching { include '*.jmod' }.files.sort().each { File jmod ->
+            task.libraryjars(jmod.absolutePath, jarfilter: '!**.jar', filter: '!module-info.class')
+        }
+        return
+    }
+
+    File rtJar = new File(javaHomeDir, 'lib/rt.jar')
+    if (!rtJar.exists() && javaHomeDir.parentFile != null) {
+        rtJar = new File(javaHomeDir.parentFile, 'jre/lib/rt.jar')
+    }
+    if (rtJar.exists()) {
+        task.libraryjars(rtJar.absolutePath)
+    }
+}
+
+tasks.register('obfuscateShadowJar', ProGuardTask) {
+    dependsOn tasks.named('shadowJar')
+
+    doFirst {
+        proguardTempDir.get().asFile.mkdirs()
+        proguardMappingFile.get().asFile.parentFile.mkdirs()
+    }
+
+    injars(tasks.named('shadowJar').get().archiveFile.get().asFile)
+    outjars(obfuscatedDevJar.get().asFile)
+
+    configuration "${project.projectDir}/proguard-rules.pro"
+    printmapping(proguardMappingFile.get().asFile)
+    printseeds(proguardSeedsFile.get().asFile)
+
+    sourceSets.main.compileClasspath.files.findAll { it.exists() }.sort().each { File dependency ->
+        libraryjars(dependency.absolutePath)
+    }
+    configureJavaRuntimeLibraryJars(delegate as ProGuardTask)
+}
+tasks.named('obfuscateShadowJar').configure {
+    enabled = false
+}
+
+tasks.register('obfuscatedJar', Jar) {
+    dependsOn tasks.named('obfuscateShadowJar')
+    archiveClassifier = 'obf-dev'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from({
+        zipTree(obfuscatedDevJar.get().asFile)
+    })
+    manifest {
+        attributes([
+            'Specification-Title'     : mod_id,
+            'Specification-Vendor'    : mod_authors,
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : mod_authors,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+tasks.named('obfuscatedJar').configure {
+    enabled = false
+}
+
+tasks.register('copyReleaseArtifacts', Sync) {
+    dependsOn tasks.named('shadowJar')
+    into(releaseOutputDir)
+
+    from(tasks.named('shadowJar')) {
+        rename { String ignored ->
+            "${mod_id}-${mod_version}-neoforge-${minecraft_version}-release.jar"
+        }
+    }
+}
+
+tasks.register('buildRelease') {
+    group = 'build'
+    description = 'Builds the shaded NeoForge jar and copies the release artifact to dist/release.'
+    dependsOn tasks.named('copyReleaseArtifacts')
+}

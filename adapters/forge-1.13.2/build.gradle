@@ -1,0 +1,128 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://libraries.minecraft.net/' }
+        mavenCentral()
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+    }
+    dependencies {
+        // ForgeGradle 3 is the last line supporting the 1.13.x toolchain.
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.197'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+
+version = mod_version
+group = mod_group_id
+archivesBaseName = mod_id
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+// Core is built by the root build before this nested build is invoked.
+def coreJar = file('../../core/build/libs/dglabmc-core-1.0.1.jar')
+
+minecraft {
+    // ForgeGradle 3 resolves mapping coordinates before project properties
+    // are exposed to the closure, so keep the 1.13.2 snapshot explicit.
+    mappings channel: 'snapshot', version: '20180921-1.13'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('run-server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://libraries.minecraft.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compile files(coreJar)
+    compile 'com.google.zxing:core:3.5.3'
+    shade files(coreJar)
+    shade 'com.google.zxing:core:3.5.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+}
+
+processResources {
+    filteringCharset = 'UTF-8'
+    def replaceProperties = [
+        minecraft_version: minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        forge_version: forge_version,
+        forge_version_range: forge_version_range,
+        loader_version_range: loader_version_range,
+        mod_id: mod_id,
+        mod_name: mod_name,
+        mod_license: mod_license,
+        mod_version: mod_version,
+        mod_authors: mod_authors,
+        mod_description: mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title': mod_id,
+            'Specification-Vendor': mod_authors,
+            'Specification-Version': '1',
+            'Implementation-Title': project.name,
+            'Implementation-Version': "${version}",
+            'Implementation-Vendor': mod_authors,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+    from { configurations.shade.collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
+    }
+}
+jar.finalizedBy('reobfJar')
+
+publishing {
+    publications { mavenJava(MavenPublication) { artifact jar } }
+    repositories { maven { url "file://${project.projectDir}/mcmodsrepo" } }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+test { useJUnitPlatform() }
+
+task copyReleaseArtifacts(type: Copy) {
+    dependsOn 'reobfJar'
+    into file("${project.projectDir}/dist/release")
+    from("${buildDir}/reobfJar/output.jar") {
+        rename { String ignored -> "${mod_id}-${mod_version}-forge-${minecraft_version}-release.jar" }
+    }
+}
+
+task buildRelease {
+    group = 'build'
+    description = 'Builds the Forge 1.13.2 adapter and copies the release artifact.'
+    dependsOn copyReleaseArtifacts
+}

@@ -3,8 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - 'forge/**'
-      - 'neoforge/**'
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -13,69 +12,35 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Resolve Branch Toolchain
-        id: toolchain
-        shell: pwsh
-        run: |
-          $refName = "${{ github.head_ref }}"
-          if ([string]::IsNullOrWhiteSpace($refName)) {
-            $refName = "${{ github.ref_name }}"
-          }
-
-          switch ($refName) {
-            'forge/1.12.2' { $javaVersion = '8' }
-            'forge/1.13.2' { $javaVersion = '11' }
-            'forge/1.14.4' { $javaVersion = '11' }
-            'forge/1.15.2' { $javaVersion = '11' }
-            'forge/1.16.5' { $javaVersion = '8' }
-            'forge/1.18.2' { $javaVersion = '17' }
-            'forge/1.19.2' { $javaVersion = '17' }
-            'forge/1.20.1' { $javaVersion = '17' }
-            'neoforge/1.20.2' { $javaVersion = '17' }
-            'neoforge/1.20.4' { $javaVersion = '17' }
-            'neoforge/1.20.6' { $javaVersion = '21' }
-            'neoforge/1.21.4' { $javaVersion = '21' }
-            default { throw "Unsupported branch for build workflow: $refName" }
-          }
-
-          "ref_name=$refName" >> $env:GITHUB_OUTPUT
-          "artifact_name=$($refName -replace '[^A-Za-z0-9._-]', '-')" >> $env:GITHUB_OUTPUT
-          "java_version=$javaVersion" >> $env:GITHUB_OUTPUT
-          "gradle_args=clean build generatePvpPunishConfig buildRelease --no-daemon" >> $env:GITHUB_OUTPUT
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ steps.toolchain.outputs.java_version }}
+          java-version: '17'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Prepare Gradle Properties For CI
-        shell: pwsh
+      - name: Prepare wrappers
+        shell: bash
         run: |
-          $path = 'gradle.properties'
-          $lines = Get-Content -LiteralPath $path
-          $filtered = $lines | Where-Object { $_ -notmatch '^systemProp\.(http|https)\.proxy(Host|Port)=' }
-          Set-Content -LiteralPath $path -Value $filtered -Encoding utf8
+          chmod +x gradlew
+          find adapters -name gradlew -exec chmod +x {} \;
 
-      - name: Build
-        shell: pwsh
-        run: .\gradlew.bat ${{ steps.toolchain.outputs.gradle_args }}
+      - name: Build all enabled targets
+        run: ./gradlew buildAll --no-daemon
 
-      - name: Upload Build Artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.toolchain.outputs.artifact_name }}-build-${{ github.run_number }}
+          name: dglabmc-build-${{ github.run_number }}
           if-no-files-found: error
           path: |
-            dist/release/*
-            dist/*.zip
+            adapters/*/dist/release/*

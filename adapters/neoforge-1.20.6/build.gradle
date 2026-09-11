@@ -1,0 +1,186 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version '7.1.25'
+    id 'com.gradleup.shadow' version '9.4.1'
+}
+
+
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+println "Java: ${System.getProperty('java.version')}, JVM: ${System.getProperty('java.vm.version')} (${System.getProperty('java.vendor')}), Arch: ${System.getProperty('os.arch')}"
+
+configurations {
+    shadowLib
+    implementation.extendsFrom shadowLib
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+runs {
+    configureEach {
+        workingDirectory project.file('run')
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+        modSource project.sourceSets.main
+    }
+
+    client {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        programArgument '--nogui'
+    }
+
+    gameTestServer {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    data {
+        workingDirectory project.file('run-data')
+        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    shadowLib('dglabmc:dglabmc-core:1.0.1') {
+        transitive = false
+    }
+    shadowLib 'com.google.zxing:core:3.5.3'
+    shadowLib('io.netty:netty-codec-http:4.1.108.Final') {
+        transitive = false
+    }
+    compileOnly 'io.netty:netty-codec-http:4.1.108.Final'
+    testImplementation 'io.netty:netty-codec-http:4.1.108.Final'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+tasks.withType(ProcessResources).configureEach {
+    def replaceProperties = [
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version            : neo_version,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description,
+        pack_format_number     : pack_format_number,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    archiveClassifier = 'slim'
+    manifest {
+        attributes([
+            'Specification-Title'     : mod_id,
+            'Specification-Vendor'    : mod_authors,
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.jar.archiveVersion,
+            'Implementation-Vendor'   : mod_authors,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configure {
+    archiveClassifier = ''
+    configurations = [project.configurations.shadowLib]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    relocate 'com.google.zxing', "${mod_group_id}.shadow.zxing"
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
+    manifest {
+        attributes([
+            'Specification-Title'     : mod_id,
+            'Specification-Vendor'    : mod_authors,
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : mod_authors,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+tasks.named('assemble').configure {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('build').configure {
+    dependsOn tasks.named('shadowJar')
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact tasks.named('shadowJar')
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+tasks.register('generatePvpPunishConfig', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'dglabmc.tool.PvpPunishConfigGenerator'
+    workingDir = project.projectDir
+    args "${project.projectDir}/dist/dglabmc-pvp-punish.zip"
+    jvmArgs '-Dfile.encoding=UTF-8'
+}
+
+def releaseOutputDir = layout.projectDirectory.dir('dist/release')
+tasks.register('copyReleaseArtifacts', Sync) {
+    dependsOn tasks.named('shadowJar')
+    into(releaseOutputDir)
+
+    from(tasks.named('shadowJar')) {
+        rename { String ignored ->
+            "${mod_id}-${mod_version}-neoforge-${minecraft_version}-release.jar"
+        }
+    }
+}
+
+tasks.register('buildRelease') {
+    group = 'build'
+    description = 'Builds the shaded NeoForge jar and copies the release artifact to dist/release.'
+    dependsOn tasks.named('copyReleaseArtifacts')
+}

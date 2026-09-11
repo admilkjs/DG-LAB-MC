@@ -1,0 +1,38 @@
+pluginManagement {
+    repositories {
+        // 国内镜像优先
+        maven { url = 'https://maven.aliyun.com/repository/gradle-plugin' }
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        
+        // 官方源
+        gradlePluginPortal()
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        // 国内镜像优先
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        maven { url = 'https://maven.aliyun.com/repository/gradle-plugin' }
+        
+        // Forge 官方（部分依赖只有这里有）
+        maven { url = 'https://maven.minecraftforge.net/' }
+        
+        // Maven Central 兜底
+        mavenCentral()
+    }
+}
+
+includeBuild('../../core')
+
+rootProject.name = 'dglabmc-forge-1.19.2'

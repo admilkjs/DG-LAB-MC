@@ -11,107 +11,30 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target_ref: forge/1.12.2
-            java_version: '8'
-            artifact_name: forge-1.12.2
-          - target_ref: forge/1.13.2
-            java_version: '11'
-            artifact_name: forge-1.13.2
-          - target_ref: forge/1.14.4
-            java_version: '11'
-            artifact_name: forge-1.14.4
-          - target_ref: forge/1.15.2
-            java_version: '11'
-            artifact_name: forge-1.15.2
-          - target_ref: forge/1.16.5
-            java_version: '8'
-            artifact_name: forge-1.16.5
-          - target_ref: forge/1.18.2
-            java_version: '17'
-            artifact_name: forge-1.18.2
-          - target_ref: forge/1.19.2
-            java_version: '17'
-            artifact_name: forge-1.19.2
-          - target_ref: forge/1.20.1
-            java_version: '17'
-            artifact_name: forge-1.20.1
-          - target_ref: neoforge/1.20.2
-            java_version: '17'
-            artifact_name: neoforge-1.20.2
-          - target_ref: neoforge/1.20.4
-            java_version: '17'
-            artifact_name: neoforge-1.20.4
-          - target_ref: neoforge/1.20.6
-            java_version: '21'
-            artifact_name: neoforge-1.20.6
-          - target_ref: neoforge/1.21.4
-            java_version: '21'
-            artifact_name: neoforge-1.21.4
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout Target Branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ matrix.target_ref }}
-          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ matrix.java_version }}
+          java-version: '17'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Prepare Gradle Properties For CI
-        shell: pwsh
+      - name: Prepare wrappers
+        shell: bash
         run: |
-          $path = 'gradle.properties'
-          $lines = Get-Content -LiteralPath $path
-          $filtered = $lines | Where-Object { $_ -notmatch '^systemProp\.(http|https)\.proxy(Host|Port)=' }
-          Set-Content -LiteralPath $path -Value $filtered -Encoding utf8
+          chmod +x gradlew
+          find adapters -name gradlew -exec chmod +x {} \;
 
-      - name: Build Release Artifacts
-        shell: pwsh
-        run: .\gradlew.bat buildRelease --no-daemon
-
-      - name: Upload Release Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          if-no-files-found: error
-          path: |
-            dist/release/*
-
-  release:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    needs: build
-
-    steps:
-      - name: Download Built Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist/all-release
-
-      - name: Flatten Artifact Paths
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path dist/final | Out-Null
-          Get-ChildItem dist/all-release -Recurse -File | ForEach-Object {
-            $relative = $_.FullName.Substring((Resolve-Path 'dist/all-release').Path.Length).TrimStart('\')
-            $segments = $relative -split '[\\/]'
-            $artifactName = if ($segments.Length -gt 1) { $segments[0] } else { 'artifact' }
-            $destinationName = "$artifactName-$($_.Name)"
-            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path 'dist/final' $destinationName) -Force
-          }
+      - name: Build all enabled targets
+        run: ./gradlew buildAll --no-daemon
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -121,4 +44,4 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            dist/final/*
+            adapters/*/dist/release/*
