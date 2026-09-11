@@ -3,7 +3,7 @@ package dglabmc;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dglabmc.config.StartupConfig;
-import dglabmc.platform.NoopPlatformClientBridge;
+import dglabmc.platform.forge.ForgePlatformClientBridge;
 import dglabmc.platform.PlatformServices;
 import dglabmc.platform.forge.ForgePlatformPaths;
 import net.minecraftforge.common.MinecraftForge;
@@ -26,12 +26,13 @@ public final class DgLabMcMod {
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
     public DgLabMcMod() {
-        PlatformServices.configure(new ForgePlatformPaths(), new NoopPlatformClientBridge());
+        PlatformServices.configure(new ForgePlatformPaths(), new ForgePlatformClientBridge());
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, StartupConfig.SPEC);
         ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST,
             () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (remote, server) -> true));
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
-        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(dglabmc.client.ClientHooks.class);
+        MinecraftForge.EVENT_BUS.register(dglabmc.platform.forge.ForgeCommandRegistrar.class);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> AppServices.get().shutdown(), "dglabmc-shutdown"));
     }
 

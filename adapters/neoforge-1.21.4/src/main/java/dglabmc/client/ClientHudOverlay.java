@@ -12,7 +12,7 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 
-@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, value = Dist.CLIENT)
 public final class ClientHudOverlay {
     private ClientHudOverlay() {
     }
@@ -48,3 +48,4 @@ public final class ClientHudOverlay {
         return channel + " " + current + " | " + Math.max(0, max);
     }
 }
+

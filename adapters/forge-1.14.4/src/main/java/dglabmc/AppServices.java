@@ -57,7 +57,7 @@ public final class AppServices {
     public synchronized WaveformDefinition importHexWaveform(String name, String description, String source) { return service().importHexWaveform(name, description, source); }
     public synchronized Path exportConfigArchive() { return service().exportConfigArchive(); }
     public synchronized void importConfigArchive(InputStream input) { service().importConfigArchive(input); }
-    public synchronized DeviceSnapshot getDeviceSnapshot() { return service().getDeviceSnapshot(); }
+    public synchronized DeviceSessionManager.DeviceSnapshot getDeviceSnapshot() { return sessionManager == null ? new DeviceSessionManager.DeviceSnapshot() : sessionManager.snapshot(); }
     public synchronized boolean isDeviceBound() { return service().isDeviceBound(); }
     public synchronized RuleEngine getRuleEngine() { return service().getRuleEngine(); }
     public synchronized RuleEngine.RuntimeSnapshot getRuleRuntimeSnapshot() { return service().getRuleRuntimeSnapshot(); }

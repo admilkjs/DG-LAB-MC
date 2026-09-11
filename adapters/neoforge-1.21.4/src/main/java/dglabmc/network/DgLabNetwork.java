@@ -32,7 +32,7 @@ public final class DgLabNetwork {
         if (registered) {
             return;
         }
-        event.registrar(PROTOCOL_VERSION)
+        event.registrar(PROTOCOL_VERSION).optional()
             .playToServer(ClientStatePayload.TYPE, ClientStatePayload.CODEC, (payload, context) -> {
                 if (context.player() instanceof ServerPlayer player) {
                     ServerPlayerStateRelay.handleClientState(player, payload.toState(player.getUUID()));

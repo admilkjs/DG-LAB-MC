@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, value = Dist.CLIENT)
 public final class ClientHooks {
     private static final Minecraft MINECRAFT = Minecraft.getInstance();
     private static KeyMapping openMenuKey;
@@ -577,3 +577,4 @@ public final class ClientHooks {
             && player.hasEffect(MobEffects.FIRE_RESISTANCE);
     }
 }
+

@@ -21,14 +21,63 @@ def targetPath = { String target ->
     return file(path)
 }
 
+def resolveJavaHome = { String target ->
+    def javaVersion = targets.getProperty("${target}.java")
+    if (javaVersion == null) {
+        return null
+    }
+    def envNames = [
+        "JAVA${javaVersion}_HOME",
+        "JAVA_HOME_${javaVersion}_X64"
+    ]
+    for (String envName : envNames) {
+        def value = System.getenv(envName)
+        if (value != null && file(value).isDirectory()) {
+            return file(value).absolutePath
+        }
+    }
+
+    def userHome = System.getProperty('user.home')
+    def programFiles = System.getenv('ProgramFiles')
+    def candidates = []
+    if (programFiles != null) {
+        candidates += fileTree(programFiles) {
+            include "Java/jdk-${javaVersion}*"
+            include "Java/jre${javaVersion}*"
+            include "Eclipse Adoptium/jdk-${javaVersion}*"
+        }.files
+    }
+    if (userHome != null) {
+        candidates += fileTree(new File(userHome, '.gradle/jdks')) {
+            include "*-${javaVersion}-*"
+            include "*-${javaVersion}.*-*"
+        }.files
+    }
+    def current = System.getenv('JAVA_HOME')
+    if (current != null) {
+        candidates << file(current)
+    }
+    def executableName = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'java.exe' : 'java'
+    def requiresCompiler = javaVersion in ['8', '11', '17', '21']
+    return candidates.find { candidate ->
+        candidate.isDirectory()
+            && new File(candidate, "bin/${executableName}").isFile()
+            && (!requiresCompiler || new File(candidate, 'bin/javac.exe').isFile() || new File(candidate, 'bin/javac').isFile())
+    }?.absolutePath
+}
+
 def runTarget = { String target ->
     def directory = targetPath(target)
     def wrapper = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'gradlew.bat' : './gradlew'
     if (!file(directory).isDirectory()) {
         throw new GradleException("Target directory does not exist: ${directory}")
     }
+    def javaHome = resolveJavaHome(target)
     exec {
         workingDir directory
+        if (javaHome != null) {
+            environment 'JAVA_HOME', javaHome
+        }
         if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
             commandLine 'cmd', '/c', wrapper, 'buildRelease', '--no-daemon'
         } else {

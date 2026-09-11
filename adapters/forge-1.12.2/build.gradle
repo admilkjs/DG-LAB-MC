@@ -1,0 +1,104 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        maven { url = 'https://maven.minecraftforge.net/' }
+        mavenCentral()
+    }
+    dependencies { classpath 'net.minecraftforge.gradle:ForgeGradle:3.+' }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+
+version = mod_version
+group = mod_group_id
+archivesBaseName = mod_id
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'snapshot', version: '20171003-1.12'
+    runs {
+        client { workingDirectory project.file('run') }
+        server { workingDirectory project.file('run-server') }
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.aliyun.com/repository/public' }
+    mavenCentral()
+}
+
+configurations { shade; compile.extendsFrom shade }
+
+def coreJar = file('../../core/build/libs/dglabmc-core-1.0.1.jar')
+task ensureCoreJar {
+    description = 'Builds the shared Core jar when a standalone adapter build starts from a clean checkout.'
+    outputs.file(coreJar)
+    doLast {
+        if (!coreJar.exists()) {
+            File workspace = file('../../')
+            String wrapper = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'gradlew.bat' : './gradlew'
+            exec {
+                workingDir workspace
+                if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+                    commandLine 'cmd', '/c', wrapper, ':core:jar', '--no-daemon'
+                } else {
+                    commandLine wrapper, ':core:jar', '--no-daemon'
+                }
+            }
+        }
+    }
+}
+compileJava.dependsOn ensureCoreJar
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    shade files(coreJar)
+    compile files(coreJar)
+    compile 'com.google.code.gson:gson:2.8.9'
+    shade 'com.google.zxing:core:3.5.3'
+    compile 'com.google.zxing:core:3.5.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+}
+
+processResources {
+    inputs.property 'version', mod_version
+    inputs.property 'mcversion', minecraft_version
+    inputs.property 'modid', mod_id
+    inputs.property 'name', mod_name
+    inputs.property 'description', mod_description
+    inputs.property 'authors', mod_authors
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'; include 'pack.mcmeta'
+        expand(version: mod_version, mcversion: minecraft_version, modid: mod_id,
+               name: mod_name, description: mod_description, authors: mod_authors)
+    }
+    from(sourceSets.main.resources.srcDirs) { exclude 'mcmod.info'; exclude 'pack.mcmeta' }
+}
+
+jar {
+    manifest { attributes([
+        'Specification-Title': mod_id, 'Specification-Vendor': mod_authors,
+        'Specification-Version': '1', 'Implementation-Title': project.name,
+        'Implementation-Version': "${version}", 'Implementation-Vendor': mod_authors,
+        'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+    ]) }
+    from { configurations.shade.collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
+    }
+}
+jar.finalizedBy('reobfJar')
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+test { useJUnitPlatform() }
+
+task copyReleaseArtifacts(type: Copy) {
+    dependsOn 'reobfJar'
+    into file("${project.projectDir}/dist/release")
+    from("${buildDir}/reobfJar/output.jar") { rename { "${mod_id}-${mod_version}-forge-${minecraft_version}-release.jar" } }
+}
+task buildRelease { group='build'; dependsOn copyReleaseArtifacts }

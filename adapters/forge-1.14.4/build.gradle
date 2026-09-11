@@ -50,6 +50,7 @@ configurations {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     shadow 'com.google.code.gson:gson:2.10.1'
+    shadow 'com.google.zxing:core:3.5.3'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 }
@@ -79,6 +80,14 @@ shadowJar {
 reobf { shadowJar {} }
 assemble.dependsOn shadowJar
 build.dependsOn reobfShadowJar
+task generatePvpPunishConfig(type: JavaExec) {
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'dglabmc.tool.PvpPunishConfigGenerator'
+    workingDir = project.projectDir
+    args "${project.projectDir}/dist/dglabmc-pvp-punish.zip"
+    jvmArgs '-Dfile.encoding=UTF-8'
+}
 task copyReleaseArtifacts(type: Copy) {
     dependsOn reobfShadowJar
     into file("${project.projectDir}/dist/release")
@@ -91,7 +100,3 @@ task buildRelease {
 }
 tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
 test { useJUnitPlatform() }
-
-
-
-

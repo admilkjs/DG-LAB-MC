@@ -10,7 +10,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 
 /** Adds a compact DG-LAB status suffix to player nameplates on NeoForge 1.21.4. */
-@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = dglabmc.DgLabMcMod.MODID, value = Dist.CLIENT)
 public final class ClientNameplateOverlay {
     private ClientNameplateOverlay() {
     }
@@ -40,3 +40,4 @@ public final class ClientNameplateOverlay {
         event.setContent(Component.literal(original.getString() + suffix));
     }
 }
+

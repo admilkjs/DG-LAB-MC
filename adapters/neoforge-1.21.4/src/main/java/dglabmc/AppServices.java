@@ -57,7 +57,7 @@ public final class AppServices {
             };
             delegate = new CoreAppServices(
                 rootDirectory,
-                "forge-1.20.1",
+                "neoforge-1.21.4",
                 DgLabMcMod.VERSION,
                 fallbackClientId -> {
                     sessionManager = new DeviceSessionManager();

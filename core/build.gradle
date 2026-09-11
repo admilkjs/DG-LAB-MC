@@ -5,6 +5,10 @@ plugins {
 group = 'dglabmc'
 version = '1.0.1'
 
+base {
+    archivesName = 'dglabmc-core'
+}
+
 repositories {
     mavenCentral()
 }

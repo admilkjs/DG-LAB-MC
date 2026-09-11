@@ -4,6 +4,11 @@ This adapter contains only Forge 1.14.4 integration.  Business logic is
 compiled directly from the shared `../../core/src/main/java` source tree so
 the version adapter never owns a second copy of Core.
 
+The adapter includes the 1.14.4 client event bridge, command router, control
+center screens, key binding and Netty WebSocket runtime.  Minecraft-specific
+types stay in this directory; rules, configuration, security and waveform
+processing stay in Core.
+
 ## Build
 
 ForgeGradle 3 uses Gradle 4.9. Use a JDK 8 or 11 installation (JDK 11 is the
