@@ -15,5 +15,5 @@ $env:JAVA_HOME = 'C:\Program Files\Java\jdk-11'
 .\gradlew.bat buildRelease --no-daemon
 ```
 
-The nested build consumes `../../core/build/libs/core-1.0.1.jar`; the root
+The nested build consumes `../../core/build/libs/dglabmc-core-1.0.1.jar`; the root
 build must build `:core` before invoking this adapter.

@@ -28,6 +28,7 @@ def resolveJavaHome = { String target ->
     }
     def envNames = [
         "JAVA${javaVersion}_HOME",
+        "JAVA_HOME_${javaVersion}",
         "JAVA_HOME_${javaVersion}_X64"
     ]
     for (String envName : envNames) {
@@ -41,21 +42,14 @@ def resolveJavaHome = { String target ->
     def programFiles = System.getenv('ProgramFiles')
     def candidates = []
     if (programFiles != null) {
-        candidates += fileTree(programFiles) {
-            include "Java/jdk-${javaVersion}*"
-            include "Java/jre${javaVersion}*"
-            include "Eclipse Adoptium/jdk-${javaVersion}*"
-        }.files
+        def javaRoot = new File(programFiles, 'Java')
+        def adoptiumRoot = new File(programFiles, 'Eclipse Adoptium')
+        candidates += (javaRoot.listFiles() ?: []).findAll { it.isDirectory() && (it.name.startsWith("jdk-${javaVersion}") || it.name.startsWith("jre${javaVersion}")) }
+        candidates += (adoptiumRoot.listFiles() ?: []).findAll { it.isDirectory() && it.name.contains("-${javaVersion}.") }
     }
     if (userHome != null) {
-        candidates += fileTree(new File(userHome, '.gradle/jdks')) {
-            include "*-${javaVersion}-*"
-            include "*-${javaVersion}.*-*"
-        }.files
-    }
-    def current = System.getenv('JAVA_HOME')
-    if (current != null) {
-        candidates << file(current)
+        def gradleJdks = new File(userHome, '.gradle/jdks')
+        candidates += (gradleJdks.listFiles() ?: []).findAll { it.isDirectory() && it.name.toLowerCase().contains("-${javaVersion}-") }
     }
     def executableName = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'java.exe' : 'java'
     def requiresCompiler = javaVersion in ['8', '11', '17', '21']
@@ -73,6 +67,7 @@ def runTarget = { String target ->
         throw new GradleException("Target directory does not exist: ${directory}")
     }
     def javaHome = resolveJavaHome(target)
+    println "Building ${target} with JAVA_HOME=${javaHome ?: 'inherited'}"
     exec {
         workingDir directory
         if (javaHome != null) {
@@ -113,6 +108,7 @@ tasks.register('printTargets') {
     doLast {
         enabledTargets.each { target ->
             println "${target}: ${targets.getProperty("${target}.loader")} ${targets.getProperty("${target}.minecraft")} (Java ${targets.getProperty("${target}.java")})"
+            println "  JAVA_HOME=${resolveJavaHome(target) ?: 'inherited'}"
         }
     }
 }
