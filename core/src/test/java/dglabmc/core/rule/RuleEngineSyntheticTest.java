@@ -1,10 +1,11 @@
-package dglabmc.rule;
+package dglabmc.core.rule;
 
-import dglabmc.config.AppConfig;
-import dglabmc.config.ConfigRepository;
-import dglabmc.device.DeviceChannel;
-import dglabmc.device.DeviceSessionManager;
-import dglabmc.wave.WaveformDefinition;
+import dglabmc.core.config.AppConfig;
+import dglabmc.core.config.ConfigRepository;
+import dglabmc.core.device.DeviceChannel;
+import dglabmc.core.device.DeviceChannelState;
+import dglabmc.core.device.DeviceTransport;
+import dglabmc.core.wave.WaveformDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -25,27 +26,23 @@ class RuleEngineSyntheticTest {
         ConfigRepository repository = new ConfigRepository(tempDir);
         repository.save(buildConfig());
 
-        RecordingSessionManager sessionManager = new RecordingSessionManager();
-        try {
-            RuleEngine engine = new RuleEngine(repository, sessionManager);
+        RecordingTransport transport = new RecordingTransport();
+        RuleEngine engine = new RuleEngine(repository, transport, RuleFeedback.NOOP);
 
-            RuleEventContext context = new RuleEventContext();
-            context.triggerId = TriggerRegistry.PLAYER_HURT;
-            context.damage = 3.0F;
-            context.currentHealth = 16.0F;
-            context.maxHealth = 20.0F;
+        RuleEventContext context = new RuleEventContext();
+        context.triggerId = TriggerRegistry.PLAYER_HURT;
+        context.damage = 3.0F;
+        context.currentHealth = 16.0F;
+        context.maxHealth = 20.0F;
 
-            engine.fireSynthetic(context);
+        engine.fireSynthetic(context);
 
-            assertFalse(sessionManager.strengthChanges.isEmpty(), "伪造事件应该先下发强度");
-            assertEquals(1, sessionManager.pulseCalls.size(), "伪造事件应该单独下发一次波形");
-            PulseCall pulseCall = sessionManager.pulseCalls.get(0);
-            assertEquals(DeviceChannel.A, pulseCall.channel, "测试规则只应命中 A 通道");
-            assertEquals(Collections.singletonList("0A0A0A0A64646464"), pulseCall.frames, "下发的波形帧应与规则绑定的波形一致");
-            assertEquals(true, pulseCall.clearBeforeSend, "伪造事件下发波形前应先清空旧波形");
-        } finally {
-            sessionManager.shutdown();
-        }
+        assertFalse(transport.strengthChanges.isEmpty(), "伪造事件应该先下发强度");
+        assertEquals(1, transport.pulseCalls.size(), "伪造事件应该单独下发一次波形");
+        PulseCall pulseCall = transport.pulseCalls.get(0);
+        assertEquals(DeviceChannel.A, pulseCall.channel, "测试规则只应命中 A 通道");
+        assertEquals(Collections.singletonList("0A0A0A0A64646464"), pulseCall.frames, "下发的波形帧应与规则绑定的波形一致");
+        assertEquals(true, pulseCall.clearBeforeSend, "伪造事件下发波形前应先清空旧波形");
     }
 
     private AppConfig buildConfig() {
@@ -77,7 +74,7 @@ class RuleEngineSyntheticTest {
         return config;
     }
 
-    private static final class RecordingSessionManager extends DeviceSessionManager {
+    private static final class RecordingTransport implements DeviceTransport {
         final List<Integer> strengthChanges = new ArrayList<Integer>();
         final List<PulseCall> pulseCalls = new ArrayList<PulseCall>();
 
@@ -101,13 +98,8 @@ class RuleEngineSyntheticTest {
         }
 
         @Override
-        public synchronized DeviceSnapshot snapshot() {
-            DeviceSnapshot snapshot = new DeviceSnapshot();
-            snapshot.connected = true;
-            snapshot.bound = true;
-            snapshot.maxStrengthA = 200;
-            snapshot.maxStrengthB = 200;
-            return snapshot;
+        public synchronized DeviceChannelState snapshot(DeviceChannel channel) {
+            return new DeviceChannelState(channel, 0, 200, false);
         }
     }
 
