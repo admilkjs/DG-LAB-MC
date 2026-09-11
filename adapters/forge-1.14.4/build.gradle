@@ -1,0 +1,97 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+' 
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
+version = mod_version
+group = mod_group_id
+archivesBaseName = mod_id
+sourceCompatibility = targetCompatibility = '1.8'
+sourceSets.main.java.srcDir project.file('../../core/src/main/java')
+
+minecraft {
+    mappings channel: 'snapshot', version: '20190719-1.14.3'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('run-server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+    }
+}
+repositories {
+    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://maven.aliyun.com/repository/public' }
+    mavenCentral()
+}
+configurations {
+    shadow
+    compile.extendsFrom shadow
+}
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    shadow 'com.google.code.gson:gson:2.10.1'
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+}
+processResources {
+    filteringCharset = 'UTF-8'
+    def props = [minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
+        forge_version: forge_version, forge_version_range: forge_version_range,
+        loader_version_range: loader_version_range, mod_id: mod_id, mod_name: mod_name,
+        mod_license: mod_license, mod_version: mod_version, mod_authors: mod_authors,
+        mod_description: mod_description]
+    inputs.properties props
+    filesMatching(['META-INF/mods.toml']) { expand props + [project: project] }
+}
+jar {
+    classifier = 'slim'
+    manifest { attributes 'Specification-Title': mod_id, 'Specification-Vendor': mod_authors,
+        'Specification-Version': '1', 'Implementation-Title': project.name,
+        'Implementation-Version': version, 'Implementation-Vendor': mod_authors }
+}
+shadowJar {
+    classifier = ''
+    configurations = [project.configurations.shadow]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/INDEX.LIST', 'module-info.class'
+    relocate 'com.google.gson', 'dglabmc.shadow.gson'
+}
+reobf { shadowJar {} }
+assemble.dependsOn shadowJar
+build.dependsOn reobfShadowJar
+task copyReleaseArtifacts(type: Copy) {
+    dependsOn reobfShadowJar
+    into file("${project.projectDir}/dist/release")
+    from("${buildDir}/reobfShadowJar/output.jar") { rename { "${mod_id}-${mod_version}-forge-${minecraft_version}-release.jar" } }
+}
+task buildRelease {
+    group = 'build'
+    description = 'Builds the Forge 1.14.4 adapter and copies the release jar.'
+    dependsOn copyReleaseArtifacts
+}
+tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+test { useJUnitPlatform() }
+
+
+
+
